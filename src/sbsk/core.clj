@@ -109,11 +109,11 @@
      :content-type "application/json"
      :documents (io/input-stream tf))))
 
-(defn local
+(defn -main
   []
   (let [records (crawl)
         tf      (fs/temp-file "fbrecords")]
     (spit tf (generate-string records))
     (println (str tf))))
 
-;; aws cloudsearchdomain --profile sbsk-fb-crawler --endpoint-url "http://doc-fbvideos-7em3llq7mvfiuqoshymtrg3acu.us-east-1.cloudsearch.amazonaws.com" upload-documents --content-type application/json --documents /tmp/fbrecords1471985133411-1995262256
+;; aws cloudsearchdomain --profile sbsk-fb-crawler --endpoint-url "http://doc-fbvideos-7em3llq7mvfiuqoshymtrg3acu.us-east-1.cloudsearch.amazonaws.com" upload-documents --content-type application/json --documents $(lein run)
