@@ -2,18 +2,30 @@
   (:require [clj-http.client :as client]
             [cheshire.core :refer :all]
             [amazonica.aws.cloudsearchdomain :as csd]
+            [amazonica.aws.cloudsearchv2 :as cs2]
             [clojure.java.io :as io]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [me.raynes.fs :as fs]
             [environ.core :refer [env]])
+  (:import [java.io.StringBufferInputStream])
   (:gen-class))
 
-(def app-secret      (env :sbsk-fb-app-secret))
-(def app-id          (env :sbsk-fb-app-id))
-(def cs-doc-endpoint (env :sbsk-cs-doc-endpoint))
-(def page-id         "591976210904363")
-(def fb-https        "https://graph.facebook.com")
+(def app-secret        (env :sbsk-fb-app-secret))
+(def app-id            (env :sbsk-fb-app-id))
+(def aws-search-domain "fbvideos")
+(def page-id           "591976210904363")
+(def fb-https          "https://graph.facebook.com")
+
+(defn get-domain
+  [domain-key]
+  (->> (amazonica.aws.cloudsearchv2/describe-domains)
+       :domain-status-list
+       (some #(when (= aws-search-domain (:domain-name %))
+                (get-in % [domain-key :endpoint])))))
+
+(def doc-domain (get-domain :doc-service))
+(def search-domain (get-domain :search-service))
 
 (defn coerce-time
   [t]
@@ -76,7 +88,28 @@
   (->> (fetch)
        (map scrub)))
 
-(defn run
+(defn upload
+  []
+  (csd/set-endpoint doc-domain)
+  (let [records (->> (fetch)
+                     (map scrub))
+        json (generate-string records)]
+    (csd/upload-documents
+     :content-type "application/json"
+     :documents (java.io.StringBufferInputStream. json))))
+
+(defn upload*
+  []
+  (csd/set-endpoint doc-domain)
+  (let [records (->> (fetch)
+                     (map scrub))
+        tf      (fs/temp-file "fbrecords")]
+    (spit tf (generate-string records))
+    (csd/upload-documents
+     :content-type "application/json"
+     :documents (io/input-stream tf))))
+
+(defn local
   []
   (let [records (crawl)
         tf      (fs/temp-file "fbrecords")]

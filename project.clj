@@ -7,7 +7,7 @@
                  [clj-http "2.2.0"]
                  [clj-time "0.12.0"]
                  [cheshire "5.6.3"]
-                 [amazonica "0.3.74"]
+                 [amazonica "0.3.75"]
                  [me.raynes/fs "1.4.6"]
                  [environ "1.1.0"]]
   :main ^:skip-aot sbsk.core
