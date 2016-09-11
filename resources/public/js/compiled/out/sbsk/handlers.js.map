@@ -1,0 +1,1 @@
+{"version":3,"file":"\/home\/acron\/projects\/personal\/sbsk\/resources\/public\/js\/compiled\/out\/sbsk\/handlers.js","sources":["handlers.cljs?rel=1473616896239"],"lineCount":10,"mappings":";AAAA;;;;AAIA,qCAAA,rCAACA,2GAEA,WAAMC,EAAEA;AAAR,AACEC","names":["re-frame.core\/reg-event-db","_","sbsk.db\/default-db"]}
