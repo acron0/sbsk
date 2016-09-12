@@ -5,7 +5,7 @@
 (defn title []
   (let [name (re-frame/subscribe [:name])]
     (fn []
-      [:div])))
+      [re-com/label :label "Search"])))
 
 (defn main-panel []
   (fn []

@@ -1,1 +1,0 @@
-{:name sbsk.handlers, :doc nil, :excludes #{}, :use-macros nil, :require-macros nil, :uses nil, :requires {re-frame re-frame.core, re-frame.core re-frame.core, db sbsk.db, sbsk.db sbsk.db}, :imports nil, :cljs.analyzer/constants {:seen #{:initialize-db}, :order [:initialize-db]}}

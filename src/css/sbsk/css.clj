@@ -7,7 +7,6 @@
 (defstyles screen
   [:*
    {:font-family base-font}]
-  [:body {:color "red"}]
   [:.level1 {:font-family base-font
              :font-size (px 40)
              :letter-spacing (px 1)}])
