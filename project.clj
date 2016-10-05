@@ -17,7 +17,11 @@
                  [re-frame "0.8.0"]
                  [re-com "0.8.3"]
                  [garden "1.3.2"]
-                 [ns-tracker "0.3.0"]]
+                 [ns-tracker "0.3.0"]
+                 [cljs-http "0.1.41"]
+                 [com.cognitect/transit-cljs "0.8.239"]
+                 ;;
+                 [cljsjs/moment "2.10.6-4"]]
   :main ^:skip-aot sbsk.core
   :target-path "target/%s"
 
