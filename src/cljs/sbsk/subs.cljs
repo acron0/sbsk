@@ -11,3 +11,8 @@
  :videos
  (fn [db]
    (:videos db)))
+
+(re-frame/reg-sub
+ :current-video
+ (fn [db]
+   (:current-video db)))

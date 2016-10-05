@@ -15,10 +15,11 @@
 
 (defstyles screen
   [:#app
-   {:overflow-y :scroll
+   {:overflow-y :auto
     :position :absolute
     :top (px 98)
-    :bottom (px 0)}]
+    :bottom (px 0)
+    :width (percent 100)}]
   [:*
    {:font-family base-font}]
   [:body
@@ -28,6 +29,12 @@
              :letter-spacing (px 1)}]
   [:.level3 {:font-family base-font
              :font-size (px 20)}]
+  [:.loading
+   {:position :absolute
+    :bottom (px 0)
+    :top (px 0)
+    :left (px 0)
+    :right (px 0)}]
   [:.search-bar
    {:margin [[(px 10) (px 0)]]}
    [:input
@@ -66,4 +73,16 @@
       :overflow :hidden
       :text-overflow :ellipsis}]
     [:.date
-     {:font-size (em 0.85)}]]])
+     {:font-size (em 0.85)}]]]
+  [:.back-button
+   {:position :absolute
+    :margin (em 0.2)}]
+  [:.video-container
+   {:width (percent 100)
+    :height (percent 100)}]
+  [:.video-view
+   [:.level1
+    {:font-size (em 1.6)}]
+   [:.rc-label
+    {:font-style :italic
+     :letter-spacing (px 1)}]])

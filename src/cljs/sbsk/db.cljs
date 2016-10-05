@@ -7,7 +7,8 @@
 
 (def empty-db
   {:videos []
-   :search nil})
+   :search nil
+   :current-video nil})
 
 (defn keywordize
   [x]

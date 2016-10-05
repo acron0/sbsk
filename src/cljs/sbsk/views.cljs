@@ -6,6 +6,15 @@
 
 (def timeout (atom nil))
 
+(defn get-iframe-dims
+  []
+  (let [aspect (/ 280 500)
+        mult   0.8
+        w      (.. js/document -body -offsetWidth)
+        w'     (* w mult)
+        h'     (* (* w aspect) mult)]
+    [w' h']))
+
 (defn on-search-change
   [v]
   (when @timeout
@@ -43,21 +52,75 @@
                        :children [[:div.title
                                    (get-in video [:fields :title])]
                                   [:div.thumb
+                                   {:on-click #(re-frame/dispatch [:open-video (:id video)])}
                                    [:img
                                     {:src (get-in video [:fields :thumb])}]]
                                   [:div.date
                                    (.calendar (js/moment (get-in video [:fields :created_date])))]]]])]]])))
 
+;; <iframe src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fspecialbooksbyspecialkids%2Fvideos%2F837204176381564%2F&show_text=0&width=560" width="560" height="315" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true" allowFullScreen="true"></iframe>
+
+(defn get-fb-video-link
+  [video-id]
+  (str "https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fspecialbooksbyspecialkids%2Fvideos%2F" video-id "%2F&show_text=0"))
+
+(defn video-view
+  [video]
+  (let [{:keys [title description id]} (:fields video)
+        [w h] (get-iframe-dims)]
+    [:div.video-container
+     [re-com/md-icon-button
+      :class "back-button"
+      :md-icon-name "zmdi-close"
+      :on-click #(re-frame/dispatch [:close-video])]
+     [re-com/v-box
+      :align :center
+      :class "video-view"
+      :children [[re-com/title
+                  :label title
+                  :level :level1]
+                 [re-com/label
+                  :width "70%"
+                  :label (str "\"" description "\"")]
+                 [re-com/gap
+                  :size "30px"]
+                 [:iframe#video-frame
+                  {:src (get-fb-video-link id)
+                   :width (str w "px")
+                   :height (str h "px")
+                   :scrolling "no"
+                   :frame-border "0"
+                   :allow-transparency "true"
+                   :allow-full-screen "true"}]
+                 [:div "HELLO"]]]]))
+
+(.addEventListener
+ js/window "resize"
+ #(when-let [frame (.getElementById js/document "video-frame")]
+    (let [[w h] (get-iframe-dims)]
+      (aset frame "height" h)
+      (aset frame "width"  w))))
+
+(defn search-view
+  [videos]
+  [re-com/v-box
+   :height "100%"
+   :width "100%"
+   :children [[search-bar]
+              [re-com/line :size  "1px" :color "silver"]
+              [search-results videos]]])
+
 (defn main-panel []
-  (let [videos (re-frame/subscribe [:videos])]
+  (let [videos (re-frame/subscribe [:videos])
+        current-video (re-frame/subscribe [:current-video])]
     (fn []
-      (if (not-empty @videos)
-        [re-com/v-box
-         :height "100%"
-         :children [[search-bar]
-                    [re-com/line :size  "1px" :color "silver"]
-                    [search-results @videos]]]
-        [re-com/v-box
-         :height "100%"
-         :children [[re-com/box
-                     :child [:i {:class "zmdi zmdi-hc-fw zmdi-cog"}]]]]))))
+      (cond
+        @current-video      (video-view @current-video)
+        (not-empty @videos) (search-view @videos)
+        :else               [re-com/box
+                             :height "100%"
+                             :width "100%"
+                             :justify :center
+                             :align :center
+                             :child [re-com/throbber
+                                     :size :large]]))))
