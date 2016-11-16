@@ -1,38 +1,37 @@
 (ns sbsk.core
   (:require [clj-http.client :as client]
             [cheshire.core :refer :all]
-            [amazonica.aws.cloudsearchdomain :as csd]
-            [amazonica.aws.cloudsearchv2 :as cs2]
+            [amazonica.aws.s3 :as s3]
+            [amazonica.aws.s3transfer :as s3t]
             [clojure.java.io :as io]
             [clj-time.core :as t]
-            [clj-time.format :as f]
+            [clj-time.format :as tf]
             [me.raynes.fs :as fs]
             [environ.core :refer [env]])
   (:import [java.io.StringBufferInputStream])
   (:gen-class))
 
+;; fb
 (def app-secret        (env :sbsk-fb-app-secret))
 (def app-id            (env :sbsk-fb-app-id))
-(def aws-search-domain "fbvideos")
+(def table-name        "videos")
 (def page-id           "591976210904363")
 (def fb-https          "https://graph.facebook.com")
-
-(defn get-domain
-  [domain-key]
-  (->> (amazonica.aws.cloudsearchv2/describe-domains)
-       :domain-status-list
-       (some #(when (= aws-search-domain (:domain-name %))
-                (get-in % [domain-key :endpoint])))))
-
-(def doc-domain (get-domain :doc-service))
-(def search-domain (get-domain :search-service))
+;; aws
+(def creds             {:profile "sbsk-fb-crawler"})
+(def bucket-full-name  "sbsk-data")
+(def data-name-parts   ["data" ".json"])
+(def bucket-seg-name   "sbsk-data-segmented")
+(def segments-per-file 10)
 
 (defn coerce-time
   [t]
-  (str (->> t
-            (re-find #"(.+)\+")
-            (last))
-       "Z"))
+  (let [fixed (re-find #"(.+)\+" t)
+        t'    (or (last fixed) t)
+        t'    (if-not (= \Z (last t')) (str t' \Z) t')]
+    (->> t'
+         (tf/parse (tf/formatter "YYYY-MM-dd'T'HH:mm:SS'Z'"))
+         (tf/unparse (tf/formatters :basic-date-time-no-ms)))))
 
 (defn facebook-get
   [method args]
@@ -74,46 +73,57 @@
 
 (defn scrub
   [entry]
-  {:type "add"
-   :id (:id entry)
-   :fields (-> entry
-               (clojure.set/rename-keys {:created_time  :created_date
-                                         :permalink_url :link
-                                         :picture       :thumb})
-               (update :created_date coerce-time)
-               (update :id clojure.edn/read-string))})
+  (let [full-text (str (:title entry) " - " (:description entry))]
+    (-> entry
+        (clojure.set/rename-keys {:created_time  :created-at
+                                  :permalink_url :link
+                                  :picture       :thumb})
+        (update :id str)
+        (update :created-at coerce-time))))
 
 (defn crawl
   []
   (->> (fetch)
        (map scrub)))
 
-(defn upload
-  []
-  (csd/set-endpoint doc-domain)
-  (let [records (->> (fetch)
-                     (map scrub))
-        json (generate-string records)]
-    (csd/upload-documents
-     :content-type "application/json"
-     :documents (java.io.StringBufferInputStream. json))))
+(defn upload-full
+  [records]
+  (let [as-json (generate-string records)
+        some-bytes (.getBytes as-json "UTF-8")
+        input-stream (java.io.ByteArrayInputStream. some-bytes)
+        key-name (apply str data-name-parts)]
+    (println "-" key-name)
+    (s3/put-object :bucket-name bucket-full-name
+                   :key key-name
+                   :input-stream input-stream
+                   :metadata {:content-length (count some-bytes)}
+                   :return-values "ALL_OLD")))
 
-(defn upload*
-  []
-  (csd/set-endpoint doc-domain)
-  (let [records (->> (fetch)
-                     (map scrub))
-        tf      (fs/temp-file "fbrecords")]
-    (spit tf (generate-string records))
-    (csd/upload-documents
-     :content-type "application/json"
-     :documents (io/input-stream tf))))
+(defn upload-segments
+  [records]
+  (let [r-segs (partition-all segments-per-file records)]
+    (loop [n 0]
+      (let [segment (nth r-segs n)
+            as-json (generate-string records)
+            some-bytes (.getBytes as-json "UTF-8")
+            input-stream (java.io.ByteArrayInputStream. some-bytes)
+            key-name (str (first data-name-parts) "." n (last data-name-parts))]
+        (println "-" key-name)
+        (s3/put-object :bucket-name bucket-seg-name
+                       :key key-name
+                       :input-stream input-stream
+                       :metadata {:content-length (count some-bytes)}
+                       :return-values "ALL_OLD"))
+      (when (< (inc n) (count r-segs))
+        (recur (inc n))))))
 
 (defn -main
   []
-  (let [records (crawl)
-        tf      (fs/temp-file "fbrecords")]
-    (spit tf (generate-string records))
-    (println (str tf))))
-
-;; aws cloudsearchdomain --profile sbsk-fb-crawler --endpoint-url "http://doc-fbvideos-7em3llq7mvfiuqoshymtrg3acu.us-east-1.cloudsearch.amazonaws.com" upload-documents --content-type application/json --documents $(lein run)
+  (let [records (crawl)]
+    (println "Found" (count records) "records...")
+    (println "Uploading full...")
+    (time
+     (upload-full records))
+    (println "Uploading segments...")
+    (time
+     (upload-segments records))))
