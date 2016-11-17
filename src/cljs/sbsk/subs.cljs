@@ -16,3 +16,8 @@
  :current-video
  (fn [db]
    (:current-video db)))
+
+(re-frame/reg-sub
+ :loading-more?
+ (fn [db]
+   (:loading-more? db)))

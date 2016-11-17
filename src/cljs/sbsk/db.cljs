@@ -5,10 +5,17 @@
             [cljs.core.async :refer [<!]]
             [cognitect.transit :as t]))
 
+(def data-loc-prefix
+  "https://s3-us-west-2.amazonaws.com/sbsk-data-segmented/data.")
+(def data-loc-suffix
+  ".json")
+
 (def empty-db
   {:videos []
    :search nil
-   :current-video nil})
+   :current-video nil
+   :latest-data -1
+   :loading-more? false})
 
 (defn keywordize
   [x]
@@ -17,14 +24,25 @@
      (let [v' (if (map? v) (keywordize v) v)]
        (assoc a (keyword k) v'))) {} x))
 
+(defn fetch-videos
+  [n]
+  (go (let [address (str data-loc-prefix n data-loc-suffix)
+            response (<! (http/get address {:with-credentials? false}))]
+        (when (= 200 (:status response))
+          (let [body    (:body response)
+                reader  (t/reader :json)
+                m       (t/read reader body)
+                results (map keywordize m)]
+            (re-frame/dispatch [:add-videos results n]))))))
+
 (defn init-db
   []
-  (go (let [response
-            (<! (http/get "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20html%20where%20url%3D%27http%3A%2F%2Fsearch-fbvideos-7em3llq7mvfiuqoshymtrg3acu.us-east-1.cloudsearch.amazonaws.com%2F2013-01-01%2Fsearch%3Fq%3Dmatchall%26return%3D_all_fields%26sort%3Dcreated_date%2Bdesc%26q.parser%3Dstructured%27&format=json" {:with-credentials? false}))]
-        (let [body   (get-in response [:body :query :results :body])
-              reader (t/reader :json)
-              {:strs [hit start]} (get (t/read reader body) "hits")
-              hits  (map-indexed (fn [i h] (assoc h "index" (+ start i))) hit)
-              hits' (map keywordize hits)]
-          (re-frame/dispatch [:add-videos hits']))))
+  (fetch-videos 0)
   empty-db)
+
+(defn load-more-videos
+  [db]
+  (let [n (inc (:latest-data db))
+        new-db (assoc db :loading-more? true)]
+    (fetch-videos n)
+    new-db))

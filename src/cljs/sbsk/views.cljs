@@ -36,7 +36,8 @@
 
 (defn search-results
   [videos]
-  (let [search (re-frame/subscribe [:search])]
+  (let [search (re-frame/subscribe [:search])
+        loading-more? (re-frame/subscribe [:loading-more?])]
     (fn [videos]
       [re-com/v-box
        :class "search-results"
@@ -50,13 +51,25 @@
                       [re-com/v-box
                        :class "video-thumb"
                        :children [[:div.title
-                                   (get-in video [:fields :title])]
+                                   (:title video)]
                                   [:div.thumb
                                    {:on-click #(re-frame/dispatch [:open-video (:id video)])}
                                    [:img
-                                    {:src (get-in video [:fields :thumb])}]]
+                                    {:src (:thumb video)}]]
                                   [:div.date
-                                   (.calendar (js/moment (get-in video [:fields :created_date])))]]]])]]])))
+                                   (.calendar (js/moment
+                                               (:created-at video)
+                                               "YYYYMMDD'T'HHmmss'Z'"))]]]])]
+                  [:div
+                   (when-not @search
+                     [re-com/h-box
+                      :justify :center
+                      :children [(if @loading-more?
+                                   [re-com/throbber
+                                    :size :small]
+                                   [re-com/button
+                                    :label "Load More"
+                                    :on-click #(re-frame/dispatch [:load-more-videos])])]])]]])))
 
 ;; <iframe src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fspecialbooksbyspecialkids%2Fvideos%2F837204176381564%2F&show_text=0&width=560" width="560" height="315" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true" allowFullScreen="true"></iframe>
 
@@ -66,7 +79,7 @@
 
 (defn video-view
   [video]
-  (let [{:keys [title description id]} (:fields video)
+  (let [{:keys [title description id]} video
         [w h] (get-iframe-dims)]
     [:div.video-container
      [re-com/md-icon-button
@@ -92,7 +105,7 @@
                    :frame-border "0"
                    :allow-transparency "true"
                    :allow-full-screen "true"}]
-                 [:div "HELLO"]]]]))
+                 [:div "..."]]]]))
 
 (.addEventListener
  js/window "resize"

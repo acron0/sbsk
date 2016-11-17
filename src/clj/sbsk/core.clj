@@ -92,7 +92,7 @@
         some-bytes (.getBytes as-json "UTF-8")
         input-stream (java.io.ByteArrayInputStream. some-bytes)
         key-name (apply str data-name-parts)]
-    (println "-" key-name)
+    (println "-" key-name (count some-bytes))
     (s3/put-object :bucket-name bucket-full-name
                    :key key-name
                    :input-stream input-stream
@@ -104,11 +104,11 @@
   (let [r-segs (partition-all segments-per-file records)]
     (loop [n 0]
       (let [segment (nth r-segs n)
-            as-json (generate-string records)
+            as-json (generate-string segment)
             some-bytes (.getBytes as-json "UTF-8")
             input-stream (java.io.ByteArrayInputStream. some-bytes)
             key-name (str (first data-name-parts) "." n (last data-name-parts))]
-        (println "-" key-name)
+        (println "-" key-name (count some-bytes))
         (s3/put-object :bucket-name bucket-seg-name
                        :key key-name
                        :input-stream input-stream
