@@ -1,6 +1,6 @@
 (ns sbsk.css
   (:require [garden.def :refer [defstyles]]
-            [garden.units :refer [px em percent]]))
+            [garden.units :refer [px em percent vw vh]]))
 
 (def base-font "'Raleway', sans-serif")
 (def thumb-scale 1.4)
@@ -53,19 +53,33 @@
    [:.video-thumb
     {:padding (em 1)}
     [:.thumb
-     {:height (px (* thumb-scale 128))
-      :width  (px (* thumb-scale 227))
+     {;;:height (px (* thumb-scale 128))
+      ;;:width  (px (* thumb-scale 227))
+      :position :relative
       :border [[(px 1) "#bbb" 'solid]]
       :cursor :pointer
       :transition (transition :border thumb-hover-time
                               :box-shadow thumb-hover-time)}
      [:&:hover
       {:border [[(px 1) "#111" 'solid]]
-       :box-shadow [[(px 4) (px 4) (px 8) "#888"]]}]
+       :box-shadow [[(px 4) (px 4) (px 8) "#888"]]}
+      [:div.play-icon
+       {:opacity "0.6"}]]
      [:img
       {:z-index -1
        :width (percent 100)
-       :height (percent 100)}]]
+       :height (percent 100)}]
+     [:div.play-icon
+      {:width (percent 20)
+       :height (percent 30)
+       :margin :auto
+       :position :absolute
+       :right 0
+       :top (percent 5)
+       :background-image "url(https://upload.wikimedia.org/wikipedia/commons/d/d3/Play_font_awesome.svg)"
+       :background-repeat "no-repeat"
+       :opacity "0.3"
+       :transition (transition :opacity thumb-hover-time)}]]
     [:.title
      {:color "#666"
       :font-weight 'bold

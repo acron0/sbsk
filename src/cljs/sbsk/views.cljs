@@ -43,7 +43,7 @@
        :class "search-results"
        :children [[re-com/title
                    :level :level3
-                   :label "Recent Uploads"]
+                   :label "Recent Videos"]
                   [:div.pure-g
                    (for [video videos]
                      ^{:key (:id video)}
@@ -55,7 +55,8 @@
                                   [:div.thumb
                                    {:on-click #(re-frame/dispatch [:open-video (:id video)])}
                                    [:img
-                                    {:src (:thumb video)}]]
+                                    {:src (:thumb video)}]
+                                   [:div.play-icon]]
                                   [:div.date
                                    (.calendar (js/moment
                                                (:created-at video)
