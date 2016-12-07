@@ -31,6 +31,7 @@
 
   :plugins [[lein-cljsbuild "1.1.3"]
             [lein-garden "0.2.8"]]
+  :uberjar-name "sbsk.jar"
   :min-lein-version "2.5.3"
   :source-paths ["src/clj"]
   :clean-targets ^{:protect false} ["resources/public/js/compiled"

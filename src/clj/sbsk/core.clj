@@ -8,7 +8,7 @@
             [clj-time.format :as tf]
             [me.raynes.fs :as fs]
             [environ.core :refer [env]]
-            [clojure.tools.cli :refer [cli]])
+            [clojure.tools.cli :refer [parse-opts]])
   (:import [java.io.StringBufferInputStream])
   (:gen-class))
 
@@ -118,19 +118,31 @@
       (when (< (inc n) (count r-segs))
         (recur (inc n))))))
 
+(defn print-help
+  ([s]
+   (println s))
+  ([s m]
+   (println m)
+   (print-help s)))
+
 (defn -main
   [& args]
-  (let [[opts args banner] (cli args ["-s" "--server"
-                                      :default true
-                                      :flag true])]
-    (println opts)
-    (if (:server opts)
-      (println "Server mode")
-      (let [records (crawl)]
-        (println "Found" (count records) "records...")
-        (println "Uploading full...")
-        (time
-         (upload-full records))
-        (println "Uploading segments...")
-        (time
-         (upload-segments records))))))
+  (let [{:keys [options summary]} (parse-opts args [["-s" "--server" "Server mode"
+                                                     :default false]
+                                                    ["-c" "--crawler" "Crawler mode"
+                                                     :default false]])
+        {:keys [server
+                crawler
+                help]} options]
+    (cond
+      help    (print-help)
+      server  (println "Server mode")
+      crawler (let [records (crawl)]
+                (println "Found" (count records) "records...")
+                (println "Uploading full...")
+                (time
+                 (upload-full records))
+                (println "Uploading segments...")
+                (time
+                 (upload-segments records)))
+      :else (print-help summary "You need to provide a mode argument."))))
