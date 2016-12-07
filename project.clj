@@ -10,14 +10,22 @@
                  [amazonica "0.3.75"]
                  [me.raynes/fs "1.4.6"]
                  [environ "1.1.0"]
+                 [compojure "1.5.1"]
+                 [http-kit "2.2.0"]
+                 [org.clojure/tools.cli "0.3.5"]
                  ;;
-                 [org.clojure/clojurescript  "1.9.89"]
-                 [reagent "0.6.0-rc"]
+                 [com.google.guava/guava "19.0"]
+                 [org.clojure/clojurescript  "1.9.89" :exclusions [com.google.guava/guava]]
+                 [reagent "0.6.0-rc" :exclusions [com.google.guava/guava]]
                  [binaryage/devtools "0.6.1"]
-                 [re-frame "0.8.0"]
+                 [re-frame "0.8.0" :exclusions [com.google.guava/guava]]
                  [re-com "0.8.3"]
                  [garden "1.3.2"]
-                 [ns-tracker "0.3.0"]]
+                 [ns-tracker "0.3.0"]
+                 [cljs-http "0.1.41"]
+                 [com.cognitect/transit-cljs "0.8.239"]
+                 ;;
+                 [cljsjs/moment "2.10.6-4"]]
   :main ^:skip-aot sbsk.core
   :target-path "target/%s"
 
@@ -38,11 +46,10 @@
                                     :pretty-print? true}}]}
 
   :profiles {:uberjar {:aot :all}
-             :dev
-             {:dependencies []
-
-              :plugins      [[lein-figwheel "0.5.4-3"]]
-              }}
+             :dev {:dependencies []
+                   :plugins      [[lein-figwheel "0.5.4-3"]]}
+             :data {:source-paths ["data-src"]
+                    :dependencies [[amazonica "0.3.73" :exclusions [com.google.guava/guava]]]}}
 
   :cljsbuild {:builds
               [{:id           "dev"
@@ -66,4 +73,5 @@
                 :source-paths ["src/cljs" "test/cljs"]
                 :compiler     {:output-to     "resources/public/js/compiled/test.js"
                                :main          witan-viz.runner
-                               :optimizations :none}}]})
+                               :optimizations :none}}]}
+  :aliases {"upload-data" ["with-profile" "data" "run" "-m" "sbsk.upload-data"]})

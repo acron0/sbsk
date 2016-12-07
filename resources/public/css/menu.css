@@ -1,6 +1,6 @@
 .custom-wrapper {
   background-color: #fff;
-  margin-bottom: 1em;
+  margin-bottom: 0.3em;
   -webkit-font-smoothing: antialiased;
   height: 97px;
   overflow: hidden;
@@ -29,13 +29,13 @@
   height: 19em;
 }
 
-.custom-menu-3 {
-  text-align: right;
+.custom-menu {
+  display: inline-table;
 }
 
 .custom-title {
-  display:inline;
   margin: 0px 0px 0px 0px;
+  min-width: 300px;
 }
 
 .custom-toggle {
@@ -84,18 +84,17 @@
   transform: rotate(-45deg);
 }
 
-@media (max-width: 43em) {
-
-  .custom-menu-3 {
-    text-align: left;
-  }
+@media (max-width: 48em) {
 
   .custom-toggle {
     display: block;
   }
 
   .custom-title{
-    display:none;
+    font-size: 24px;
+    position: absolute;
+    top: 32px;
+    left: 108px;
   }
 
   .custom-can-transform {
