@@ -7,7 +7,8 @@
             [clj-time.core :as t]
             [clj-time.format :as tf]
             [me.raynes.fs :as fs]
-            [environ.core :refer [env]])
+            [environ.core :refer [env]]
+            [clojure.tools.cli :refer [cli]])
   (:import [java.io.StringBufferInputStream])
   (:gen-class))
 
@@ -118,12 +119,18 @@
         (recur (inc n))))))
 
 (defn -main
-  []
-  (let [records (crawl)]
-    (println "Found" (count records) "records...")
-    (println "Uploading full...")
-    (time
-     (upload-full records))
-    (println "Uploading segments...")
-    (time
-     (upload-segments records))))
+  [& args]
+  (let [[opts args banner] (cli args ["-s" "--server"
+                                      :default true
+                                      :flag true])]
+    (println opts)
+    (if (:server opts)
+      (println "Server mode")
+      (let [records (crawl)]
+        (println "Found" (count records) "records...")
+        (println "Uploading full...")
+        (time
+         (upload-full records))
+        (println "Uploading segments...")
+        (time
+         (upload-segments records))))))

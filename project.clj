@@ -10,6 +10,9 @@
                  [amazonica "0.3.75"]
                  [me.raynes/fs "1.4.6"]
                  [environ "1.1.0"]
+                 [compojure "1.5.1"]
+                 [http-kit "2.2.0"]
+                 [org.clojure/tools.cli "0.3.5"]
                  ;;
                  [com.google.guava/guava "19.0"]
                  [org.clojure/clojurescript  "1.9.89" :exclusions [com.google.guava/guava]]
