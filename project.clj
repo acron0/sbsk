@@ -1,4 +1,4 @@
-(defproject sbsk "0.1.0-SNAPSHOT"
+(defproject sbsk "0.1.0"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -74,4 +74,12 @@
                 :compiler     {:output-to     "resources/public/js/compiled/test.js"
                                :main          witan-viz.runner
                                :optimizations :none}}]}
-  :aliases {"upload-data" ["with-profile" "data" "run" "-m" "sbsk.upload-data"]})
+  :aliases {"upload-data" ["with-profile" "data" "run" "-m" "sbsk.upload-data"]}
+  :release-tasks [["vcs" "assert-committed"]
+                  ["change" "version"
+                   "leiningen.release/bump-version" "release"]
+                  ["vcs" "commit"]
+                  ["vcs" "tag"]
+                  ["change" "version" "leiningen.release/bump-version"]
+                  ["vcs" "commit"]
+                  ["vcs" "push"]])
