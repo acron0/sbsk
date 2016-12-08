@@ -94,7 +94,8 @@
         input-stream (java.io.ByteArrayInputStream. some-bytes)
         key-name (apply str data-name-parts)]
     (println "-" key-name (count some-bytes))
-    (s3/put-object :bucket-name bucket-full-name
+    (s3/put-object creds
+                   :bucket-name bucket-full-name
                    :key key-name
                    :input-stream input-stream
                    :metadata {:content-length (count some-bytes)}
