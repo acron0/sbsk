@@ -16,6 +16,7 @@
 
   </head>
   <body>
+      <div id="app"></div>
       <div class="custom-wrapper pure-g" id="menu">
           <div class="pure-u-1">
               <div class="pure-menu pure-menu-horizontal">
@@ -43,12 +44,12 @@
               </div>
           </div>
       </div>
-      <div id="app"></div>
       <script src="js/compiled/app.js"></script>
       <script>sbsk.core.init();</script>
       <script>
        (function (window, document) {
            var menu = document.getElementById('menu'),
+               app = document.getElementById('app'),
                WINDOW_CHANGE_EVENT = ('onorientationchange' in window) ? 'orientationchange':'resize';
 
            function toggleHorizontal() {
@@ -70,6 +71,7 @@
                    toggleHorizontal();
                }
                menu.classList.toggle('open');
+               app.classList.toggle('open');
                document.getElementById('toggle').classList.toggle('x');
            };
 

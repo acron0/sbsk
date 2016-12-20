@@ -19,7 +19,10 @@
     :position :absolute
     :top (px 98)
     :bottom (px 0)
-    :width (percent 100)}]
+    :width (percent 100)
+    :transition (transition :top "0.5s")}
+   [:&.open
+    {:top (em 19)}]]
   [:*
    {:font-family base-font}]
   [:body
@@ -43,6 +46,7 @@
      :background-color 'transparent
      :border-radius (px 0)
      :outline :none
+     :width (percent 100)
      :font-size (em 1.3)}]
    [:i
     {:font-size (em 2)

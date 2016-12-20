@@ -5,6 +5,7 @@
             [cljsjs.moment]))
 
 (def timeout (atom nil))
+(def desc-title-len 24)
 
 (defn get-iframe-dims
   []
@@ -51,7 +52,7 @@
                       [re-com/v-box
                        :class "video-thumb"
                        :children [[:div.title
-                                   (:title video)]
+                                   (or (:title video) (str (subs (:description video) 0 desc-title-len) "..."))]
                                   [:div.thumb
                                    {:on-click #(re-frame/dispatch [:open-video (:id video)])}
                                    [:img
@@ -91,7 +92,7 @@
       :align :center
       :class "video-view"
       :children [[re-com/title
-                  :label title
+                  :label (or title (str (subs description 0 desc-title-len) "..."))
                   :level :level1]
                  [re-com/label
                   :width "70%"
