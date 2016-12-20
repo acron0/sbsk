@@ -16,6 +16,11 @@
         h'     (* (* w aspect) mult)]
     [w' h']))
 
+(defn clip-string
+  [s]
+  (let [end (.indexOf s " " desc-title-len)]
+    (str (subs s 0 end) "...")))
+
 (defn on-search-change
   [v]
   (when @timeout
@@ -52,7 +57,7 @@
                       [re-com/v-box
                        :class "video-thumb"
                        :children [[:div.title
-                                   (or (:title video) (str (subs (:description video) 0 desc-title-len) "..."))]
+                                   (or (:title video) (clip-string (:description video)))]
                                   [:div.thumb
                                    {:on-click #(re-frame/dispatch [:open-video (:id video)])}
                                    [:img
@@ -92,7 +97,7 @@
       :align :center
       :class "video-view"
       :children [[re-com/title
-                  :label (or title (str (subs description 0 desc-title-len) "..."))
+                  :label (or title (clip-string description))
                   :level :level1]
                  [re-com/label
                   :width "70%"
