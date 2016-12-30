@@ -40,43 +40,58 @@
                     :model search
                     :placeholder "Enter a search term"}]]])))
 
+(defn videos-by-month
+  [videos]
+  (let [month (fn [video] (.format (js/moment
+                                    (:created-at video)
+                                    "YYYYMMDD'T'HHmmss'Z'") "MMMM, YYYY"))]
+    (group-by month videos)))
+
 (defn search-results
   [videos]
   (let [search (re-frame/subscribe [:search])
         loading-more? (re-frame/subscribe [:loading-more?])]
     (fn [videos]
-      [re-com/v-box
-       :class "search-results"
-       :children [[re-com/title
-                   :level :level3
-                   :label "Recent Videos"]
-                  [:div.pure-g
-                   (for [video videos]
-                     ^{:key (:id video)}
-                     [:div.pure-u-1.pure-u-md-1-2.pure-u-lg-1-3
-                      [re-com/v-box
-                       :class "video-thumb"
-                       :children [[:div.title
-                                   (or (:title video) (clip-string (:description video)))]
-                                  [:div.thumb
-                                   {:on-click #(re-frame/dispatch [:open-video (:id video)])}
-                                   [:img
-                                    {:src (:thumb video)}]
-                                   [:div.play-icon]]
-                                  [:div.date
-                                   (.calendar (js/moment
-                                               (:created-at video)
-                                               "YYYYMMDD'T'HHmmss'Z'"))]]]])]
-                  [:div
-                   (when-not @search
-                     [re-com/h-box
-                      :justify :center
-                      :children [(if @loading-more?
-                                   [re-com/throbber
-                                    :size :small]
-                                   [re-com/button
-                                    :label "Load More"
-                                    :on-click #(re-frame/dispatch [:load-more-videos])])]])]]])))
+      (let [videos-by-month (videos-by-month videos)]
+        [re-com/v-box
+         :class "search-results"
+         :children [[re-com/title
+                     :level :level2
+                     :label "Recent Videos"]
+                    [:div.pure-g
+                     (for [month (keys videos-by-month)]
+                       ^{:key month}
+                       [:div
+                        {:style {:width "100%"}}
+                        [re-com/title
+                         :level :level3
+                         :label month]
+                        (for [video (get videos-by-month month)]
+                          ^{:key (:id video)}
+                          [:div.pure-u-1.pure-u-md-1-2.pure-u-lg-1-3
+                           [re-com/v-box
+                            :class "video-thumb"
+                            :children [[:div.title
+                                        (or (:title video) (clip-string (:description video)))]
+                                       [:div.thumb
+                                        {:on-click #(re-frame/dispatch [:open-video (:id video)])}
+                                        [:img
+                                         {:src (:thumb video)}]
+                                        [:div.play-icon]]
+                                       [:div.date
+                                        (.calendar (js/moment
+                                                    (:created-at video)
+                                                    "YYYYMMDD'T'HHmmss'Z'"))]]]])])]
+                    [:div
+                     (when-not @search
+                       [re-com/h-box
+                        :justify :center
+                        :children [(if @loading-more?
+                                     [re-com/throbber
+                                      :size :small]
+                                     [re-com/button
+                                      :label "Load More"
+                                      :on-click #(re-frame/dispatch [:load-more-videos])])]])]]]))))
 
 ;; <iframe src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fspecialbooksbyspecialkids%2Fvideos%2F837204176381564%2F&show_text=0&width=560" width="560" height="315" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true" allowFullScreen="true"></iframe>
 
