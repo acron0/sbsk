@@ -21,8 +21,14 @@
   padding-left: 4px;
 }
 
+.pure-menu-link:hover {
+  background-color: transparent;
+  text-decoration: none;
+  color: #ccc;
+}
+
 .custom-can-transform {
-  display:inline-table;
+  display: inline-table;
 }
 
 .custom-wrapper.open {
