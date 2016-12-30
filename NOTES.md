@@ -18,8 +18,8 @@ java -jar /home/sbsk/sbsk-app/target/uberjar/sbsk.jar -c
 TODO
 # Search
 # Categories / Tags / Locations (Metadata)
-- Not obvious they're videos
 - No categories?
-- What order are they in?
 - Intro blurb
 - Description Overlay
+- What do to about sizes?
+- Better description-as-title ellipsis

@@ -8,7 +8,8 @@
             [clj-time.format :as tf]
             [me.raynes.fs :as fs]
             [environ.core :refer [env]]
-            [clojure.tools.cli :refer [parse-opts]])
+            [clojure.tools.cli :refer [parse-opts]]
+            [yada.yada.lean :refer [resource listener]])
   (:import [java.io.StringBufferInputStream])
   (:gen-class))
 
@@ -127,6 +128,21 @@
    (println m)
    (print-help s)))
 
+(defn run-server
+  []
+  (let [s (listener
+           ["/" (resource
+                 {:methods
+                  {:get
+                   {:produces "text/plain"
+                    :response "Hello World!"}}})]
+           {:port 3000})]
+    (try
+      (while true
+        (Thread/sleep 0))
+      (finally
+        ((:close s))))))
+
 (defn -main
   [& args]
   (let [{:keys [options summary]} (parse-opts args [["-s" "--server" "Server mode"
@@ -138,7 +154,7 @@
                 help]} options]
     (cond
       help    (print-help)
-      server  (println "Server mode")
+      server  (run-server)
       crawler (let [records (crawl)]
                 (println "Found" (count records) "records...")
                 (println "Uploading full...")

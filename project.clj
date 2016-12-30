@@ -23,6 +23,9 @@
                  [garden "1.3.2"]
                  [ns-tracker "0.3.0"]
                  [cljs-http "0.1.41"]
+                 [yada "1.1.46"]
+                 [aleph "0.4.1"]
+                 [bidi "2.0.9"]
                  [com.cognitect/transit-cljs "0.8.239"]
                  ;;
                  [cljsjs/moment "2.10.6-4"]]
