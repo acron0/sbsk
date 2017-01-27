@@ -6,13 +6,16 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [clj-http "2.2.0"]
                  [clj-time "0.12.0"]
-                 [cheshire "5.6.3"]
+                 [com.fasterxml.jackson.core/jackson-core "2.8.5"]
+                 [com.fasterxml.jackson.core/jackson-databind "2.8.5"]
+                 [cheshire "5.6.3" :exclusions [com.fasterxml.jackson.core/jackson-core]]
                  [amazonica "0.3.75"]
                  [me.raynes/fs "1.4.6"]
                  [environ "1.1.0"]
                  [compojure "1.5.1"]
                  [http-kit "2.2.0"]
                  [org.clojure/tools.cli "0.3.5"]
+                 [ring "1.5.1"]
                  ;;
                  [com.google.guava/guava "19.0"]
                  [org.clojure/clojurescript  "1.9.89" :exclusions [com.google.guava/guava]]
@@ -23,9 +26,6 @@
                  [garden "1.3.2"]
                  [ns-tracker "0.3.0"]
                  [cljs-http "0.1.41"]
-                 [yada "1.1.46"]
-                 [aleph "0.4.1"]
-                 [bidi "2.0.9"]
                  [com.cognitect/transit-cljs "0.8.239"]
                  ;;
                  [cljsjs/moment "2.10.6-4"]]
@@ -53,7 +53,8 @@
              :dev {:dependencies []
                    :plugins      [[lein-figwheel "0.5.4-3"]]}
              :data {:source-paths ["data-src"]
-                    :dependencies [[amazonica "0.3.73" :exclusions [com.google.guava/guava]]]}}
+                    :dependencies [[amazonica "0.3.73" :exclusions [com.google.guava/guava
+                                                                    com.fasterxml.jackson.core/jackson-annotations]]]}}
 
   :cljsbuild {:builds
               [{:id           "dev"

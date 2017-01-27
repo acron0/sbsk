@@ -9,7 +9,7 @@
             [me.raynes.fs :as fs]
             [environ.core :refer [env]]
             [clojure.tools.cli :refer [parse-opts]]
-            [yada.yada.lean :refer [resource listener]])
+            [ring.adapter.jetty :refer [run-jetty]])
   (:import [java.io.StringBufferInputStream])
   (:gen-class))
 
@@ -128,27 +128,40 @@
    (println m)
    (print-help s)))
 
+(defn get-query
+  [ctx]
+  (second (re-find #"q=(.+)" (get ctx :query-string))))
+
+(defn do-search
+  [ctx]
+  (let [q (get-query ctx)]
+    (generate-string {:results "123"})))
+
+(defn reload-database
+  [ctx]
+  (println "Reloading database...")
+  "{}")
+
+(defn search-handler [request]
+  {:status 200
+   :headers {"Content-Type" "application/json"}
+   :body (generate-string {:foo (get-query request)})})
+
+(defn reload-handler [request]
+  {:status 200})
+
 (defn run-server
   []
-  (let [s (listener
-           ["/" (resource
-                 {:methods
-                  {:get
-                   {:produces "text/plain"
-                    :response "Hello World!"}}})]
-           {:port 3000})]
-    (try
-      (while true
-        (Thread/sleep 0))
-      (finally
-        ((:close s))))))
+  (future (run-jetty search-handler {:port 3000}))
+  (future (run-jetty reload-handler {:port 4000})))
 
 (defn -main
   [& args]
-  (let [{:keys [options summary]} (parse-opts args [["-s" "--server" "Server mode"
-                                                     :default false]
-                                                    ["-c" "--crawler" "Crawler mode"
-                                                     :default false]])
+  (let [{:keys [options summary]}
+        (parse-opts args [["-s" "--server" "Server mode"
+                           :default false]
+                          ["-c" "--crawler" "Crawler mode"
+                           :default false]])
         {:keys [server
                 crawler
                 help]} options]
