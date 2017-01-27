@@ -11,7 +11,8 @@
             [clojure.tools.cli :refer [parse-opts]]
             [ring.adapter.jetty :refer [run-jetty]]
             [caponia.index :as capi]
-            [caponia.query :as capq])
+            [caponia.query :as capq]
+            [ring.middleware.cors :refer [wrap-cors]])
   (:import [java.io.StringBufferInputStream])
   (:gen-class))
 
@@ -165,7 +166,7 @@
 
 (defn do-search
   [query]
-  (if @index
+  (if (and @index (not (clojure.string/blank? query)))
     (let [results (capq/do-search @index query :or)]
       (mapv (fn [[id _]]
               (get @records id)) results))
@@ -184,7 +185,9 @@
 (defn run-server
   []
   (reload-database)
-  (future (run-jetty search-handler {:port 3000}))
+  (future (run-jetty (wrap-cors search-handler
+                                :access-control-allow-origin [#".*"]
+                                :access-control-allow-methods [:get]) {:port 3000}))
   (future (run-jetty reload-database-handler {:port 4000})))
 
 (defn -main

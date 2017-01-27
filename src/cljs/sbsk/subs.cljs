@@ -10,7 +10,9 @@
 (re-frame/reg-sub
  :videos
  (fn [db]
-   (:videos db)))
+   {:all-videos (:videos db)
+    :search-results (:search-result-videos db)
+    :search-pending? (:search-pending? db)}))
 
 (re-frame/reg-sub
  :current-video

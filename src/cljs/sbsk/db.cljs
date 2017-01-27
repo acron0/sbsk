@@ -12,10 +12,12 @@
 
 (def empty-db
   {:videos []
+   :search-result-videos []
    :search nil
    :current-video nil
    :latest-data -1
-   :loading-more? false})
+   :loading-more? false
+   :search-pending? false})
 
 (defn keywordize
   [x]
@@ -46,3 +48,20 @@
         new-db (assoc db :loading-more? true)]
     (fetch-videos n)
     new-db))
+
+(defn search-videos
+  [db query]
+  (let [new-db (assoc db :search-pending? true)]
+    (when (> (count query) 3)
+      (go (let [result (<! (http/get "http://localhost:3000"
+                                     {:query-params {:q query}
+                                      :with-credentials? false}))]
+            (when (:success result)
+              (re-frame/dispatch [:search-results (:body result)])))))
+    new-db))
+
+(defn reset-search-results
+  [db results]
+  (assoc db
+         :search-pending? false
+         :search-result-videos results))
