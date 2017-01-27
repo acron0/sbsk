@@ -16,6 +16,7 @@
                  [http-kit "2.2.0"]
                  [org.clojure/tools.cli "0.3.5"]
                  [ring "1.5.1"]
+                 [caponia "0.3.3"]
                  ;;
                  [com.google.guava/guava "19.0"]
                  [org.clojure/clojurescript  "1.9.89" :exclusions [com.google.guava/guava]]

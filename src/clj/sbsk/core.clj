@@ -9,7 +9,9 @@
             [me.raynes.fs :as fs]
             [environ.core :refer [env]]
             [clojure.tools.cli :refer [parse-opts]]
-            [ring.adapter.jetty :refer [run-jetty]])
+            [ring.adapter.jetty :refer [run-jetty]]
+            [caponia.index :as capi]
+            [caponia.query :as capq])
   (:import [java.io.StringBufferInputStream])
   (:gen-class))
 
@@ -25,6 +27,9 @@
 (def data-name-parts   ["data" ".json"])
 (def bucket-seg-name   "sbsk-data-segmented")
 (def segments-per-file 10)
+;;
+(def records (atom {}))
+(def index (atom nil))
 
 (defn coerce-time
   [t]
@@ -90,6 +95,7 @@
 
 (defn upload-full
   [records]
+  ;; TODO make this a caponia index to save, rather than a json file.
   (let [as-json (generate-string records)
         some-bytes (.getBytes as-json "UTF-8")
         input-stream (java.io.ByteArrayInputStream. some-bytes)
@@ -132,28 +138,54 @@
   [ctx]
   (second (re-find #"q=(.+)" (get ctx :query-string))))
 
-(defn do-search
-  [ctx]
-  (let [q (get-query ctx)]
-    (generate-string {:results "123"})))
-
 (defn reload-database
-  [ctx]
+  []
   (println "Reloading database...")
-  "{}")
+  (let [data-str (s3/get-object-as-string
+                  creds
+                  bucket-full-name (apply str data-name-parts))
+        data (parse-string data-str keyword)]
+    (println "Downloaded" (count data) "records...")
+    ;; create lookup
+    (reset! records (reduce (fn [a e] (assoc a (:id e) e)) {} data))
+    ;; load index
+    (reset! index (capi/make-index))
+    (run! (fn [[id record]]
+            (capi/index-text @index id (str (:title record)
+                                            " "
+                                            (:description record)))) @records)
+    (println "Done")))
+
+(defn reload-database-handler
+  [ctx]
+  (if (= (:request-method ctx) :post)
+    (do (future (reload-database))
+        {:staus 201})
+    {:status 405}))
+
+(defn do-search
+  [query]
+  (if @index
+    (let [results (capq/do-search @index query :or)]
+      (mapv (fn [[id _]]
+              (get @records id)) results))
+    []))
 
 (defn search-handler [request]
-  {:status 200
-   :headers {"Content-Type" "application/json"}
-   :body (generate-string {:foo (get-query request)})})
-
-(defn reload-handler [request]
-  {:status 200})
+  (if @index
+    {:status 200
+     :headers {"Content-Type" "application/json"}
+     :body (-> request
+               (get-query)
+               (do-search)
+               (generate-string))}
+    {:status 503}))
 
 (defn run-server
   []
+  (reload-database)
   (future (run-jetty search-handler {:port 3000}))
-  (future (run-jetty reload-handler {:port 4000})))
+  (future (run-jetty reload-database-handler {:port 4000})))
 
 (defn -main
   [& args]
