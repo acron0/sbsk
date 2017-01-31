@@ -4,7 +4,8 @@
             [cljs-http.client :as http]
             [cljs.core.async :refer [<!]]
             [cognitect.transit :as t]))
-
+(def server-address
+  "ec2-54-89-240-173.compute-1.amazonaws.com")
 (def data-loc-prefix
   "https://s3-us-west-2.amazonaws.com/sbsk-data-segmented/data.")
 (def data-loc-suffix
@@ -55,7 +56,7 @@
                       :search-pending? true
                       :search query)]
     (when (> (count query) 3)
-      (go (let [result (<! (http/get "http://localhost:3000"
+      (go (let [result (<! (http/get (str "http://" server-address ":3000")
                                      {:query-params {:q query}
                                       :with-credentials? false}))]
             (when (:success result)
