@@ -182,13 +182,25 @@
                (generate-string))}
     {:status 503}))
 
+(def servers (atom []))
+
+(defn stop-server
+  []
+  (run! #(.stop %) @servers)
+  (reset! servers []))
+
 (defn run-server
   []
   (reload-database)
-  (future (run-jetty (wrap-cors search-handler
-                                :access-control-allow-origin [#".*"]
-                                :access-control-allow-methods [:get]) {:port 3000}))
-  (future (run-jetty reload-database-handler {:port 4000})))
+  (reset! servers
+          [(run-jetty (wrap-cors search-handler
+                                 :access-control-allow-origin [#".*"]
+                                 :access-control-allow-methods [:get]) {:port 3000
+                                                                        :daemon? true
+                                                                        :join? false})
+           (run-jetty reload-database-handler {:port 4000
+                                               :daemon? true
+                                               :join? false})]))
 
 (defn -main
   [& args]
