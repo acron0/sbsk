@@ -51,7 +51,9 @@
 
 (defn search-videos
   [db query]
-  (let [new-db (assoc db :search-pending? true)]
+  (let [new-db (assoc db
+                      :search-pending? true
+                      :search query)]
     (when (> (count query) 3)
       (go (let [result (<! (http/get "http://localhost:3000"
                                      {:query-params {:q query}

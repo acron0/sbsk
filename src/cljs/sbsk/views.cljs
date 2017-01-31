@@ -28,7 +28,8 @@
   (reset! timeout (js/setTimeout #(re-frame/dispatch [:search v]) 600)))
 
 (defn search-bar []
-  (let [search (re-frame/subscribe [:search])]
+  (let [search (re-frame/subscribe [:search])
+        cached (r/atom (or @search ""))]
     (fn []
       [re-com/h-box
        :class "search-bar"
@@ -36,8 +37,10 @@
                    :child [:i {:class "zmdi zmdi-hc-fw zmdi-search"}]]
                   [:input
                    {:type "text"
-                    :on-change #(on-search-change (.-value (.-target %)))
-                    :model search
+                    :on-change #(let [value (.-value (.-target %))]
+                                  (reset! cached value)
+                                  (on-search-change value))
+                    :value @cached
                     :placeholder "Enter a search term"}]]])))
 
 (defn videos-by-month
