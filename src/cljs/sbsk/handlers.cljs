@@ -18,8 +18,8 @@
 
 (re-frame/reg-event-db
  :open-video
- (fn  [db [_ video-id]]
-   (assoc db :current-video (some #(when (= (:id %) video-id) %) (:videos db)))))
+ (fn  [db [_ video-id k]]
+   (assoc db :current-video (some #(when (= (:id %) video-id) %) (get db k)))))
 
 (re-frame/reg-event-db
  :close-video
@@ -30,3 +30,13 @@
  :load-more-videos
  (fn  [db [_]]
    (db/load-more-videos db)))
+
+(re-frame/reg-event-db
+ :search
+ (fn  [db [_ query]]
+   (db/search-videos db query)))
+
+(re-frame/reg-event-db
+ :search-results
+ (fn  [db [_ results]]
+   (db/reset-search-results db results)))

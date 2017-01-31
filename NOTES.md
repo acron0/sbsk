@@ -16,10 +16,11 @@ java -jar /home/sbsk/sbsk-app/target/uberjar/sbsk.jar -c
 * Add script to crontab
 
 TODO
+# Add db reload to crawler
+# DEPLOY!
 # Search
 # Categories / Tags / Locations (Metadata)
 - No categories?
 - Intro blurb
-- Description Overlay
+- Description on Overlay?
 - What do to about sizes?
-- Better description-as-title ellipsis
