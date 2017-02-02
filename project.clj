@@ -20,6 +20,7 @@
                  [ring "1.5.1"]
                  [ring-cors "0.1.9"]
                  [caponia "0.3.3"]
+                 [overtone/at-at "1.2.0"]
                  ;;
                  [com.google.guava/guava "19.0"]
                  [org.clojure/clojurescript  "1.9.89" :exclusions [com.google.guava/guava]]
@@ -54,8 +55,10 @@
                                     :pretty-print? true}}]}
 
   :profiles {:uberjar {:aot :all}
-             :dev {:dependencies []
-                   :plugins      [[lein-figwheel "0.5.4-3"]]}
+             :dev {:source-paths ["dev-src"]
+                   :dependencies [[org.clojure/tools.namespace "0.2.4"]]
+                   :plugins      [[lein-figwheel "0.5.4-3"]]
+                   :repl-options {:init-ns user}}
              :data {:source-paths ["data-src"]
                     :dependencies [[amazonica "0.3.73" :exclusions [com.google.guava/guava
                                                                     com.fasterxml.jackson.core/jackson-annotations]]]}}

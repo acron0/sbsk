@@ -1,5 +1,12 @@
-{:crawler  {}
- :database {}
+{:crawler  {:interval 60000
+            :hash-reset-interval 360000
+            :facebook {:app-id #env SBSK_FB_APP_ID
+                       :app-secret #env SBSK_FB_APP_SECRET
+                       :page-id "591976210904363"}
+            :bucket-full "sbsk-data"
+            :bucket-segments "sbsk-data-segmented"
+            :records-per-segment 10}
+ :database {:credentials {:profile "sbsk-fb-crawler"}}
  :admin    {}
  :search   {}
  :log      {}}
