@@ -1,0 +1,5 @@
+{:crawler  {}
+ :database {}
+ :admin    {}
+ :search   {}
+ :log      {}}

@@ -1,9 +1,13 @@
-(defproject sbsk "0.1.6-SNAPSHOT"
+(defproject sbsk "0.2.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
+                 [org.clojure/tools.cli "0.3.5"]
+                 [com.stuartsierra/component "0.3.2"]
+                 [com.taoensso/timbre "4.8.0"]
+                 [aero "1.0.3"]
                  [clj-http "2.2.0"]
                  [clj-time "0.12.0"]
                  [com.fasterxml.jackson.core/jackson-core "2.8.5"]
@@ -13,8 +17,6 @@
                  [me.raynes/fs "1.4.6"]
                  [environ "1.1.0"]
                  [compojure "1.5.1"]
-                 [http-kit "2.2.0"]
-                 [org.clojure/tools.cli "0.3.5"]
                  [ring "1.5.1"]
                  [ring-cors "0.1.9"]
                  [caponia "0.3.3"]

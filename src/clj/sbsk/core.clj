@@ -12,7 +12,15 @@
             [ring.adapter.jetty :refer [run-jetty]]
             [caponia.index :as capi]
             [caponia.query :as capq]
-            [ring.middleware.cors :refer [wrap-cors]])
+            [ring.middleware.cors :refer [wrap-cors]]
+            [aero.core :refer [read-config]]
+            [taoensso.timbre :as log]
+            ;;
+            [com.stuartsierra.component :as component]
+            [sbsk.components.search   :as search]
+            [sbsk.components.crawler  :as crawler]
+            [sbsk.components.admin    :as admin]
+            [sbsk.components.database :as database])
   (:import [java.io.StringBufferInputStream])
   (:gen-class))
 
@@ -202,25 +210,66 @@
                                                :daemon? true
                                                :join? false})]))
 
-(defn -main
-  [& args]
-  (let [{:keys [options summary]}
-        (parse-opts args [["-s" "--server" "Server mode"
-                           :default false]
-                          ["-c" "--crawler" "Crawler mode"
-                           :default false]])
-        {:keys [server
-                crawler
-                help]} options]
-    (cond
-      help    (print-help)
-      server  (run-server)
-      crawler (let [records (crawl)]
-                (println "Found" (count records) "records...")
-                (println "Uploading full...")
-                (time
-                 (upload-full records))
-                (println "Uploading segments...")
-                (time
-                 (upload-segments records)))
-      :else (print-help summary "You need to provide a mode argument."))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defn new-system [profile modes]
+  (let [config (read-config (clojure.java.io/resource "config.edn") {:profile profile})
+        _ (log/merge-config! (:log config))
+        _ (log/info "Profile:" profile)
+        mode-set (set modes)
+        mode-enabled? (fn [x] (contains? mode-set x))
+        components [[:database (database/map->Database (:database config))]
+                    ;;
+                    [:search   (when (mode-enabled? :search)
+                                 (component/using
+                                  (search/map->Search (:search config))
+                                  [:database]))]
+                    [:crawler (when (mode-enabled? :crawler)
+                                (component/using
+                                 (crawler/map->Crawler (:crawler config))
+                                 [:database]))]
+                    [:admin (when (mode-enabled? :admin)
+                              (component/using
+                               (admin/map->Admin (:admin config))
+                               [:database]))]]
+        filtered (reduce (fn [a [x y]] (if y (concat a [x y]) a)) [] components)]
+
+    (apply component/system-map filtered)))
+
+(defn -main [& args]
+  (let [profile (first args)
+        modes (map keyword (rest args))]
+
+    ;; https://stuartsierra.com/2015/05/27/clojure-uncaught-exceptions
+    (Thread/setDefaultUncaughtExceptionHandler
+     (reify Thread$UncaughtExceptionHandler
+       (uncaughtException [_ thread ex]
+         (log/error "Unhandled exception:" ex))))
+
+    (component/start
+     (new-system profile modes))))
+
+#_(defn -main
+    [& args]
+    (let [{:keys [options summary]}
+          (parse-opts args [["-s" "--server" "Server mode"
+                             :default false]
+                            ["-c" "--crawler" "Crawler mode"
+                             :default false]])
+          {:keys [server
+                  crawler
+                  help]} options]
+      (cond
+        help    (print-help)
+        server  (run-server)
+        crawler (let [records (crawl)]
+                  (println "Found" (count records) "records...")
+                  (println "Uploading full...")
+                  (time
+                   (upload-full records))
+                  (println "Uploading segments...")
+                  (time
+                   (upload-segments records)))
+        :else (print-help summary "You need to provide a mode argument."))))
