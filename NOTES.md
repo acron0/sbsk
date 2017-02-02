@@ -16,7 +16,7 @@ java -jar /home/sbsk/sbsk-app/target/uberjar/sbsk.jar -c
 * Add script to crontab
 
 TODO
-# Add db reload to crawler
+# Add db reload to crawler script!!
 # DEPLOY!
 # Search
 # Categories / Tags / Locations (Metadata)
@@ -24,3 +24,6 @@ TODO
 - Intro blurb
 - Description on Overlay?
 - What do to about sizes?
+
+
+search "ec2-54-89-240-173.compute-1.amazonaws.com"
