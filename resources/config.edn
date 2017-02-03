@@ -1,5 +1,5 @@
-{:crawler  {:interval 60000
-            :hash-reset-interval 360000
+{:crawler  {:interval 21600000
+            :hash-reset-interval 21600000
             :facebook {:app-id #env SBSK_FB_APP_ID
                        :app-secret #env SBSK_FB_APP_SECRET
                        :page-id "591976210904363"}
