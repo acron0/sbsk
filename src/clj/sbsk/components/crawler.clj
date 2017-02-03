@@ -92,7 +92,7 @@
   (fn []
     (log/debug "Starting crawler process...")
     (let [records (map scrub (fetch app-id app-secret page-id))
-          new-hash (hash records)]
+          new-hash #_(hash records) nil] ;; hash is unreliable so disable until we can do this better
       (if (not= new-hash @hash-atom)
         (do
           (log/info "New hash was observed:" new-hash)
