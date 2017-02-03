@@ -8,5 +8,7 @@
             :records-per-segment 10}
  :database {:credentials {:profile "sbsk-fb-crawler"}}
  :admin    {}
- :search   {}
+ :search   {:bucket-full "sbsk-data"
+            :secret-header-name #or [#env SBSK_SECRET_HEADER_NAME "X-SBSK-Secret"]
+            :secret-header-value #or [#env SBSK_SECRET_HEADER_VALUE "sdiklaicepsybskooblaiceps"]}
  :log      {}}

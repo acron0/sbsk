@@ -27,8 +27,8 @@
 
 (defn go
   "Initializes the current development system and starts it running."
-  [& modes]
-  (init (or modes '(:crawler)))
+  []
+  (init [:search])
   (start))
 
 (defn reset []

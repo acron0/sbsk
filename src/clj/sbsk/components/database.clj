@@ -9,7 +9,15 @@
 (defprotocol Writer
   (write-record! [this table key-name record]))
 
+(defprotocol Reader
+  (read-record-as-string [this table key-name]))
+
 (defrecord Database [credentials]
+  Reader
+  (read-record-as-string [this table key-name]
+    (s3/get-object-as-string
+     credentials
+     table key-name))
   Writer
   (write-record! [this table key-name record]
     (let [as-json (generate-string record)
