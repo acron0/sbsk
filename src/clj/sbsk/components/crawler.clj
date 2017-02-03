@@ -92,18 +92,19 @@
   (fn []
     (log/debug "Starting crawler process...")
     (let [records (map scrub (fetch app-id app-secret page-id))
-          new-hash #_(hash records) nil] ;; hash is unreliable so disable until we can do this better
-      (if (not= new-hash @hash-atom)
-        (do
-          (log/info "New hash was observed:" new-hash)
-          (log/info "Found" (count records) "records...")
-          (log/info "Uploading full...")
-          (upload-full records database bucket-full)
-          (log/info "Uploading"
-                    (int (Math/ceil (/ (count records) records-per-segment)))
-                    "segments...")
-          (upload-segments records database bucket-segments records-per-segment))
-        (log/debug "No change observed"))
+          new-hash (hash records)]
+      ;; hash is unreliable so disable until we can do this better
+      (if true #_(not= new-hash @hash-atom)
+          (do
+            (log/info "New hash was observed:" new-hash)
+            (log/info "Found" (count records) "records...")
+            (log/info "Uploading full...")
+            (upload-full records database bucket-full)
+            (log/info "Uploading"
+                      (int (Math/ceil (/ (count records) records-per-segment)))
+                      "segments...")
+            (upload-segments records database bucket-segments records-per-segment))
+          (log/debug "No change observed"))
       (reset! hash-atom new-hash))))
 
 (defrecord Crawler [database
