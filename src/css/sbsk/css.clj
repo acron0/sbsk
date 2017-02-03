@@ -16,20 +16,18 @@
 (defstyles screen
   [:#app
    {:overflow-y :auto
+    :overflow-x :hidden
     :position :absolute
-    :top (px 98)
-    :bottom (px 0)
-    :width (percent 100)
-    :transition (transition :top "0.5s")}
-   [:&.open
-    {:top (em 19)}]]
+    :top (px 7)
+    :width (percent 100)}]
   [:*
    {:font-family base-font}]
   [:body
    {:overflow :hidden}]
   [:.level1 {:font-family base-font
-             :font-size (px 40)
-             :letter-spacing (px 1)}]
+             :font-size (px 36)
+             :letter-spacing (px 1)
+             :color "#605E5E"}]
   [:.level3 {:font-family base-font
              :font-size (px 20)}]
   [:.loading
@@ -38,6 +36,19 @@
     :top (px 0)
     :left (px 0)
     :right (px 0)}]
+  [:.header
+   {:width (percent 100)
+    :min-width (px 680)}
+   [:img
+    {:width (px 125)
+     :height (px 128)}]
+   [:.menu-item
+    {:margin [[(em 0.8) (em 1)]]
+     :font-size (px 18)
+     :color "#A0A09F"}]]
+
+
+
   [:.search-bar
    {:margin [[(px 10) (px 0)]]}
    [:input
