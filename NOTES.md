@@ -17,4 +17,6 @@ java -jar /home/sbsk/sbsk-app/target/uberjar/sbsk.jar -c
 
 ###########################
 
-Video highlight size: 194 x 150
+TODO
+----
+remove 'highlight' size - replace with 'small'

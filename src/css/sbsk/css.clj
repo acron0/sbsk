@@ -97,7 +97,11 @@
      :line-height 1.3
      :padding 0
      :margin 0
-     :cursor :pointer}]]
+     :cursor :pointer}]
+   [:.video-packed-display]
+   [:.video-packed]
+   [:.load-more
+    {:margin (em 1)}]]
 
   ;; General
   [:.clickable-string
@@ -105,8 +109,15 @@
     :transition (transition :color "0.4s")}
    [:&:hover
     {:color "#CCC"}]]
+  [:.video-thumb
+   [:img {:cursor :pointer
+          :transition (transition :box-shadow thumb-hover-time
+                                  :opacity thumb-hover-time)}
+    [:&:hover
+     {:box-shadow [[(px 4) (px 4) (px 8) "#888"]]
+      :opacity 0.9}]]]
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   [:.search-bar
    {:margin [[(px 10) (px 0)]]}

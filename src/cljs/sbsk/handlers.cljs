@@ -12,6 +12,8 @@
  (fn  [db [_ videos latest-data]]
    (-> db
        (update :videos concat videos)
+       (update :videos #(sort-by :created-at %))
+       (update :videos reverse)
        (assoc :latest-data latest-data
               :loading-more? false))
    #_(re-frame/dispatch-sync [:refresh-search])))

@@ -20,7 +20,8 @@
    :current-video nil
    :latest-data -1
    :loading-more? false
-   :search-pending? false})
+   :search-pending? false
+   :isotope nil})
 
 (defn keywordize
   [x]
