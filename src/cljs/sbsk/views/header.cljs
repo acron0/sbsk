@@ -16,9 +16,9 @@
     [re-com/h-box
      :children [(doall
                  (for [[item address] links]
-                   [re-com/label
-                    :class "menu-item"
-                    :label (str/upper-case (name item))]))]]))
+                   ^{:key (name item)}
+                   [:a.clickable-string.menu-item {:href address}
+                    (str/upper-case (name item))]))]]))
 
 (defn panel
   []

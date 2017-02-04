@@ -4,22 +4,15 @@
             [re-com.core :as re-com]
             ;;
             [sbsk.views.header :as header]
+            [sbsk.views.footer :as footer]
+            [sbsk.views.body :as body]
             ;;
             [cljsjs.moment]))
 
 (defn main-panel []
-  (let [videos (re-frame/subscribe [:videos])
-        current-video (re-frame/subscribe [:current-video])]
+  (let [current-video (re-frame/subscribe [:current-video])]
     (fn []
       [re-com/v-box
        :children [(header/panel)
-                  (if (or
-                       (not-empty (:all-videos @videos))
-                       (not-empty (:search-results @videos))) [:span "search view"]
-                      [re-com/box
-                       :height "100%"
-                       :width "100%"
-                       :justify :center
-                       :align :center
-                       :child [re-com/throbber
-                               :size :large]])]])))
+                  [body/panel]
+                  (footer/panel)]])))

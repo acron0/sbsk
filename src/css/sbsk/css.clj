@@ -1,10 +1,15 @@
 (ns sbsk.css
   (:require [garden.def :refer [defstyles]]
+            [garden.color :as c]
             [garden.units :refer [px em percent vw vh]]))
 
 (def base-font "'Raleway', sans-serif")
 (def thumb-scale 1.4)
 (def thumb-hover-time "0.2s")
+(def content-width 980)
+(def title-font-colour "#605E5E")
+(def menu-item-colour "#A0A09F")
+(def header-bar-bg-colour "#605E5E")
 
 (defn transition
   [& args]
@@ -22,20 +27,21 @@
     :width (percent 100)}]
   [:*
    {:font-family base-font}]
-  [:body
-   {:overflow :hidden}]
   [:.level1 {:font-family base-font
              :font-size (px 36)
              :letter-spacing (px 1)
-             :color "#605E5E"}]
+             :color title-font-colour}]
   [:.level3 {:font-family base-font
-             :font-size (px 20)}]
-  [:.loading
-   {:position :absolute
-    :bottom (px 0)
-    :top (px 0)
-    :left (px 0)
-    :right (px 0)}]
+             :font-size (px 14)
+             :font-weight 'bold
+             :color title-font-colour}]
+  [:.level2 {:font-family base-font
+             :font-size (px 14)
+             :color 'white
+             :padding [[(em 0) (em 0.4) (em 0.2) (em 0.4)]]
+             :background-color header-bar-bg-colour}]
+
+  ;; Header
   [:.header
    {:width (percent 100)
     :min-width (px 680)}
@@ -45,7 +51,60 @@
    [:.menu-item
     {:margin [[(em 0.8) (em 1)]]
      :font-size (px 18)
-     :color "#A0A09F"}]]
+     :color menu-item-colour
+     :text-decoration :none}]]
+
+  ;; Footer
+  [:.footer
+   {:background-color "rgba(16, 63, 84, 1)"
+    :color 'white
+    :padding (em 1)
+    :font-size (em 1.25)}
+   [:.content
+    {:width (px content-width)
+     :display :block
+     :margin :auto}]
+   [:hr {:margin [[(em 1) (em 2) (em 3) (em 4)]]}]
+   [:.rc-h-box
+    {:width (percent 100)}
+    [:div.license :div.donations {:width (percent 100)
+                                  :padding (em 2)}]
+    [:div.license {:text-align :justify}]
+    [:div.donations {:text-align :center}
+     [:div:first-child {:margin-bottom (em 1)}]
+     [:iframe {:margin-left (px 50)}]]]
+   [:.social-links
+    [:img
+     {:width (px 42)
+      :height (px 42)
+      :margin [[(em 0) (em 0.6)]]}]]]
+
+  ;; Content body
+  [:.content-body
+   {:width (percent 100)}
+   [:.upper :.lower
+    {:margin-bottom (em 3)}]
+   [:.content
+    {:width (px content-width)
+     :display :block
+     :margin :auto}
+    [:.search-nav
+     ["div:nth-child(3)"
+      {:margin-top (px 15)}]]]
+   [:.popular-search-term
+    {:font-size (em 0.95)
+     :color (c/darken menu-item-colour 10)
+     :line-height 1.3
+     :padding 0
+     :margin 0
+     :cursor :pointer}]]
+
+  ;; General
+  [:.clickable-string
+   {:cursor :pointer
+    :transition (transition :color "0.4s")}
+   [:&:hover
+    {:color "#CCC"}]]
 
 
 

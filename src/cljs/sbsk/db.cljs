@@ -42,7 +42,7 @@
 
 (defn init-db
   []
-  (fetch-videos 0)
+  (run! fetch-videos (range 2))
   empty-db)
 
 (defn load-more-videos
