@@ -20,3 +20,5 @@ java -jar /home/sbsk/sbsk-app/target/uberjar/sbsk.jar -c
 TODO
 ----
 remove 'highlight' size - replace with 'small'
+replace latest videos with packery?
+externs!!!!
