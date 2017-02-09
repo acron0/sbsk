@@ -36,9 +36,12 @@
 (re-frame/reg-event-db
  :search
  (fn  [db [_ query]]
-   (db/search-videos db query)))
+   (if (not= (:search db) query)
+     (db/search-videos db query)
+     db)))
 
 (re-frame/reg-event-db
  :search-results
  (fn  [db [_ results]]
+   (println ">>>>" (:search db) (count results))
    (db/reset-search-results db results)))

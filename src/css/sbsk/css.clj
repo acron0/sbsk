@@ -90,7 +90,27 @@
      :margin :auto}
     [:.search-nav
      ["div:nth-child(3)"
-      {:margin-top (px 15)}]]]
+      {:margin-top (px 15)}]
+     [:input
+      {:height (px 32)
+       :border 0
+       :padding 0
+       :border-radius (px 0)
+       :outline :none
+       :background-color header-bar-bg-colour
+       :color 'white
+       :padding-left (em 0.75)}]
+     [:.search-button
+      {:color 'white
+       :background-color (c/darken header-bar-bg-colour 15)
+       :border-radius 0}
+      [:.rc-md-icon-button
+       {:margin :auto
+        :display :block}]
+      [:&:hover
+       [:i {:color 'silver}]]]
+     [:.level2
+      {:width (percent 100)}]]]
    [:.popular-search-term
     {:font-size (em 0.95)
      :color (c/darken menu-item-colour 10)

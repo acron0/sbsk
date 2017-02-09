@@ -33,7 +33,16 @@
 (def video-large-width (* 3 video-small-width))
 (def video-large-height (* 3 video-small-height))
 
+(def search-input-id "search-nav-input")
+(defn search-input-element [] (.getElementById js/document search-input-id))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn dispatch-search
+  ([s]
+   (re-frame/dispatch [:search s]))
+  ([]
+   (dispatch-search (.-value (search-input-element)))))
 
 (defn search-nav
   [search-terms]
@@ -42,16 +51,33 @@
    :height "100%"
    :width (px 180)
    :children (concat
-              [[re-com/title
-                :level :level2
-                :label "Search Videos"]
+              [[re-com/h-box
+                :align :stretch
+                :children [[re-com/box
+                            :size "auto"
+                            :child [:form#search-nav-form
+                                    {:on-submit (fn [e]
+                                                  (dispatch-search)
+                                                  (.preventDefault e))}
+                                    [:input#search-nav-input
+                                     {:placeholder "Search Videos"}]]]
+                           [re-com/box
+                            :size "32px"
+                            :class "search-button"
+                            :child [re-com/md-icon-button
+                                    :md-icon-name "zmdi-search"
+                                    :on-click (fn [e]
+                                                (dispatch-search)
+                                                (.preventDefault e))]]]]
                [re-com/title
                 :level :level3
                 :label "Popular Search Terms"]]
               (doall (for [term search-terms]
                        ^{:key term}
                        [:div.clickable-string.popular-search-term
-                        {:on-click #(println "Go to search term:" term)}
+                        {:on-click (fn [_]
+                                     (set! (.-value (search-input-element)) term)
+                                     (dispatch-search term))}
                         term])))])
 
 (defn video-highlight
@@ -154,80 +180,117 @@
             :height (px (- height (* 2 trim)))
             :style (style {:margin (px trim)})}])])
 
+(def isotope-config
+  #js {:itemSelector ".video-packed"
+       :layoutMode "packery"
+       :percentPosition false
+       :packery #js {:gutter 0}})
+
+(defn init-isotope!
+  [vpd-id isotope isotope-config]
+  (reset! isotope (js/Isotope. (.getElementById js/document vpd-id)
+                               isotope-config)))
+
 (defn append-videos!
   [vpd-id isotope videos added-videos]
-  (->> videos
-       (filter (comp not @added-videos :id))
-       (run!
-        (fn [video]
-          (let [[w h] (random-video-dimensions)
-                video-el (.item (hiccup->element (video-packed w h video)) 0)
-                vpd-el (.getElementById js/document vpd-id)]
-            (.appendChild vpd-el video-el)
-            (.appended isotope video-el)
-            (swap! added-videos conj (:id video)))))))
+  (when isotope
+    (->> videos
+         (filter (comp not @added-videos :id))
+         (run!
+          (fn [video]
+            (let [[w h] (random-video-dimensions)
+                  video-el (.item (hiccup->element (video-packed w h video)) 0)
+                  vpd-el (.getElementById js/document vpd-id)]
+              (.appendChild vpd-el video-el)
+              (.appended isotope video-el)
+              (swap! added-videos conj (:id video))))))))
+
+(defn reset-isotope!
+  [vpd-id isotope added-videos]
+  (let [vpd-el (.getElementById js/document vpd-id)]
+    (loop [last (.-lastChild vpd-el)]
+      (when last
+        (.removeChild vpd-el last)
+        (recur (.-lastChild vpd-el)))))
+  (.destroy @isotope)
+  (reset! isotope nil)
+  (reset! added-videos #{}))
 
 (defn video-packed-display
-  [videos]
-  (let [isotope (atom nil)
-        added-videos (atom #{})
-        component-videos (atom nil)
-        vpd-id (str (random-uuid))]
+  [search-term videos]
+  (let [isotope            (atom nil)
+        added-videos       (atom #{})
+        component-videos   (atom nil)
+        render-since-reset (atom nil)
+        vpd-id             (str (random-uuid))
+        last-search-term   (atom search-term)]
     (r/create-class
      {:component-did-mount
       (fn [& _]
-        #_(println "VPD CDM" vpd-id (count @component-videos))
         (when-not @isotope
-          (reset! isotope (js/Isotope. (.getElementById js/document vpd-id)
-                                       #js {:itemSelector ".video-packed"
-                                            :layoutMode "packery"
-                                            :percentPosition false
-                                            :packery #js {:gutter 0}})))
+          (init-isotope! vpd-id isotope isotope-config))
         (append-videos! vpd-id @isotope @component-videos added-videos))
       :component-did-update
-      (fn [& _]
-        #_(println "VPD CDU" vpd-id (count @component-videos))
-        (when @isotope
+      (fn [old-state new-state]
+        (when (and (not @isotope) search-term)
+          (init-isotope! vpd-id isotope isotope-config))
+        (when (or (not search-term) @render-since-reset)
           (append-videos! vpd-id @isotope @component-videos added-videos)))
       :reagent-render
-      (fn [videos]
+      (fn [search-term videos]
+        (if (and @isotope (not= @last-search-term search-term))
+          (do
+            (reset-isotope! vpd-id isotope added-videos)
+            (reset! render-since-reset false)
+            (reset! last-search-term search-term))
+          (when (false? @render-since-reset)
+            (reset! render-since-reset true)))
         (reset! component-videos videos)
-        #_(println "VPD REN" vpd-id (count videos))
+        ;;
         (let [videos' (map #(assoc % :thumb-dimensions (random-video-dimensions)) videos)]
           [:div.video-packed-display
            {:id vpd-id}]))})))
 
 (defn lower-body
-  [videos]
-  (let [videos-by-month (videos-by-month videos)]
+  [search-results? search-term videos]
+  (let [videos-by-month (when-not search-results?
+                          (videos-by-month videos))]
     [re-com/v-box
      :class "lower"
      :width "100%"
      :children [[re-com/title
                  :level :level2
-                 :label "All Videos"]
-                [:div.pure-g
-                 (for [month (keys videos-by-month)]
-                   ^{:key month}
+                 :label (if search-results?
+                          (str "Search Results for '" search-term "'")
+                          "All Videos")]
+                (if search-results?
+                  [:div.pure-g
                    [:div
                     {:style {:width "100%"}}
-                    [re-com/title
-                     :level :level3
-                     :label month]
-                    [video-packed-display (get videos-by-month month)]])
-                 [re-com/h-box
-                  :class "load-more"
-                  :justify :center
-                  :width "100%"
-                  :children [(if true #_@loading-more?
-                                 #_[re-com/throbber
-                                    :size :small]
-                                 [re-com/button
-                                  :label "Load More"
-                                  :on-click #(re-frame/dispatch [:load-more-videos])])]]]]]))
+                    [video-packed-display search-term videos]]]
+                  [:div.pure-g
+                   (for [month (keys videos-by-month)]
+                     ^{:key month}
+                     [:div
+                      {:style {:width "100%"}}
+                      [re-com/title
+                       :level :level3
+                       :label month]
+                      [video-packed-display nil (get videos-by-month month)]])
+                   [re-com/h-box
+                    :class "load-more"
+                    :justify :center
+                    :width "100%"
+                    :children [(if true #_@loading-more?
+                                   #_[re-com/throbber
+                                      :size :small]
+                                   [re-com/button
+                                    :label "Load More"
+                                    :on-click #(re-frame/dispatch [:load-more-videos])])]]])]]))
 
 (defn panel []
   (let [videos (re-frame/subscribe [:videos])
+        search-term (re-frame/subscribe [:search])
         noof-highlight-videos 8]
     (fn []
       (let [search-results (not-empty (:search-results @videos))
@@ -238,8 +301,10 @@
             [re-com/v-box
              :children [(upper-body (take noof-highlight-videos
                                           (:all-videos @videos)))
-                        (lower-body (drop noof-highlight-videos
-                                          (or search-results all-videos)))]]
+                        (lower-body search-results
+                                    @search-term
+                                    (or search-results
+                                        (drop noof-highlight-videos all-videos)))]]
             [re-com/box
              :height "100%"
              :width "100%"
