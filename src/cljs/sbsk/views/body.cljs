@@ -44,6 +44,10 @@
   ([]
    (dispatch-search (.-value (search-input-element)))))
 
+(defn open-video
+  [video]
+  (re-frame/dispatch [:open-video (:id video)]))
+
 (defn search-nav
   [search-terms]
   [re-com/v-box
@@ -90,7 +94,8 @@
      :height h
      :child [:div.video-thumb
              {:style {:width "100%"
-                      :height "100%"}}
+                      :height "100%"}
+              :on-click (partial open-video video)}
              [:img {:src (:thumb video)
                     :width w
                     :height h}]]]))
@@ -191,6 +196,10 @@
   (reset! isotope (js/Isotope. (.getElementById js/document vpd-id)
                                isotope-config)))
 
+(defn add-onclick!
+  [el fun]
+  (aset el "onclick" fun))
+
 (defn append-videos!
   [vpd-id isotope videos added-videos]
   (when isotope
@@ -201,6 +210,7 @@
             (let [[w h] (random-video-dimensions)
                   video-el (.item (hiccup->element (video-packed w h video)) 0)
                   vpd-el (.getElementById js/document vpd-id)]
+              (add-onclick! video-el (partial open-video video))
               (.appendChild vpd-el video-el)
               (.appended isotope video-el)
               (swap! added-videos conj (:id video))))))))

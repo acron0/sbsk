@@ -20,8 +20,11 @@
 
 (re-frame/reg-event-db
  :open-video
- (fn  [db [_ video-id k]]
-   (assoc db :current-video (some #(when (= (:id %) video-id) %) (get db k)))))
+ (fn  [db [_ video-id]]
+   (println "Opening video" video-id)
+   (assoc db :current-video (some #(when (= (:id %) video-id) %)
+                                  (or (get db :videos)
+                                      (get db :search-result-videos))))))
 
 (re-frame/reg-event-db
  :close-video
@@ -43,5 +46,4 @@
 (re-frame/reg-event-db
  :search-results
  (fn  [db [_ results]]
-   (println ">>>>" (:search db) (count results))
    (db/reset-search-results db results)))
