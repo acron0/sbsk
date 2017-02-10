@@ -6,6 +6,7 @@
             [sbsk.views.header :as header]
             [sbsk.views.footer :as footer]
             [sbsk.views.body :as body]
+            [sbsk.views.video-player :as video-player]
             ;;
             [cljsjs.moment]))
 
@@ -15,4 +16,6 @@
       [re-com/v-box
        :children [(header/panel)
                   [body/panel]
-                  (footer/panel)]])))
+                  (footer/panel)
+                  (when @current-video
+                    [video-player/panel @current-video])]])))

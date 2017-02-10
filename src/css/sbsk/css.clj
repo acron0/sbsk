@@ -79,6 +79,25 @@
       :height (px 42)
       :margin [[(em 0) (em 0.6)]]}]]]
 
+  ;; Video player
+  [:.video-player
+   {:position :fixed
+    :top 0
+    :bottom 0
+    :left 0
+    :right 0
+    :background-color "rgba(33, 33, 33, 0.6)"
+    :color 'white
+    :padding [[(em 0) (percent 5)]]
+    :font-size (em 1.25)}
+   [:.content
+    {:width (percent 100)
+     :height (percent 100)
+     :padding (em 1)
+     :background-color "rgba(66, 66, 66, 0.95)"
+     :display :block
+     :margin :auto}]]
+
   ;; Content body
   [:.content-body
    {:width (percent 100)}
