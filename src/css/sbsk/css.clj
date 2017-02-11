@@ -7,6 +7,7 @@
 (def thumb-scale 1.4)
 (def thumb-hover-time "0.2s")
 (def content-width 980)
+(def vp-content-width 720)
 (def title-font-colour "#605E5E")
 (def menu-item-colour "#A0A09F")
 (def header-bar-bg-colour "#605E5E")
@@ -94,9 +95,25 @@
     {:width (percent 100)
      :height (percent 100)
      :padding (em 1)
-     :background-color "rgba(66, 66, 66, 0.95)"
-     :display :block
-     :margin :auto}]]
+     :background-color "rgba(66, 66, 66, 0.95)"}
+    [:.inner-content
+     {:display :block
+      :margin :auto
+      :height (percent 100)
+      :width (px vp-content-width)}
+     [:.level1
+      {:color 'white
+       :font-size (px 20)
+       :font-weight :bold}]
+     [:.close-button
+      {:position :absolute
+       :top 0
+       :left (percent 5)}]
+     [:.video-info
+      {:margin [[(px 20) (px 60)]]}]
+     [:.fb-header
+      [:.fb-info
+       {:margin-left (px 10)}]]]]]
 
   ;; Content body
   [:.content-body
