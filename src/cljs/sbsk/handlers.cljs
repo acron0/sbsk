@@ -21,7 +21,6 @@
 (re-frame/reg-event-db
  :open-video
  (fn  [db [_ video-id]]
-   (println "Opening video" video-id)
    (assoc db :current-video (some #(when (= (:id %) video-id) %)
                                   (or (get db :videos)
                                       (get db :search-result-videos))))))
