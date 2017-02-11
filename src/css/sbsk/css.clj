@@ -94,7 +94,6 @@
    [:.content
     {:width (percent 100)
      :height (percent 100)
-     :padding (em 1)
      :background-color "rgba(66, 66, 66, 0.95)"}
     [:.inner-content
      {:display :block
