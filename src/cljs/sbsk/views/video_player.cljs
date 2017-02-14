@@ -20,7 +20,9 @@
    :align :stretch
    :children [[re-com/box
                :align-self :center
-               :child [:img {:src "img/fb.png"}]]
+               :child [:img {:src "img/fb.png"
+                             :width 32
+                             :height 32}]]
               [re-com/v-box
                :class "fb-info"
                :justify :start

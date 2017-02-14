@@ -109,10 +109,15 @@
        :top 0
        :left (percent 5)}]
      [:.video-info
-      {:margin [[(px 20) (px 60)]]}]
+      {:margin [[(px 20) (px 60)]]
+       :line-height (em 1.3)}]
      [:.fb-header
+      {:padding-top (px 20)}
       [:.fb-info
-       {:margin-left (px 10)}]]]]]
+       {:margin-left (px 10)
+        :font-size (em 0.8)}
+       [:.level1
+        {:font-size (em 1.1)}]]]]]]
 
   ;; Content body
   [:.content-body
