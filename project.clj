@@ -32,6 +32,7 @@
                  [ns-tracker "0.3.0"]
                  [cljs-http "0.1.41"]
                  [com.cognitect/transit-cljs "0.8.239"]
+                 [hiccups "0.3.0"]
                  ;;
                  [cljsjs/moment "2.10.6-4"]]
   :main ^:skip-aot sbsk.core
@@ -46,7 +47,8 @@
                                     "target"
                                     "resources/public/css/compiled"]
 
-  :figwheel {:css-dirs ["resources/public/css"]}
+  :figwheel {:css-dirs ["resources/public/css"]
+             :nrepl-port 7888}
 
   :garden {:builds [{:id           "screen"
                      :source-paths ["src/css"]
@@ -56,9 +58,13 @@
 
   :profiles {:uberjar {:aot :all}
              :dev {:source-paths ["dev-src"]
-                   :dependencies [[org.clojure/tools.namespace "0.2.4"]]
-                   :plugins      [[lein-figwheel "0.5.4-3"]]
-                   :repl-options {:init-ns user}}
+                   :dependencies [[org.clojure/tools.namespace "0.2.4"]
+                                  [com.cemerick/piggieback "0.2.1"]
+                                  [org.clojure/tools.nrepl "0.2.12"]
+                                  [figwheel-sidecar "0.5.9"]]
+                   :plugins      [[lein-figwheel "0.5.9"]]
+                   :repl-options {:init-ns user
+                                  :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}
              :data {:source-paths ["data-src"]
                     :dependencies [[amazonica "0.3.73" :exclusions [com.google.guava/guava
                                                                     com.fasterxml.jackson.core/jackson-annotations]]]}}
@@ -79,11 +85,13 @@
                                :output-to       "resources/public/js/compiled/app.js"
                                :optimizations   :advanced
                                :closure-defines {goog.DEBUG false}
+                               :externs         ["../js/externs.js"]
                                :pretty-print    false}}
 
                {:id           "test"
                 :source-paths ["src/cljs" "test/cljs"]
-                :compiler     {:output-to     "resources/public/js/compiled/test.js"
+                :compiler     {:output-to     "resources/public/js/compiled/test/test.js"
+                               :output-dir    "resources/public/js/compiled/test"
                                :main          witan-viz.runner
                                :optimizations :none}}]}
   :aliases {"upload-data" ["with-profile" "data" "run" "-m" "sbsk.upload-data"]}

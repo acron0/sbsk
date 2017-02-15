@@ -1,12 +1,13 @@
 (ns sbsk.db
-  (:require-macros [cljs.core.async.macros :refer [go]])
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [sbsk.macros :refer [cljs-env]])
   (:require [re-frame.core :as re-frame]
             [cljs-http.client :as http]
             [cljs.core.async :refer [<!]]
             [cognitect.transit :as t]))
 
 (def server-address
-  "ec2-54-89-240-173.compute-1.amazonaws.com")
+  (or (cljs-env :sbsk-search-address) "localhost"))
 (def data-loc-prefix
   "https://s3-us-west-2.amazonaws.com/sbsk-data-segmented/data.")
 (def data-loc-suffix
@@ -19,7 +20,8 @@
    :current-video nil
    :latest-data -1
    :loading-more? false
-   :search-pending? false})
+   :search-pending? false
+   :isotope nil})
 
 (defn keywordize
   [x]
@@ -41,7 +43,7 @@
 
 (defn init-db
   []
-  (fetch-videos 0)
+  (run! fetch-videos (range 2))
   empty-db)
 
 (defn load-more-videos

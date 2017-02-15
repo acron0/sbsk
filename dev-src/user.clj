@@ -3,7 +3,8 @@
    [com.stuartsierra.component :as component]
    [clojure.tools.namespace.repl :refer (refresh refresh-all)]
    [environ.core :refer [env]]
-   [sbsk.core :refer (new-system)]))
+   [sbsk.core :refer (new-system)]
+   [figwheel-sidecar.repl-api :as ra]))
 
 (def system nil)
 
@@ -28,9 +29,13 @@
 (defn go
   "Initializes the current development system and starts it running."
   []
-  (init [:search])
+  (init [:crawler])
   (start))
 
 (defn reset []
   (stop)
   (refresh :after 'user/go))
+
+(defn cljs-repl
+  []
+  (ra/cljs-repl))

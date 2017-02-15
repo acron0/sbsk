@@ -15,12 +15,10 @@ java -jar /home/sbsk/sbsk-app/target/uberjar/sbsk.jar -c
 * Add AWS creds and config
 * Add script to crontab
 
+###########################
+
 TODO
-# Add db reload to crawler
-# DEPLOY!
-# Search
-# Categories / Tags / Locations (Metadata)
-- No categories?
-- Intro blurb
-- Description on Overlay?
-- What do to about sizes?
+----
+remove 'highlight' size - replace with 'small'
+replace latest videos with packery?
+externs!!!!

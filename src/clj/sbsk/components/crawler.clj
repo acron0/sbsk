@@ -46,10 +46,10 @@
                     page (parse-string
                           (:body
                            (facebook-get
-                            (str "/v2.7/" page-id "/videos")
+                            (str "/v2.8/" page-id "/videos")
                             {:query-params
                              (merge access-token
-                                    {:fields "created_time,description,id,permalink_url,picture,title"})})) true)]
+                                    {:fields "created_time,description,id,permalink_url,picture,title,embeddable,format"})})) true)]
                (let [{:keys [data paging]} page
                      {:keys [next]} paging]
                  (if next
@@ -62,13 +62,19 @@
 
 (defn scrub
   [entry]
-  (let [full-text (str (:title entry) " - " (:description entry))]
+  (let [full-text (str (:title entry) " - " (:description entry))
+        best-format (last (sort-by :width (:format entry)))]
     (-> entry
         (clojure.set/rename-keys {:created_time  :created-at
-                                  :permalink_url :link
-                                  :picture       :thumb})
+                                  :permalink_url :link})
         (update :id str)
-        (update :created-at coerce-time))))
+        (update :created-at coerce-time)
+        (dissoc :embeddable
+                :picture
+                :format)
+        (assoc  :thumb (:picture best-format)
+                :width (:width best-format)
+                :height (:height best-format)))))
 
 (defn upload-full
   [records db bucket]
@@ -91,7 +97,9 @@
    bucket-full bucket-segments records-per-segment hash-atom]
   (fn []
     (log/debug "Starting crawler process...")
-    (let [records (map scrub (fetch app-id app-secret page-id))
+    (let [records (->> (fetch app-id app-secret page-id)
+                       (filter :embeddable)
+                       (map scrub))
           new-hash (hash records)]
       ;; hash is unreliable so disable until we can do this better
       (if true #_(not= new-hash @hash-atom)

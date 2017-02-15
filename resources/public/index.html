@@ -3,7 +3,6 @@
   <head>
       <meta charset='utf-8'>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css">
       <link rel="stylesheet" href="vendor/css/material-design-iconic-font.min.css">
       <link rel="stylesheet" href="vendor/css/re-com.css">
       <link href="http://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic" rel="stylesheet" type="text/css">
@@ -12,82 +11,14 @@
       <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
       <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
       <link href="css/compiled/screen.css" rel="stylesheet" type="text/css">
-      <link href="css/menu.css" rel="stylesheet" type="text/css">
 
   </head>
   <body>
       <div id="app"></div>
-      <div class="custom-wrapper pure-g" id="menu">
-          <div class="pure-u-1">
-              <div class="pure-menu pure-menu-horizontal">
-                  <a href="#" class="custom-toggle" id="toggle">
-                      <s class="bar"></s>
-                      <s class="bar"></s>
-                  </a>
-                  <img class="custom-img" src ="https://static.wixstatic.com/media/94bdf2_c51c2aff27f347dea7bd3a1535978330~mv2.jpg/v1/fill/w_246,h_258,al_c,q_80,usm_0.66_1.00_0.01/94bdf2_c51c2aff27f347dea7bd3a1535978330~mv2.jpg" width="92px" height="97px">
-                  <div class="custom-menu">
-                      <h1 class="custom-title level1"">Special Books by Special Kids</h1>
-                      <div class="custom-can-transform">
-                          <div>
-                              <ul class="pure-menu-list">
-                                  <li class="pure-menu-item"><a href="#" class="pure-menu-link">HOME</a></li>
-                                  <li class="pure-menu-item"><a href="#" class="pure-menu-link">ABOUT US</a></li>
-                                  <li class="pure-menu-item"><a href="#" class="pure-menu-link"><strong>VIDEOS</strong></a></li>
-                                  <li class="pure-menu-item"><a href="#" class="pure-menu-link">DONATE</a></li>
-                                  <li class="pure-menu-item"><a href="#" class="pure-menu-link">CONTACT</a></li>
-                                  <li class="pure-menu-item"><a href="#" class="pure-menu-link">FAQ</a></li>
-
-                              </ul>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
+      <!--<script src="https://unpkg.com/packery@2/dist/packery.pkgd.min.js"></script>-->
+      <script src="https://unpkg.com/isotope-layout@3/dist/isotope.pkgd.min.js"></script>
+      <script src="js/packery-mode.pkgd.min.js"></script>
       <script src="js/compiled/app.js"></script>
       <script>sbsk.core.init();</script>
-      <script>
-       (function (window, document) {
-           var menu = document.getElementById('menu'),
-               app = document.getElementById('app'),
-               WINDOW_CHANGE_EVENT = ('onorientationchange' in window) ? 'orientationchange':'resize';
-
-           function toggleHorizontal() {
-               [].forEach.call(
-                   document.getElementById('menu').querySelectorAll('.custom-can-transform'),
-                   function(el){
-                       el.classList.toggle('pure-menu-horizontal');
-                   }
-               );
-           };
-
-           function toggleMenu() {
-               // set timeout so that the panel has a chance to roll up
-               // before the menu switches states
-               if (menu.classList.contains('open')) {
-                   setTimeout(toggleHorizontal, 500);
-               }
-               else {
-                   toggleHorizontal();
-               }
-               menu.classList.toggle('open');
-               app.classList.toggle('open');
-               document.getElementById('toggle').classList.toggle('x');
-           };
-
-           function closeMenu() {
-               if (menu.classList.contains('open')) {
-                   toggleMenu();
-               }
-           }
-
-           document.getElementById('toggle').addEventListener('click', function (e) {
-               toggleMenu();
-           });
-
-           window.addEventListener(WINDOW_CHANGE_EVENT, closeMenu);
-       })(this, this.document);
-
-      </script>
   </body>
 </html>
