@@ -51,12 +51,14 @@
 
 (defn video-iframe
   [video]
-  (let [scale-to-w 720
-        ratio      (when-not (zero? (:width video))
-                     (/ scale-to-w (:width video)))
+  (let [w' (or (:width video) 0)
+        h' (or (:height video) 0)
+        scale-to-w 720
+        ratio      (when-not (zero? w')
+                     (/ scale-to-w w'))
         w          (str scale-to-w "px")
         h          (if ratio
-                     (str (* ratio (:height video)) "px")
+                     (str (* ratio h') "px")
                      (str "100%"))]
     [:iframe#video-frame
      {:src (get-fb-video-link (:id video))

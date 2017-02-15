@@ -2,6 +2,14 @@
   (:require [re-frame.core :as re-frame]
             [sbsk.db :as db]))
 
+(defn set-noscroll!
+  [on]
+  (let [html (aget (.-all js/document) 0)
+        classes (set (clojure.string/split (.-className html) " "))
+        fun (if on conj disj)]
+    (println "classes" classes (fun classes "noscroll"))
+    (set! (.-className html) (clojure.string/join " " (fun classes "noscroll")))))
+
 (re-frame/reg-event-db
  :initialize-db
  (fn  [_ _]
@@ -21,6 +29,7 @@
 (re-frame/reg-event-db
  :open-video
  (fn  [db [_ video-id]]
+   (set-noscroll! true)
    (assoc db :current-video (some #(when (= (:id %) video-id) %)
                                   (or (get db :videos)
                                       (get db :search-result-videos))))))
@@ -28,6 +37,7 @@
 (re-frame/reg-event-db
  :close-video
  (fn  [db [_ video-id]]
+   (set-noscroll! false)
    (assoc db :current-video nil)))
 
 (re-frame/reg-event-db
