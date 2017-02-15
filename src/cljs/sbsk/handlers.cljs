@@ -7,7 +7,6 @@
   (let [html (aget (.-all js/document) 0)
         classes (set (clojure.string/split (.-className html) " "))
         fun (if on conj disj)]
-    (println "classes" classes (fun classes "noscroll"))
     (set! (.-className html) (clojure.string/join " " (fun classes "noscroll")))))
 
 (re-frame/reg-event-db
