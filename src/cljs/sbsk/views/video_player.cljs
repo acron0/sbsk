@@ -51,13 +51,18 @@
 
 (defn video-iframe
   [video]
-  (let [w 720
-        h (/ w 1.6)]
+  (let [scale-to-w 720
+        ratio      (when-not (zero? (:width video))
+                     (/ scale-to-w (:width video)))
+        w          (str scale-to-w "px")
+        h          (if ratio
+                     (str (* ratio (:height video)) "px")
+                     (str "100%"))]
     [:iframe#video-frame
      {:src (get-fb-video-link (:id video))
-      :width (str w "px")
-      :height "100%"
-      :scrolling "no"
+      :width w
+      :height h
+      :SCROLLING "no"
       :frame-border "0"
       :allow-transparency "true"
       :allow-full-screen "true"}]))
@@ -72,12 +77,11 @@
 
 (defn panel
   [video]
-  [:div
-   {:class "video-player"
-    :on-click #(re-frame/dispatch [:close-video])}
-   [:div
-    {:class "content"
-     :on-click #(.stopPropagation %)}
+  [:div.video-player
+   {:on-click #(re-frame/dispatch [:close-video])}
+   [:div.background]
+   [:div.content
+    {:on-click #(.stopPropagation %)}
     [re-com/v-box
      :class "inner-content"
      :justify :start

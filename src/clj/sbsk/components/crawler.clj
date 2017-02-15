@@ -46,7 +46,7 @@
                     page (parse-string
                           (:body
                            (facebook-get
-                            (str "/v2.7/" page-id "/videos")
+                            (str "/v2.8/" page-id "/videos")
                             {:query-params
                              (merge access-token
                                     {:fields "created_time,description,id,permalink_url,picture,title,embeddable,format"})})) true)]
