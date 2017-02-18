@@ -3,7 +3,8 @@
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.8.0"]
+  :dependencies [;; clj
+                 [org.clojure/clojure "1.8.0"]
                  [org.clojure/tools.cli "0.3.5"]
                  [com.stuartsierra/component "0.3.2"]
                  [com.taoensso/timbre "4.8.0"]
@@ -21,20 +22,21 @@
                  [ring-cors "0.1.9"]
                  [caponia "0.3.3"]
                  [overtone/at-at "1.2.0"]
-                 ;;
+
+                 ;; cljs
                  [com.google.guava/guava "19.0"]
-                 [org.clojure/clojurescript  "1.9.89" :exclusions [com.google.guava/guava]]
-                 [reagent "0.6.0-rc" :exclusions [com.google.guava/guava]]
+                 [org.clojure/clojurescript  "1.9.293" :exclusions [com.google.guava/guava]]
+                 [reagent "0.6.0" :exclusions [com.google.guava/guava]]
                  [binaryage/devtools "0.6.1"]
-                 [re-frame "0.8.0" :exclusions [com.google.guava/guava]]
-                 [re-com "0.8.3"]
+                 [re-frame "0.9.1" :exclusions [com.google.guava/guava]]
+                 [re-com "0.9.0"]
                  [garden "1.3.2"]
                  [ns-tracker "0.3.0"]
                  [cljs-http "0.1.41"]
                  [com.cognitect/transit-cljs "0.8.239"]
                  [hiccups "0.3.0"]
-                 ;;
-                 [cljsjs/moment "2.10.6-4"]]
+                 [cljsjs/moment "2.10.6-4"]
+                 [re-frame-datatable "0.5.1" :exclusions [org.clojure/clojure]]]
   :main ^:skip-aot sbsk.core
   :target-path "target/%s"
 
@@ -50,10 +52,15 @@
   :figwheel {:css-dirs ["resources/public/css"]
              :nrepl-port 7888}
 
-  :garden {:builds [{:id           "screen"
+  :garden {:builds [{:id           "sbsk"
                      :source-paths ["src/css"]
                      :stylesheet sbsk.css/screen
                      :compiler     {:output-to     "resources/public/css/compiled/screen.css"
+                                    :pretty-print? true}}
+                    {:id           "sbsk-admin"
+                     :source-paths ["src/css-admin"]
+                     :stylesheet sbsk-admin.css/screen
+                     :compiler     {:output-to     "resources/public/css/compiled/admin.css"
                                     :pretty-print? true}}]}
 
   :profiles {:uberjar {:aot :all}
@@ -71,7 +78,7 @@
 
   :cljsbuild {:builds
               [{:id           "dev"
-                :source-paths ["src/cljs"]
+                :source-paths ["src/cljs" "src/cljs-shared"]
                 :figwheel     {:on-jsload "sbsk.core/mount-root"}
                 :compiler     {:main                 sbsk.core
                                :output-to            "resources/public/js/compiled/app.js"
@@ -79,8 +86,17 @@
                                :asset-path           "js/compiled/out"
                                :source-map-timestamp true}}
 
+               {:id           "dev-admin"
+                :source-paths ["src/cljs-admin" "src/cljs-shared"]
+                :figwheel     {:on-jsload "sbsk-admin.core/mount-root"}
+                :compiler     {:main                 sbsk-admin.core
+                               :output-to            "resources/public/js/compiled/admin.js"
+                               :output-dir           "resources/public/js/compiled/admin"
+                               :asset-path           "js/compiled/admin"
+                               :source-map-timestamp true}}
+
                {:id           "min"
-                :source-paths ["src/cljs"]
+                :source-paths ["src/cljs" "src/cljs-shared"]
                 :compiler     {:main            sbsk.core
                                :output-to       "resources/public/js/compiled/app.js"
                                :optimizations   :advanced
@@ -88,8 +104,18 @@
                                :externs         ["../js/externs.js"]
                                :pretty-print    false}}
 
+               {:id           "min-admin"
+                :source-paths ["src/cljs-admin" "src/cljs-shared"]
+                :compiler     {:main            sbsk-admin.core
+                               :output-to       "resources/public/js/compiled/admin.js"
+                               :optimizations   :advanced
+                               :closure-defines {goog.DEBUG false}
+                               :externs         ["../js-admin/externs.js"]
+                               :pretty-print    false
+                               :output-dir      "resources/public/js/admin"}}
+
                {:id           "test"
-                :source-paths ["src/cljs" "test/cljs"]
+                :source-paths ["src/cljs" "src/cljs-shared" "test/cljs"]
                 :compiler     {:output-to     "resources/public/js/compiled/test/test.js"
                                :output-dir    "resources/public/js/compiled/test"
                                :main          witan-viz.runner
