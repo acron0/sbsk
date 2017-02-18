@@ -29,7 +29,7 @@
                     [:admin (when (mode-enabled? :admin)
                               (component/using
                                (admin/map->Admin (:admin config))
-                               [:database]))]]
+                               [:database :crawler]))]]
         filtered (reduce (fn [a [x y]]
                            (if y (concat a [x y]) a)) [] components)]
 

@@ -16,3 +16,8 @@
  :tags
  (fn [db]
    (:tags db)))
+
+(re-frame/reg-sub
+ :dirty?
+ (fn [db]
+   (:dirty? db)))

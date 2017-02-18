@@ -12,6 +12,7 @@
 (def empty-db
   {:videos []
    :tags #{}
+   :dirty? false
    :current-video nil
    :latest-data -1
    :loading-more? false})
@@ -27,6 +28,15 @@
         new-db (assoc db :loading-more? true)]
     (fetch-videos n)
     new-db))
+
+(defn refresh-all-videos!
+  []
+  (go (let [result (<! (http/post (str "http://" admin-address
+                                       ":" admin-port
+                                       "/api/refresh")
+                                  {:with-credentials? false}))]
+        #_(when (:success result)
+            (re-frame/dispatch [:search-results (:body result)])))))
 
 (defn sync-to-video-database!
   [video]

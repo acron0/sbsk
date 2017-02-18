@@ -10,10 +10,20 @@
   (write-record! [this table key-name record]))
 
 (defprotocol Reader
-  (read-record-as-string [this table key-name]))
+  (list-keys [this table])
+  (read-record-as-string [this table key-name])
+  (read-record-as-obj [this table key-name]))
 
 (defrecord Database [credentials]
   Reader
+  (list-keys [this table]
+    (map :key (:object-summaries
+               (s3/list-objects {:profile "sbsk-fb-crawler"}
+                                table))))
+  (read-record-as-obj [this table key-name]
+    (-> this
+        (read-record-as-string table key-name)
+        (parse-string keyword)))
   (read-record-as-string [this table key-name]
     (s3/get-object-as-string
      credentials

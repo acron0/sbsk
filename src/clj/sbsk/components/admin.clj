@@ -8,7 +8,8 @@
             [compojure.route :as route]
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
-            [sbsk.components.database :as database]))
+            [sbsk.components.database :as database]
+            [sbsk.components.crawler :as crawler]))
 
 (defn save-video!
   [req db metadata-bucket]
@@ -24,16 +25,20 @@
     {:status 415}))
 
 (defn perform-db-refresh!
-  [db metadata-bucket]
-  (println "????"))
+  [cwlr]
+  (if cwlr
+    (do
+      (crawler/crawl-now! cwlr)
+      {:status 200})
+    {:status 412}))
 
 (defn app
-  [metadata-bucket db]
+  [metadata-bucket {:keys [database crawler]}]
   (defroutes approutes
     (GET "/" [] (io/resource "public/admin.html"))
     (context "/api" []
-             (POST "/refresh" [] (perform-db-refresh! db metadata-bucket))
-             (POST "/video/:id/metadata" request (save-video! request db metadata-bucket)))
+             (POST "/refresh" [] (perform-db-refresh! crawler))
+             (POST "/video/:id/metadata" request (save-video! request database metadata-bucket)))
     (route/resources "/")))
 
 (defn authenticated?
@@ -47,7 +52,7 @@
   (start [component]
     (log/info "Starting Admin")
     (assoc component :server
-           (run-jetty (-> (app metadata-bucket (:database component))
+           (run-jetty (-> (app metadata-bucket component)
                           (wrap-basic-authentication
                            (authenticated? username password))
                           (wrap-cors

@@ -20,4 +20,4 @@ TODO
 ----
 * remove 'highlight' size - replace with 'small'
 * check externs!!!!
-* remove shared data functions from sbsk db.cljs
+* search db needs to include meta data

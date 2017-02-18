@@ -26,7 +26,7 @@
 
 (defn actions
   []
-  (let []
+  (let [dirty? (re-frame/subscribe [:dirty?])]
     (fn []
       [re-com/v-box
        :width "100%"
@@ -37,11 +37,13 @@
                    :children [[re-com/button
                                :label "Refresh Video Database"
                                :class "btn-success"
-                               :tooltip "Fetches all the latest videos from Facebook. May take a minute or two."]
+                               :tooltip "Fetches all the latest videos from Facebook. May take a minute or two."
+                               :on-click #(re-frame/dispatch [:sync-db true])]
                               [re-com/button
                                :label "Sync Admin Changes"
-                               :class "btn-success"
-                               :tooltip "Pushes recent changes from the admin interface into the video database."]]]]])))
+                               :class (if @dirty? "btn-danger" "btn-success")
+                               :tooltip "Pushes recent changes from the admin interface into the video database."
+                               :on-click #(re-frame/dispatch [:sync-db false])]]]]])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Videos Table
@@ -99,19 +101,20 @@
 
 (defn title-control
   [video]
-  (let [default-title (or (:title video) (clip-string (:title video)))
-        current-title (or (get-in video [:meta :title])
-                          (:title video)
-                          (clip-string (:title video)))]
+  (let [default-title (or (:title video) (clip-string (:description video)))
+        meta-title (get-in video [:meta :title])
+        current-title (if-not (clojure.string/blank? meta-title)
+                        meta-title
+                        default-title)]
     [re-com/v-box
-     :width "100%"
+     :width "50%"
      :children [[re-com/title
                  :level :level3
                  :label "Title"]
                 [re-com/input-text
                  :style {:font-size "22px"
                          :font-weight :bold
-                         :text-align :center}
+                         }
                  :width "100%"
                  :model current-title
                  :placeholder default-title
@@ -128,32 +131,39 @@
      :gap "10px"
      :children
      [[re-com/v-box
+       :gap "10px"
        :children
-       [[re-com/label :label "Default Picture"]
-        [:img {:src (:thumb video)
-               :width video-large-width
-               :height video-large-height}]]]
-      [re-com/v-box
-       :children
-       [[re-com/label :label "Additional Picture"]
+       [[re-com/label :label "Replacement Picture"]
         [:img {:src (get-in video [:meta :thumb])
                :width video-large-width
-               :height video-large-height}]]]]]
-    [re-com/gap :size "10px"]
-    [re-com/label
-     :label "Select a new picture:"]
-    [:input {:type "file"
-             :id "additional-picture-input"
-             :on-change
-             (fn [e]
-               (let [file (first (array-seq (.. e -target -files)))]
-                 (re-frame/dispatch [:edit-current-video/thumb file])))}]]])
+               :height video-large-height}]
+        [re-com/label
+         :label "Select a Replacement Picture (6x4):"]
+        [:input {:type "file"
+                 :id "additional-picture-input"
+                 :on-change
+                 (fn [e]
+                   (let [file (first (array-seq (.. e -target -files)))]
+                     (re-frame/dispatch [:edit-current-video/thumb file])))}]
+        [re-com/label
+         :label "or"]
+        [re-com/button
+         :class "btn-danger"
+         :label "Revert to Default Picture"]]]
+      [re-com/v-box
+       :gap "10px"
+       :children
+       [[re-com/label :label "Default  Picture"]
+        [:img {:src (:thumb video)
+               :width video-large-width
+               :height video-large-height}]
+        [re-com/gap :size "10px"]]]]]]])
 
 (defn short-desc-control
   [video]
   (let [short-desc (or (get-in video [:meta :short-description]) "")]
     [re-com/v-box
-     :width "100%"
+     :width "50%"
      :children [[re-com/title
                  :level :level3
                  :label "Short Description"]
@@ -166,15 +176,17 @@
 (defn full-desc-control
   [video]
   (let [default-full-desc (:description video)
-        full-desc (or (get-in video [:meta :description])
-                      default-full-desc)]
+        full-desc (if-not (clojure.string/blank? (get-in video [:meta :description]))
+                    (get-in video [:meta :description])
+                    default-full-desc)]
     [re-com/v-box
-     :width "100%"
+     :width "50%"
      :children [[re-com/title
                  :level :level3
                  :label "Full Description"]
                 [re-com/input-textarea
                  :width "100%"
+                 :height "200px"
                  :model full-desc
                  :placeholder default-full-desc
                  :on-change #(re-frame/dispatch [:edit-current-video/description %])]]]))
