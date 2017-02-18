@@ -24,20 +24,62 @@
 
 (re-frame/reg-event-db
  :start-edit-video
- (fn  [db [_ id]]
-   (assoc db :current-video (some #(when (= id (:id %))
-                                     %) (:videos db)))))
+ (fn [db [_ id]]
+   (db/fetch-video-meta id)
+   (-> db
+       (assoc :current-video-loading? true)
+       (assoc :current-video (some #(when (= id (:id %))
+                                      %) (:videos db))))))
 
 (re-frame/reg-event-db
  :stop-edit-video
- (fn  [db [_ id]]
+ (fn [db [_ id]]
    (assoc db :current-video nil)))
 
 (re-frame/reg-event-db
  :sync-db
- (fn  [db [_ id]]
+ (fn [db [_ id]]
    (db/refresh-all-videos!)
-   (assoc db :dirty? false)))
+   (-> db
+       (assoc :dirty? false)
+       (assoc :refreshing? true))))
+
+(re-frame/reg-event-db
+ :refresh-finished
+ (fn [db [_ id]]
+   (-> db
+       (assoc :refreshing? false))))
+
+(re-frame/reg-event-db
+ :error
+ (fn [db [_ msg]]
+   (assoc db :error msg)))
+
+(defn after?
+  [time-a time-b]
+  (if-not time-a
+    false
+    (if-not time-b
+      true
+      (let [fmt (cljs-time.format/formatter "yyyyMMdd'T'HHmmss'Z'")
+            a (cljs-time.format/parse fmt time-a)
+            b (cljs-time.format/parse fmt time-b)]
+        (cljs-time.core/after? a b)))))
+
+(re-frame/reg-event-db
+ :update-video-metadata
+ (fn [db [_ id metadata]]
+   (when (= id (get-in db [:current-video :id]))
+     (let [remote-edited-time (:edited-time metadata)
+           local-edited-time (get-in db [:current-video :meta :edited-time])
+           local-is-newer? (after? local-edited-time remote-edited-time)
+           db' (-> (if local-is-newer?
+                     (assoc db :dirty? true)
+                     (assoc-in db [:current-video :meta] metadata))
+                   (assoc :current-video-loading? false))]
+       (if local-is-newer?
+         (db/reintegrate-current-video db' local-is-newer?)
+         db')))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -83,3 +125,26 @@
                  (assoc :dirty? true)
                  (assoc-in [:current-video :meta :description] d))]
      (db/reintegrate-current-video db'))))
+
+(re-frame/reg-event-db
+ :edit-current-video/thumb
+ (fn  [db [_ file]]
+   (let [reader (js/FileReader.)]
+     (set! (.-onload reader) #(re-frame/dispatch [:edit-current-video/thumb-update
+                                                  (.. % -target -result)
+                                                  (get-in db [:current-video :id])
+                                                  false]))
+     (.readAsDataURL reader file)
+     #_(db/upload-photo! file)
+     (-> db
+         (assoc :dirty? true)))))
+
+(re-frame/reg-event-db
+ :edit-current-video/thumb-update
+ (fn  [db [_ url video-id sync?]]
+   (if (= video-id (get-in db [:current-video :id]))
+     (let [db' (-> db
+                   (assoc :dirty? true)
+                   (assoc-in [:current-video :meta :thumb] url))]
+       (db/reintegrate-current-video db' sync?))
+     db)))

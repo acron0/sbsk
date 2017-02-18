@@ -1,5 +1,6 @@
 (ns sbsk-admin.views
   (:require [re-frame.core :as re-frame]
+            [re-frame.db :as re-frame-db]
             [reagent.core :as r]
             [re-com.core :as re-com]
             [re-frame-datatable.core :as dt]
@@ -240,22 +241,26 @@
 
 (defn current-video-panel
   [video]
-  [re-com/v-box
-   :width "100%"
-   :class "current-video-edit"
-   :gap "15px"
-   :children
-   [[re-com/hyperlink
-     :label "< Back to Videos"
-     :on-click #(re-frame/dispatch [:stop-edit-video])]
-    (title-control video)
-    (thumb-control video)
-    [tags-control video]
-    (short-desc-control video)
-    (full-desc-control video)
-    [re-com/button
-     :label "Save"
-     :class "btn-success"]]])
+  (let [current-video-loading? (re-frame/subscribe [:current-video-loading?])]
+    (fn [video]
+      (if @current-video-loading?
+        [re-com/throbber]
+        [re-com/v-box
+         :width "100%"
+         :class "current-video-edit"
+         :gap "15px"
+         :children
+         [[re-com/hyperlink
+           :label "< Back to Videos"
+           :on-click #(re-frame/dispatch [:stop-edit-video])]
+          (title-control video)
+          (thumb-control video)
+          [tags-control video]
+          (short-desc-control video)
+          (full-desc-control video)
+          [re-com/button
+           :label "Save"
+           :class "btn-success"]]]))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tabs
@@ -277,18 +282,57 @@
                                  (re-frame/dispatch [:stop-edit-video])
                                  (reset! current-tab %))]
                   (if @current-video
-                    (current-video-panel @current-video)
+                    [current-video-panel @current-video]
                     (case @current-tab
                       :videos [videos]
                       :playlists [playlists]))]])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn error-panel
+  [msg]
+  [re-com/v-box
+   :width "100%"
+   :align :center
+   :children
+   [[re-com/title
+     :level :level1
+     :label "Error!"]
+    [re-com/label
+     :label msg]
+    [re-com/line]
+    [:a
+     {:href (str "mailto:antony@teamwoods.org?subject=Error report from SBSK Admin&body=" msg
+                 "%0D%0A------------------------%0D%0A"
+                 "Please include any additional information below the line, such as what action were you performing when the error occurred?"
+                 "%0D%0A-------------------------%0D%0A")
+      :target "_blank"}
+     [re-com/label
+      :label "Click here to email an error report."]]]])
+
+(defn refreshing-panel
+  []
+  [re-com/v-box
+   :width "100%"
+   :align :center
+   :children
+   [[re-com/title
+     :level :level1
+     :label "Please Wait"]
+    [re-com/label
+     :label "The database is currently refreshing videos and synchronising changes. This may take a few minutes."]
+    [re-com/label
+     :label "The page will automatically update once it's finished."]]])
+
 (defn main-panel []
-  (fn []
-    [re-com/v-box
-     :height "100%"
-     :children [(title)
-                [re-com/line]
-                [actions]
-                [tabs]]]))
+  (let [error (re-frame/subscribe [:error])
+        refreshing?(re-frame/subscribe [:refreshing?])]
+    (fn []
+      [re-com/v-box
+       :height "100%"
+       :children [(title)
+                  [re-com/line]
+                  (when-not (or @error @refreshing?) [actions])
+                  (when-not (or @error @refreshing?) [tabs])
+                  (when @error (error-panel @error))
+                  (when @refreshing? (refreshing-panel))]])))

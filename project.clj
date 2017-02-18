@@ -34,6 +34,7 @@
                  [garden "1.3.2"]
                  [ns-tracker "0.3.0"]
                  [cljs-http "0.1.41"]
+                 [com.andrewmcveigh/cljs-time "0.4.0"]
                  [com.cognitect/transit-cljs "0.8.239"]
                  [hiccups "0.3.0"]
                  [cljsjs/moment "2.10.6-4"]

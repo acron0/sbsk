@@ -21,3 +21,18 @@
  :dirty?
  (fn [db]
    (:dirty? db)))
+
+(re-frame/reg-sub
+ :current-video-loading?
+ (fn [db]
+   (:current-video-loading? db)))
+
+(re-frame/reg-sub
+ :error
+ (fn [db]
+   (:error db)))
+
+(re-frame/reg-sub
+ :refreshing?
+ (fn [db]
+   (:refreshing? db)))
