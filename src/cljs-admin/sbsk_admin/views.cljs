@@ -65,6 +65,13 @@
                  ::dt/render-fn     (fn [val]
                                       [:span
                                        (as-moment val)])}
+                {::dt/column-key   [:meta :edited-at]
+                 ::dt/sorting      {::dt/enabled? true}
+                 ::dt/column-label "Edited At"
+                 ::dt/render-fn     (fn [val]
+                                      [:span
+                                       (if val (as-moment val)
+                                           "Never")])}
                 {::dt/column-key   [:id]
                  ::dt/column-label "Actions"
                  ::dt/render-fn    (fn [id]
@@ -108,7 +115,7 @@
                  :width "100%"
                  :model current-title
                  :placeholder default-title
-                 :on-change #()]]]))
+                 :on-change #(re-frame/dispatch [:edit-current-video/title %])]]]))
 
 (defn thumb-control
   [video]
@@ -136,7 +143,11 @@
     [re-com/label
      :label "Select a new picture:"]
     [:input {:type "file"
-             :id "additional-picture-input"}]]])
+             :id "additional-picture-input"
+             :on-change
+             (fn [e]
+               (let [file (first (array-seq (.. e -target -files)))]
+                 (re-frame/dispatch [:edit-current-video/thumb file])))}]]])
 
 (defn short-desc-control
   [video]
@@ -150,12 +161,12 @@
                  :width "100%"
                  :model short-desc
                  :placeholder "Provide a brief description, ideally a single sentence."
-                 :on-change #()]]]))
+                 :on-change #(re-frame/dispatch [:edit-current-video/short-description %])]]]))
 
 (defn full-desc-control
   [video]
   (let [default-full-desc (:description video)
-        full-desc (or (get-in video [:meta :short-description])
+        full-desc (or (get-in video [:meta :description])
                       default-full-desc)]
     [re-com/v-box
      :width "100%"
@@ -166,10 +177,53 @@
                  :width "100%"
                  :model full-desc
                  :placeholder default-full-desc
-                 :on-change #()]]]))
+                 :on-change #(re-frame/dispatch [:edit-current-video/description %])]]]))
 
 (defn tags-control
-  [video])
+  [video]
+  (let [all-tags (re-frame/subscribe [:tags])
+        tag-atom (r/atom nil)
+        tag-search (fn [s]
+                     (into []
+                           (filter #(re-find (re-pattern (str "(?i)" s)) %) @all-tags)))]
+    (fn [video]
+      (let [tags (get-in video [:meta :tags])]
+        [re-com/v-box
+         :width "50%"
+         :children [[re-com/title
+                     :level :level3
+                     :label "Tags"]
+                    [re-com/h-box
+                     :width "100%"
+                     :children [[re-com/typeahead
+                                 :model ""
+                                 :width "100%"
+                                 :rigid? false
+                                 :data-source tag-search
+                                 :placeholder "Search for tags or create a new one"
+                                 :on-change #(reset! tag-atom %)]
+                                [re-com/box
+                                 :child
+                                 [re-com/button
+                                  :label "Add"
+                                  :on-click #(re-frame/dispatch [:edit-current-video/add-tag @tag-atom])]]]]
+                    [re-com/gap
+                     :size "10px"]
+                    (for [t tags]
+                      [:div
+                       {:key t}
+                       [re-com/h-box
+                        :gap "5px"
+                        :children
+                        [[re-com/md-circle-icon-button
+                          :size :smaller
+                          :tooltip "Remove this tag"
+                          :md-icon-name "zmdi-close"
+                          :on-click #(re-frame/dispatch [:edit-current-video/remove-tag t])]
+                         [re-com/box
+                          :align-self :center
+                          :child [re-com/label
+                                  :label t]]]]])]]))))
 
 
 (defn current-video-panel
@@ -184,9 +238,9 @@
      :on-click #(re-frame/dispatch [:stop-edit-video])]
     (title-control video)
     (thumb-control video)
+    [tags-control video]
     (short-desc-control video)
-    (full-desc-control video)
-    (tags-control video)]])
+    (full-desc-control video)]])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tabs

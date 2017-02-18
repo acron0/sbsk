@@ -19,4 +19,6 @@
   [:.actions
    {:margin (em 1)}]
   [:.current-video-edit
-   {:padding (em 1)}])
+   {:padding (em 1)}]
+  [:.rc-typeahead-suggestions-container
+   {:margin-top (px 34)}])

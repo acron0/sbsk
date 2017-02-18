@@ -32,3 +32,40 @@
  :stop-edit-video
  (fn  [db [_ id]]
    (assoc db :current-video nil)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(re-frame/reg-event-db
+ :edit-current-video/add-tag
+ (fn  [db [_ tag]]
+   (let [db' (-> db
+                 (update-in [:current-video :meta :tags] set)
+                 (update-in [:current-video :meta :tags] conj tag)
+                 (update-in [:tags] conj tag))]
+     (db/reintegrate-current-video db'))))
+
+(re-frame/reg-event-db
+ :edit-current-video/remove-tag
+ (fn  [db [_ tag]]
+   (let [db' (-> db
+                 (update-in [:current-video :meta :tags] set)
+                 (update-in [:current-video :meta :tags] disj tag))]
+     (db/reintegrate-current-video db'))))
+
+(re-frame/reg-event-db
+ :edit-current-video/title
+ (fn  [db [_ title]]
+   (let [db'(assoc-in db [:current-video :meta :title] title)]
+     (db/reintegrate-current-video db'))))
+
+(re-frame/reg-event-db
+ :edit-current-video/short-description
+ (fn  [db [_ sd]]
+   (let [db'(assoc-in db [:current-video :meta :short-description] sd)]
+     (db/reintegrate-current-video db'))))
+
+(re-frame/reg-event-db
+ :edit-current-video/description
+ (fn  [db [_ d]]
+   (let [db'(assoc-in db [:current-video :meta :description] d)]
+     (db/reintegrate-current-video db'))))
