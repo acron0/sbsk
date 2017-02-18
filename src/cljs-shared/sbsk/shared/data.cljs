@@ -13,6 +13,23 @@
 (def data-loc-suffix
   ".json")
 
+(def desc-title-len 24)
+(def video-img-div 4.663)
+(def video-highlight-width (/ 900 video-img-div))
+(def video-highlight-height (/ 600 video-img-div))
+;;
+(def video-small-width (/ 980 5))
+(def video-small-height (/ 653 5))
+(def video-medium-width (* 2 video-small-width))
+(def video-medium-height (* 2 video-small-height))
+(def video-large-width (* 3 video-small-width))
+(def video-large-height (* 3 video-small-height))
+
+(defn clip-string
+  [s]
+  (let [end (.indexOf s " " desc-title-len)]
+    (str (subs s 0 end) "...")))
+
 (defn keywordize
   [x]
   (reduce-kv

@@ -3,14 +3,8 @@
             [re-frame.core :as re-frame]
             [re-com.core :as re-com]
             [clojure.string :as str]
-            [cljsjs.moment]))
-
-(def desc-title-len 24)
-
-(defn clip-string
-  [s]
-  (let [end (.indexOf s " " desc-title-len)]
-    (str (subs s 0 end) "...")))
+            [cljsjs.moment]
+            [sbsk.shared.data :refer [clip-string]]))
 
 (defn fb-header
   [video]
