@@ -20,6 +20,7 @@
                  [compojure "1.5.1"]
                  [ring "1.5.1"]
                  [ring-cors "0.1.9"]
+                 [ring-basic-authentication "1.0.5"]
                  [caponia "0.3.3"]
                  [overtone/at-at "1.2.0"]
 

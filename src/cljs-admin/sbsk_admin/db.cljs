@@ -1,6 +1,13 @@
 (ns sbsk-admin.db
-  (:require [sbsk.shared.data :as sbsk-data]
-            [goog.string :as gstr]))
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [sbsk.macros :refer [cljs-env]])
+  (:require [sbsk.shared.data :refer [fetch-videos
+                                      admin-address
+                                      admin-port]]
+            [goog.string :as gstr]
+            [cljs-http.client :as http]
+            [cljs.core.async :refer [<!]]
+            [cognitect.transit :as t]))
 
 (def empty-db
   {:videos []
@@ -11,19 +18,25 @@
 
 (defn init-db
   []
-  (run! sbsk-data/fetch-videos (range 2))
+  (run! fetch-videos (range 2))
   empty-db)
 
 (defn load-more-videos
   [db]
   (let [n (inc (:latest-data db))
         new-db (assoc db :loading-more? true)]
-    (sbsk-data/fetch-videos n)
+    (fetch-videos n)
     new-db))
 
 (defn sync-to-video-database!
-  [videos]
-  )
+  [video]
+  (go (let [result (<! (http/post (str "http://" admin-address
+                                       ":" admin-port
+                                       "/api/video/" (:id video) "/metadata")
+                                  {:with-credentials? false
+                                   :json-params (:meta video)}))]
+        #_(when (:success result)
+            (re-frame/dispatch [:search-results (:body result)])))))
 
 (defn reintegrate-current-video
   [db]

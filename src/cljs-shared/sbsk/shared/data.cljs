@@ -8,6 +8,12 @@
 
 (def server-address
   (or (cljs-env :sbsk-search-address) "localhost"))
+(def server-port
+  (or (cljs-env :sbsk-search-port) "3000"))
+(def admin-address
+  (or (cljs-env :sbsk-admin-address) "localhost"))
+(def admin-port
+  (or (cljs-env :sbsk-admin-port) "7000"))
 (def data-loc-prefix
   "https://s3-us-west-2.amazonaws.com/sbsk-data-segmented/data.")
 (def data-loc-suffix

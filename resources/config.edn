@@ -1,13 +1,17 @@
-{:crawler  {:interval 21600000
+{:metadata {:bucket "sbsk-metadata"}
+ :crawler  {:interval 21600000
             :hash-reset-interval 21600000
             :facebook {:app-id #env SBSK_FB_APP_ID
                        :app-secret #env SBSK_FB_APP_SECRET
                        :page-id "591976210904363"}
             :bucket-full "sbsk-data"
             :bucket-segments "sbsk-data-segmented"
-            :records-per-segment 10}
+            :records-per-segment 10
+            :metadata-bucket ^:ref [:metadata :bucket]}
  :database {:credentials {:profile "sbsk-fb-crawler"}}
- :admin    {}
+ :admin    {:username #or [#env SBSK_ADMIN_USERNAME "sbsk"]
+            :password #or [#env SBSK_ADMIN_PASSWORD "password"]
+            :metadata-bucket ^:ref [:metadata :bucket]}
  :search   {:bucket-full "sbsk-data"
             :secret-header-name #or [#env SBSK_SECRET_HEADER_NAME "X-SBSK-Secret"]
             :secret-header-value #or [#env SBSK_SECRET_HEADER_VALUE "sdiklaicepsybskooblaiceps"]}

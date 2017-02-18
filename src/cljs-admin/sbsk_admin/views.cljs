@@ -240,7 +240,10 @@
     (thumb-control video)
     [tags-control video]
     (short-desc-control video)
-    (full-desc-control video)]])
+    (full-desc-control video)
+    [re-com/button
+     :label "Save"
+     :class "btn-success"]]])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tabs
