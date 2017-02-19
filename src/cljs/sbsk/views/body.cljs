@@ -14,7 +14,8 @@
                                       video-medium-width
                                       video-medium-height
                                       video-large-width
-                                      video-large-height]]))
+                                      video-large-height]]
+            [cljsjs.smooth-scroll]))
 
 (def popular-search-terms
   ["Autism"
@@ -218,6 +219,13 @@
   (reset! isotope nil)
   (reset! added-videos #{}))
 
+(defn scroll-to-mosaic
+  []
+  (.setTimeout
+   js/window
+   #(.animateScroll js/smoothScroll "#video-mosaic")
+   100))
+
 (defn video-packed-display
   [search-term videos]
   (let [isotope            (atom nil)
@@ -230,12 +238,15 @@
      {:component-did-mount
       (fn [& _]
         (when-not @isotope
-          (init-isotope! vpd-id isotope isotope-config))
+          (init-isotope! vpd-id isotope isotope-config)
+          (when search-term
+            (scroll-to-mosaic)))
         (append-videos! vpd-id @isotope @component-videos added-videos))
       :component-did-update
       (fn [old-state new-state]
         (when (and (not @isotope) search-term)
-          (init-isotope! vpd-id isotope isotope-config))
+          (init-isotope! vpd-id isotope isotope-config)
+          (scroll-to-mosaic))
         (when (or (not search-term) @render-since-reset)
           (append-videos! vpd-id @isotope @component-videos added-videos)))
       :reagent-render
@@ -257,38 +268,39 @@
   [search-results? search-term videos]
   (let [videos-by-month (when-not search-results?
                           (videos-by-month videos))]
-    [re-com/v-box
-     :class "lower"
-     :width "100%"
-     :children [[re-com/title
-                 :level :level2
-                 :label (if search-results?
-                          (str "Search Results for '" search-term "'")
-                          "All Videos")]
-                (if search-results?
-                  [:div.pure-g
-                   [:div
-                    {:style {:width "100%"}}
-                    [video-packed-display search-term videos]]]
-                  [:div.pure-g
-                   (for [month (keys videos-by-month)]
-                     ^{:key month}
-                     [:div
-                      {:style {:width "100%"}}
-                      [re-com/title
-                       :level :level3
-                       :label month]
-                      [video-packed-display nil (get videos-by-month month)]])
-                   [re-com/h-box
-                    :class "load-more"
-                    :justify :center
-                    :width "100%"
-                    :children [(if true #_@loading-more?
-                                   #_[re-com/throbber
-                                      :size :small]
-                                   [re-com/button
-                                    :label "Load More"
-                                    :on-click #(re-frame/dispatch [:load-more-videos])])]]])]]))
+    [:div#video-mosaic
+     [re-com/v-box
+      :class "lower"
+      :width "100%"
+      :children [[re-com/title
+                  :level :level2
+                  :label (if search-results?
+                           (str "Search Results for '" search-term "'")
+                           "All Videos")]
+                 (if search-results?
+                   [:div.pure-g
+                    [:div
+                     {:style {:width "100%"}}
+                     [video-packed-display search-term videos]]]
+                   [:div.pure-g
+                    (for [month (keys videos-by-month)]
+                      ^{:key month}
+                      [:div
+                       {:style {:width "100%"}}
+                       [re-com/title
+                        :level :level3
+                        :label month]
+                       [video-packed-display nil (get videos-by-month month)]])
+                    [re-com/h-box
+                     :class "load-more"
+                     :justify :center
+                     :width "100%"
+                     :children [(if true #_@loading-more?
+                                    #_[re-com/throbber
+                                       :size :small]
+                                    [re-com/button
+                                     :label "Load More"
+                                     :on-click #(re-frame/dispatch [:load-more-videos])])]]])]]]))
 
 (defn panel []
   (let [videos (re-frame/subscribe [:videos])

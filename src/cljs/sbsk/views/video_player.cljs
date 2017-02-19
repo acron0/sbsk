@@ -100,5 +100,7 @@
       :children [(fb-header video)
                  (video-info video)
                  (video-iframe video)
+                 [re-com/gap
+                  :size "10px"]
                  (tags video)]]]]
    (close-button)])
