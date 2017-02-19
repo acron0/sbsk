@@ -117,42 +117,53 @@
 
 (defn thumb-control
   [video]
-  [re-com/v-box
-   :children
-   [[re-com/title
-     :level :level3
-     :label "Picture"]
-    [re-com/h-box
-     :gap "10px"
+  (let [meta-thumb (get-in video [:meta :thumb])
+        uploading? (and meta-thumb (clojure.string/starts-with? meta-thumb "data:"))]
+    [re-com/v-box
      :children
-     [[re-com/v-box
+     [[re-com/title
+       :level :level3
+       :label "Picture"]
+      [re-com/h-box
        :gap "10px"
        :children
-       [[re-com/label :label "Replacement Picture"]
-        [:img {:src (get-in video [:meta :thumb])
-               :width video-large-width
-               :height video-large-height}]
-        [re-com/label
-         :label "Select a Replacement Picture (6x4):"]
-        [:input {:type "file"
-                 :id "additional-picture-input"
-                 :on-change
-                 (fn [e]
-                   (let [file (first (array-seq (.. e -target -files)))]
-                     (re-frame/dispatch [:edit-current-video/thumb file])))}]
-        [re-com/label
-         :label "or"]
-        [re-com/button
-         :class "btn-danger"
-         :label "Revert to Default Picture"]]]
-      [re-com/v-box
-       :gap "10px"
-       :children
-       [[re-com/label :label "Default  Picture"]
-        [:img {:src (:thumb video)
-               :width video-large-width
-               :height video-large-height}]
-        [re-com/gap :size "10px"]]]]]]])
+       [[re-com/v-box
+         :gap "10px"
+         :children
+         [[re-com/label :label "Replacement Picture"]
+          [:div
+           {:style {:position :relative}}
+           [:img {:src meta-thumb
+                  :width video-large-width
+                  :height video-large-height}]
+           (when uploading?
+             [:div.uploading-thumb
+              {:style {:width video-large-width
+                       :height video-large-height}}
+              "Uploading..."
+              [re-com/throbber
+               :color "#000"]])]
+          [re-com/label
+           :label "Select a Replacement Picture (6x4):"]
+          [:input {:type "file"
+                   :id "additional-picture-input"
+                   :on-change
+                   (fn [e]
+                     (let [file (first (array-seq (.. e -target -files)))]
+                       (re-frame/dispatch [:edit-current-video/thumb file])))}]
+          [re-com/label
+           :label "or"]
+          [re-com/button
+           :class "btn-danger"
+           :label "Revert to Default Picture"]]]
+        [re-com/v-box
+         :gap "10px"
+         :children
+         [[re-com/label :label "Default  Picture"]
+          [:img {:src (:thumb video)
+                 :width video-large-width
+                 :height video-large-height}]
+          [re-com/gap :size "10px"]]]]]]]))
 
 (defn short-desc-control
   [video]
@@ -304,11 +315,13 @@
   [re-com/v-box
    :width "100%"
    :align :center
+   :gap "10px"
    :children
    [[re-com/title
      :level :level1
      :label "Error!"]
     [re-com/label
+     :style {:padding "1em 4em"}
      :label msg]
     [re-com/line]
     [:a
@@ -318,7 +331,11 @@
                  "%0D%0A-------------------------%0D%0A")
       :target "_blank"}
      [re-com/label
-      :label "Click here to email an error report."]]]])
+      :label "Click here to email an error report."]]
+    [re-com/button
+     :label "Restart App"
+     :class "btn-primary"
+     :on-click #(.reload js/location)]]])
 
 (defn refreshing-panel
   []

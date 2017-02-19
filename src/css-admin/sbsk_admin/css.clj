@@ -21,4 +21,10 @@
   [:.current-video-edit
    {:padding (em 1)}]
   [:.rc-typeahead-suggestions-container
-   {:margin-top (px 34)}])
+   {:margin-top (px 34)}]
+  [:.uploading-thumb
+   {:position :absolute
+    :top 0
+    :font-size (px 20)
+    :font-weight :bold
+    :background-color "rgba(255, 255, 255, 0.5)"}])

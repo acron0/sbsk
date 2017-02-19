@@ -1,4 +1,5 @@
 {:metadata {:bucket "sbsk-metadata"}
+ :aws-credentials {:profile "sbsk-fb-crawler"}
  :crawler  {:interval 21600000
             :hash-reset-interval 21600000
             :facebook {:app-id #env SBSK_FB_APP_ID
@@ -8,10 +9,13 @@
             :bucket-segments "sbsk-data-segmented"
             :records-per-segment 10
             :metadata-bucket ^:ref [:metadata :bucket]}
- :database {:credentials {:profile "sbsk-fb-crawler"}}
+ :database {:credentials ^:ref [:aws-credentials]}
  :admin    {:username #or [#env SBSK_ADMIN_USERNAME "sbsk"]
             :password #or [#env SBSK_ADMIN_PASSWORD "password"]
-            :metadata-bucket ^:ref [:metadata :bucket]}
+            :metadata-bucket ^:ref [:metadata :bucket]
+            :photo-bucket "sbsk-pictures"
+            :photo-bucket-region "us-west-2"
+            :credentials ^:ref [:aws-credentials]}
  :search   {:bucket-full "sbsk-data"
             :secret-header-name #or [#env SBSK_SECRET_HEADER_NAME "X-SBSK-Secret"]
             :secret-header-value #or [#env SBSK_SECRET_HEADER_VALUE "sdiklaicepsybskooblaiceps"]}

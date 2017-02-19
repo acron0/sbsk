@@ -38,7 +38,7 @@
   (go (let [result (<! (http/post (str "http://" admin-address
                                        ":" admin-port
                                        "/api/refresh")
-                                  {:with-credentials? false}))]
+                                  {:with-credentials? true}))]
         (if (:success result)
           (do
             (when full?
@@ -51,7 +51,7 @@
   (go (let [result (<! (http/post (str "http://" admin-address
                                        ":" admin-port
                                        "/api/video/" (:id video) "/metadata")
-                                  {:with-credentials? false
+                                  {:with-credentials? true
                                    :json-params (:meta video)}))]
         #_(when (:success result)
             (re-frame/dispatch [:search-results (:body result)])))))
@@ -74,6 +74,7 @@
                       [:meta :edited-at]
                       edited-time)]
      (when sync?
+       ;; Make sure we don't upload base64 thumb data
        (let [thumb (get-in cv [:meta :thumb])
              cv (if (and thumb (clojure.string/starts-with? thumb "data:"))
                   (update cv :meta dissoc :thumb)
@@ -93,8 +94,25 @@
   (go (let [result (<! (http/get (str "http://" admin-address
                                       ":" admin-port
                                       "/api/video/" id "/metadata")
-                                 {:with-credentials? false}))]
+                                 {:with-credentials? true}))]
         (if (or (:success result)
                 (= 404 (:status result)))
           (re-frame/dispatch [:update-video-metadata id (:body result)])
           (re-frame/dispatch [:error (str "Failed to fetch metadata for " id ": " result)])))))
+
+(defn upload-photo!
+  [id file]
+  (go (let [result (<! (http/get (str "http://" admin-address
+                                      ":" admin-port
+                                      "/api/video/" id "/photo/upload-link")
+                                 {:with-credentials? true}))]
+        (if (:success result)
+          (let [upload-result (<! (http/put (:body result)
+                                            {:with-credentials? false
+                                             :body file}))]
+            (if (:success upload-result)
+              (re-frame/dispatch [:edit-current-video/thumb-update
+                                  (str "https://s3-us-west-2.amazonaws.com/sbsk-pictures/" id)
+                                  id true])
+              (re-frame/dispatch [:error (str "Failed to upload photo to S3 for " id ": " upload-result)])))
+          (re-frame/dispatch [:error (str "Failed to create upload link for " id ": " result)])))))

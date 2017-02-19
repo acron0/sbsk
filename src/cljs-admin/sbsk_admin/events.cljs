@@ -85,7 +85,6 @@
                        (assoc db :dirty? true)
                        (assoc-in db [:current-video :meta] metadata))
                      (assoc :current-video-loading? false))]
-         (println "GOT META" metadata)
          (db/reintegrate-current-video db' local-is-newer?
                                        (if local-is-newer?
                                          local-edited-time
@@ -145,7 +144,7 @@
                                                   (get-in db [:current-video :id])
                                                   false]))
      (.readAsDataURL reader file)
-     #_(db/upload-photo! file)
+     (db/upload-photo! (get-in db [:current-video :id]) file)
      (-> db
          (assoc :dirty? true)))))
 
