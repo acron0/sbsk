@@ -48,8 +48,8 @@
   :min-lein-version "2.5.3"
   :source-paths ["src/clj"]
   :clean-targets ^{:protect false} ["resources/public/js/compiled"
-                                    "target"
-                                    "resources/public/css/compiled"]
+                                    "resources/public/css/compiled"
+                                    "target"]
 
   :figwheel {:css-dirs ["resources/public/css"]
              :nrepl-port 7888}
@@ -65,7 +65,8 @@
                      :compiler     {:output-to     "resources/public/css/compiled/admin.css"
                                     :pretty-print? true}}]}
 
-  :profiles {:uberjar {:aot :all}
+  :profiles {:uberjar {:aot :all
+                       :auto-clean false}
              :dev {:source-paths ["dev-src"]
                    :dependencies [[org.clojure/tools.namespace "0.2.4"]
                                   [com.cemerick/piggieback "0.2.1"]
@@ -114,7 +115,7 @@
                                :closure-defines {goog.DEBUG false}
                                :externs         ["../js-admin/externs.js"]
                                :pretty-print    false
-                               :output-dir      "resources/public/js/admin"}}
+                               :output-dir      "resources/public/js/admin-tmp"}}
 
                {:id           "test"
                 :source-paths ["src/cljs" "src/cljs-shared" "test/cljs"]

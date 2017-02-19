@@ -36,6 +36,13 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn get-thumb
+  [video]
+  (or (get-in video [:meta :thumb])
+      (get video :thumb)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn dispatch-search
   ([s]
    (re-frame/dispatch [:search s]))
@@ -94,7 +101,7 @@
              {:style {:width "100%"
                       :height "100%"}
               :on-click (partial open-video video)}
-             [:img {:src (:thumb video)
+             [:img {:src (get-thumb video)
                     :width w
                     :height h}]]]))
 
@@ -178,7 +185,7 @@
                                                           "cyan"
                                                           "pink"])})}
    (let [trim 2]
-     [:img {:src (:thumb video)
+     [:img {:src (get-thumb video)
             :width (px (- width (* 2 trim)))
             :height (px (- height (* 2 trim)))
             :style (style {:margin (px trim)})}])])
