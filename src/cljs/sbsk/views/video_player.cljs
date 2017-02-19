@@ -4,6 +4,7 @@
             [re-com.core :as re-com]
             [clojure.string :as str]
             [cljsjs.moment]
+            [sbsk.shared.video :as video]
             [sbsk.shared.data :refer [clip-string]]))
 
 (defn fb-header
@@ -20,9 +21,11 @@
               [re-com/v-box
                :class "fb-info"
                :justify :start
-               :children [[re-com/title
-                           :level :level1
-                           :label "Special Books by Special Kids"]
+               :children [[:a
+                           {:href "http://facebook.com/specialbooksbyspecialkids"}
+                           [re-com/title
+                            :level :level1
+                            :label "Special Books by Special Kids"]]
                           [re-com/label
                            :label (str "posted " (.calendar (js/moment
                                                              (:created-at video)
@@ -32,12 +35,13 @@
   [video]
   [re-com/v-box
    :class "video-info"
-   :children [[re-com/title
-               :level :level1
-               :label (or (:title video)
-                          (clip-string (:description video)))]
+   :children [[:a
+               {:href (str "http://facebook.com" (:link video))}
+               [re-com/title
+                :level :level1
+                :label (video/get-title video)]]
               [re-com/label
-               :label (:description video)]]])
+               :label (video/get-description video)]]])
 
 (defn get-fb-video-link
   [video-id]
@@ -58,10 +62,23 @@
      {:src (get-fb-video-link (:id video))
       :width w
       :height h
-      :SCROLLING "no"
+      :scrolling "no"
       :frame-border "0"
       :allow-transparency "true"
       :allow-full-screen "true"}]))
+
+(defn tags
+  [video]
+  (when-let [ts (video/get-tags video)]
+    [re-com/h-box
+     :gap "5px"
+     :children (concat [[re-com/label
+                         :label "Tags"]
+                        [re-com/line]]
+                       (for [t ts]
+                         [re-com/hyperlink
+                          :class "taglink"
+                          :label (str "#" t)]))]))
 
 (defn close-button
   []
@@ -75,13 +92,13 @@
   [video]
   [:div.video-player
    {:on-click #(re-frame/dispatch [:close-video])}
-   [:div.background]
    [:div.content
-    {:on-click #(.stopPropagation %)}
-    [re-com/v-box
-     :class "inner-content"
-     :justify :start
-     :children [(fb-header video)
-                (video-info video)
-                (video-iframe video)
-                (close-button)]]]])
+    [:div.inner-content
+     {:on-click #(.stopPropagation %)}
+     [re-com/v-box
+      :justify :start
+      :children [(fb-header video)
+                 (video-info video)
+                 (video-iframe video)
+                 (tags video)]]]]
+   (close-button)])

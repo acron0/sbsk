@@ -11,6 +11,7 @@
 (def title-font-colour "#605E5E")
 (def menu-item-colour "#A0A09F")
 (def header-bar-bg-colour "#605E5E")
+(def blue-highlight "#2196f3")
 
 (defn transition
   [& args]
@@ -41,6 +42,8 @@
              :color 'white
              :padding [[(em 0) (em 0.4) (em 0.2) (em 0.4)]]
              :background-color header-bar-bg-colour}]
+  [:a
+   {:text-decoration :none}]
 
   ;; Header
   [:.header
@@ -87,19 +90,16 @@
     :bottom 0
     :left 0
     :right 0
-    :background-color "rgba(33, 33, 33, 0.6)"
+    :background-color "rgba(66, 66, 66, 0.95)"
     :color 'white
     :font-size (em 1.25)
     :overflow-y :scroll}
-   [:.background
-    {:position :fixed
-     :z-index -1
+   [:.close-button
+    {:position :absolute
      :top 0
      :left 0
-     :bottom 0
-     :right 0
-     :margin [[0 (percent 5)]]
-     :background-color "rgba(66, 66, 66, 0.95)"}]
+     :background-color 'transparent
+     :font-size (em 2)}]
    [:.content
     {:margin [[0 (percent 5)]]
      :height (percent 100)}
@@ -113,10 +113,6 @@
       {:color 'white
        :font-size (px 20)
        :font-weight :bold}]
-     [:.close-button
-      {:position :absolute
-       :top 0
-       :left (percent 5)}]
      [:.video-info
       {:margin [[(px 20) (px 60)]]
        :line-height (em 1.3)}]
@@ -126,7 +122,10 @@
        {:margin-left (px 10)
         :font-size (em 0.8)}
        [:.level1
-        {:font-size (em 1.1)}]]]]]]
+        {:font-size (em 1.1)}]]]]
+    [:.taglink
+     [:&:hover
+      {:color blue-highlight}]]]]
 
   ;; Content body
   [:.content-body

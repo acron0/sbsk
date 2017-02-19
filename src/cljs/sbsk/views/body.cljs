@@ -6,9 +6,8 @@
             [clojure.string :as str]
             [sbsk.hiccup-help :refer [px hiccup->element]]
             [garden.core :refer [style]]
-            [sbsk.shared.data :refer [desc-title-len
-                                      video-img-div
-                                      video-highlight-width
+            [sbsk.shared.video :as video]
+            [sbsk.shared.data :refer [video-highlight-width
                                       video-highlight-height
                                       video-small-height
                                       video-small-width
@@ -33,13 +32,6 @@
 
 (def search-input-id "search-nav-input")
 (defn search-input-element [] (.getElementById js/document search-input-id))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn get-thumb
-  [video]
-  (or (get-in video [:meta :thumb])
-      (get video :thumb)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -101,7 +93,7 @@
              {:style {:width "100%"
                       :height "100%"}
               :on-click (partial open-video video)}
-             [:img {:src (get-thumb video)
+             [:img {:src (video/get-thumb video)
                     :width w
                     :height h}]]]))
 
@@ -142,11 +134,6 @@
    :children [(search-nav popular-search-terms)
               (video-highlights videos)]])
 
-(defn clip-string
-  [s]
-  (let [end (.indexOf s " " desc-title-len)]
-    (str (subs s 0 end) "...")))
-
 (defn videos-by-month
   [videos]
   (let [month (fn [video] (.format (js/moment
@@ -185,7 +172,7 @@
                                                           "cyan"
                                                           "pink"])})}
    (let [trim 2]
-     [:img {:src (get-thumb video)
+     [:img {:src (video/get-thumb video)
             :width (px (- width (* 2 trim)))
             :height (px (- height (* 2 trim)))
             :style (style {:margin (px trim)})}])])
