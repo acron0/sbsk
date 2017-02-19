@@ -29,9 +29,10 @@
  :open-video
  (fn  [db [_ video-id]]
    (set-noscroll! true)
-   (assoc db :current-video (some #(when (= (:id %) video-id) %)
-                                  (or (get db :videos)
-                                      (get db :search-result-videos))))))
+   (assoc db :current-video (or (some #(when (= (:id %) video-id) %)
+                                      (get db :search-result-videos))
+                                (some #(when (= (:id %) video-id) %)
+                                      (get db :videos))))))
 
 (re-frame/reg-event-db
  :close-video

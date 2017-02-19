@@ -223,7 +223,7 @@
   []
   (.setTimeout
    js/window
-   #(.animateScroll js/smoothScroll "#video-mosaic")
+   #(.animateScroll js/smoothScroll "#search-results")
    100))
 
 (defn video-packed-display
@@ -268,7 +268,7 @@
   [search-results? search-term videos]
   (let [videos-by-month (when-not search-results?
                           (videos-by-month videos))]
-    [:div#video-mosaic
+    [:div#search-results
      [re-com/v-box
       :class "lower"
       :width "100%"
