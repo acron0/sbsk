@@ -8,4 +8,4 @@ wget -O sbsk.zip "https://github.com/acron0/sbsk/archive/$VERSION.zip"
 unzip sbsk.zip
 mv sbsk-$VERSION/ $SBSK_DIR
 cd $SBSK_DIR
-lein uberjar
+./scripts/build-daemon.sh

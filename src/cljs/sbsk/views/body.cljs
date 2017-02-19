@@ -5,7 +5,17 @@
             [re-com.core :as re-com]
             [clojure.string :as str]
             [sbsk.hiccup-help :refer [px hiccup->element]]
-            [garden.core :refer [style]]))
+            [garden.core :refer [style]]
+            [sbsk.shared.data :refer [desc-title-len
+                                      video-img-div
+                                      video-highlight-width
+                                      video-highlight-height
+                                      video-small-height
+                                      video-small-width
+                                      video-medium-width
+                                      video-medium-height
+                                      video-large-width
+                                      video-large-height]]))
 
 (def popular-search-terms
   ["Autism"
@@ -21,20 +31,15 @@
    "Girls"
    "Boys"])
 
-(def desc-title-len 24)
-(def video-img-div 4.663)
-(def video-highlight-width (/ 900 video-img-div))
-(def video-highlight-height (/ 600 video-img-div))
-;;
-(def video-small-width (/ 980 5))
-(def video-small-height (/ 653 5))
-(def video-medium-width (* 2 video-small-width))
-(def video-medium-height (* 2 video-small-height))
-(def video-large-width (* 3 video-small-width))
-(def video-large-height (* 3 video-small-height))
-
 (def search-input-id "search-nav-input")
 (defn search-input-element [] (.getElementById js/document search-input-id))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn get-thumb
+  [video]
+  (or (get-in video [:meta :thumb])
+      (get video :thumb)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -96,7 +101,7 @@
              {:style {:width "100%"
                       :height "100%"}
               :on-click (partial open-video video)}
-             [:img {:src (:thumb video)
+             [:img {:src (get-thumb video)
                     :width w
                     :height h}]]]))
 
@@ -154,7 +159,7 @@
   (let [prop [[10 [video-small-width video-small-height]]
               [5  [video-medium-width video-medium-height]]
               [1  [video-large-width video-large-height]]]
-        pick(rand-nth (range (apply + (map first prop))))]
+        pick (rand-nth (range (apply + (map first prop))))]
     (loop [props prop
            total 0]
       (let [[x result] (first props)
@@ -180,7 +185,7 @@
                                                           "cyan"
                                                           "pink"])})}
    (let [trim 2]
-     [:img {:src (:thumb video)
+     [:img {:src (get-thumb video)
             :width (px (- width (* 2 trim)))
             :height (px (- height (* 2 trim)))
             :style (style {:margin (px trim)})}])])

@@ -13,12 +13,11 @@ export SBSK_FB_APP_SECRET=...
 java -jar /home/sbsk/sbsk-app/target/uberjar/sbsk.jar -c
 ```
 * Add AWS creds and config
-* Add script to crontab
 
 ###########################
 
 TODO
 ----
-remove 'highlight' size - replace with 'small'
-replace latest videos with packery?
-externs!!!!
+* remove 'highlight' size - replace with 'small'
+* check externs!!!!
+* search db needs to include meta data

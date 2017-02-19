@@ -18,9 +18,8 @@
 (defn reload-index
   [index records table-name database]
   (log/info "Reloading index...")
-  (let [data-str (db/read-record-as-string
-                  database table-name (apply str data-name-parts))
-        data (parse-string data-str keyword)]
+  (let [data (db/read-record-as-obj
+              database table-name (apply str data-name-parts))]
     (log/info "Downloaded" (count data) "records...")
     ;; create lookup
     (reset! records (reduce (fn [a e] (assoc a (:id e) e)) {} data))

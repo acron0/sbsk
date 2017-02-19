@@ -76,6 +76,17 @@
                 :width (:width best-format)
                 :height (:height best-format)))))
 
+(defn add-metadata
+  [db md-keys table]
+  (fn [video]
+    (let [key-name (:id video)
+          exists? (contains? md-keys key-name)]
+      (if exists?
+        (let [md (db/read-record-as-obj db table key-name)]
+          (log/debug "Adding metadata for" key-name)
+          (assoc video :meta md))
+        video))))
+
 (defn upload-full
   [records db bucket]
   ;; TODO make this a caponia index to save, rather than a json file.
@@ -92,35 +103,42 @@
       (when (< (inc n) (count r-segs))
         (recur (inc n))))))
 
-(defn do-crawl
-  [database {:keys [app-id app-secret page-id]}
-   bucket-full bucket-segments records-per-segment hash-atom]
-  (fn []
-    (log/debug "Starting crawler process...")
-    (let [records (->> (fetch app-id app-secret page-id)
-                       (filter :embeddable)
-                       (map scrub))
-          new-hash (hash records)]
-      ;; hash is unreliable so disable until we can do this better
-      (if true #_(not= new-hash @hash-atom)
-          (do
-            (log/info "New hash was observed:" new-hash)
-            (log/info "Found" (count records) "records...")
-            (log/info "Uploading full...")
-            (upload-full records database bucket-full)
-            (log/info "Uploading"
-                      (int (Math/ceil (/ (count records) records-per-segment)))
-                      "segments...")
-            (upload-segments records database bucket-segments records-per-segment))
-          (log/debug "No change observed"))
-      (reset! hash-atom new-hash))))
+(defprotocol OnDemandCrawler
+  (crawl-now! [this]))
+
+(def lock (Object.))
 
 (defrecord Crawler [database
                     interval facebook bucket-full
-                    hash-reset-interval bucket-segments records-per-segment]
+                    hash-reset-interval bucket-segments records-per-segment
+                    metadata-bucket]
+  OnDemandCrawler
+  (crawl-now! [{:keys [hash-atom]}]
+    (locking lock
+      (log/debug "Starting crawler process...")
+      (let [{:keys [app-id app-secret page-id]} facebook
+            md-keys (set (db/list-keys database metadata-bucket))
+            records (->> (fetch app-id app-secret page-id)
+                         (filter :embeddable)
+                         (map scrub)
+                         (map (add-metadata database md-keys metadata-bucket)))
+            new-hash (hash records)]
+        ;; hash is unreliable so disable until we can do this better
+        (if true #_(not= new-hash @hash-atom)
+            (do
+              (log/info "New hash was observed:" new-hash)
+              (log/info "Found" (count records) "records...")
+              (log/info "Uploading full...")
+              (upload-full records database bucket-full)
+              (log/info "Uploading"
+                        (int (Math/ceil (/ (count records) records-per-segment)))
+                        "segments...")
+              (upload-segments records database bucket-segments records-per-segment))
+            (log/debug "No change observed"))
+        (reset! hash-atom new-hash))))
   component/Lifecycle
   (start [component]
-    (log/info "Starting Crawler")
+    (log/info "Starting Crawler" interval)
     (let [pool (at/mk-pool)
           hash-atom (atom nil)]
       (assoc component
@@ -128,7 +146,8 @@
              :scheduled-fns
              [(at/interspaced
                interval
-               (do-crawl database facebook bucket-full bucket-segments records-per-segment hash-atom)
+               #(crawl-now! (assoc component
+                                   :hash-atom hash-atom))
                pool)
               (at/every
                hash-reset-interval
@@ -143,4 +162,4 @@
     (run! at/kill scheduled-fns)
     (at/stop-and-reset-pool! pool :strategy :kill)
     (log/info "All schedules are now stopped")
-    (dissoc component :pool :scheduled-fns :hash-atom)))
+    (dissoc component :pool :scheduled-fns :hash-atom :lock-atom)))

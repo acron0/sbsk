@@ -9,8 +9,9 @@
              [sbsk.components.database :as database])
   (:gen-class))
 
-(defn new-system [profile modes]
-  (let [config (read-config (clojure.java.io/resource "config.edn") {:profile profile})
+(defn new-system [profile-str modes]
+  (let [profile (keyword profile-str)
+        config (read-config (clojure.java.io/resource "config.edn") {:profile profile})
         mode-set (set modes)
         _ (log/merge-config! (:log config))
         _ (log/info "Profile:" profile)
@@ -29,7 +30,7 @@
                     [:admin (when (mode-enabled? :admin)
                               (component/using
                                (admin/map->Admin (:admin config))
-                               [:database]))]]
+                               [:database :crawler]))]]
         filtered (reduce (fn [a [x y]]
                            (if y (concat a [x y]) a)) [] components)]
 
