@@ -193,8 +193,15 @@
   [el fun]
   (aset el "onclick" fun))
 
+(defn scroll-to-mosaic
+  []
+  (.setTimeout
+   js/window
+   #(.animateScroll js/smoothScroll "#search-results")
+   100))
+
 (defn append-videos!
-  [vpd-id isotope videos added-videos]
+  [vpd-id isotope videos added-videos scroll?]
   (when isotope
     (->> videos
          (filter (comp not @added-videos :id))
@@ -206,7 +213,9 @@
               (add-onclick! video-el (partial open-video video))
               (.appendChild vpd-el video-el)
               (.appended isotope video-el)
-              (swap! added-videos conj (:id video))))))))
+              (swap! added-videos conj (:id video))))))
+    (when scroll?
+      (scroll-to-mosaic))))
 
 (defn reset-isotope!
   [vpd-id isotope added-videos]
@@ -218,13 +227,6 @@
   (.destroy @isotope)
   (reset! isotope nil)
   (reset! added-videos #{}))
-
-(defn scroll-to-mosaic
-  []
-  (.setTimeout
-   js/window
-   #(.animateScroll js/smoothScroll "#search-results")
-   100))
 
 (defn video-packed-display
   [search-term videos]
@@ -238,17 +240,14 @@
      {:component-did-mount
       (fn [& _]
         (when-not @isotope
-          (init-isotope! vpd-id isotope isotope-config)
-          (when search-term
-            (scroll-to-mosaic)))
-        (append-videos! vpd-id @isotope @component-videos added-videos))
+          (init-isotope! vpd-id isotope isotope-config))
+        (append-videos! vpd-id @isotope @component-videos added-videos search-term))
       :component-did-update
       (fn [old-state new-state]
         (when (and (not @isotope) search-term)
-          (init-isotope! vpd-id isotope isotope-config)
-          (scroll-to-mosaic))
+          (init-isotope! vpd-id isotope isotope-config))
         (when (or (not search-term) @render-since-reset)
-          (append-videos! vpd-id @isotope @component-videos added-videos)))
+          (append-videos! vpd-id @isotope @component-videos added-videos search-term)))
       :reagent-render
       (fn [search-term videos]
         (if (and @isotope (not= @last-search-term search-term))
