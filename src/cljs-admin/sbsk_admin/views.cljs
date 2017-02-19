@@ -361,5 +361,5 @@
                   [re-com/line]
                   (when-not (or @error @refreshing?) [actions])
                   (when-not (or @error @refreshing?) [tabs])
-                  (when @error (error-panel @error))
-                  (when @refreshing? (refreshing-panel))]])))
+                  (when (and (not @error) @refreshing?) (refreshing-panel))
+                  (when @error (error-panel @error))]])))
