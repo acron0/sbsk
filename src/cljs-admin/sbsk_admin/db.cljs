@@ -34,13 +34,16 @@
     new-db))
 
 (defn refresh-all-videos!
-  []
+  [full?]
   (go (let [result (<! (http/post (str "http://" admin-address
                                        ":" admin-port
                                        "/api/refresh")
                                   {:with-credentials? false}))]
         (if (:success result)
-          (re-frame/dispatch [:refresh-finished])
+          (do
+            (when full?
+              (run! fetch-videos (range 2)))
+            (re-frame/dispatch [:refresh-finished]))
           (re-frame/dispatch [:error (str "Failed to detect the status of a refresh/sync: " result)])))))
 
 (defn sync-to-video-database!
@@ -64,8 +67,10 @@
                                   (.getDate now)
                                   (.getHours now)
                                   (.getMinutes now)
-                                  (.getSeconds now))
-         cv (assoc-in (:current-video db)
+                                  (.getSeconds now))]
+     (reintegrate-current-video db sync? edited-time)))
+  ([db sync? edited-time]
+   (let [cv (assoc-in (:current-video db)
                       [:meta :edited-at]
                       edited-time)]
      (when sync?
@@ -89,6 +94,7 @@
                                       ":" admin-port
                                       "/api/video/" id "/metadata")
                                  {:with-credentials? false}))]
-        (if (:success result)
+        (if (or (:success result)
+                (= 404 (:status result)))
           (re-frame/dispatch [:update-video-metadata id (:body result)])
           (re-frame/dispatch [:error (str "Failed to fetch metadata for " id ": " result)])))))

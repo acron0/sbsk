@@ -52,6 +52,7 @@
 (defn videos
   []
   [re-com/v-box
+   :style {:font-size "18px"}
    :children [[dt/datatable
                :videos
                [:videos]
@@ -60,21 +61,14 @@
                  ::dt/column-label ""
                  ::dt/render-fn     (fn [val]
                                       [:img {:src val
-                                             :width 60
-                                             :height 40}])}
+                                             :width 120
+                                             :height 80}])}
                 {::dt/column-key   [:created-at]
                  ::dt/sorting      {::dt/enabled? true}
                  ::dt/column-label "Created At"
                  ::dt/render-fn     (fn [val]
                                       [:span
                                        (as-moment val)])}
-                {::dt/column-key   [:meta :edited-at]
-                 ::dt/sorting      {::dt/enabled? true}
-                 ::dt/column-label "Edited At"
-                 ::dt/render-fn     (fn [val]
-                                      [:span
-                                       (if val (as-moment val)
-                                           "Never")])}
                 {::dt/column-key   [:id]
                  ::dt/column-label "Actions"
                  ::dt/render-fn    (fn [id]
@@ -253,6 +247,22 @@
          [[re-com/hyperlink
            :label "< Back to Videos"
            :on-click #(re-frame/dispatch [:stop-edit-video])]
+          [re-com/h-box
+           :align :center
+           :gap "10px"
+           :children
+           [[:i.zmdi.zmdi-hc-fw-rc.zmdi-time]
+            [re-com/label
+             :label (str "Last Edited: " (if-let [edited-time (get-in video [:meta :edited-at])]
+                                           (as-moment edited-time)
+                                           "Never"))]]]
+          [re-com/h-box
+           :align :center
+           :gap "10px"
+           :children
+           [[:i.zmdi.zmdi-hc-fw-rc.zmdi-link]
+            [:a {:href (str "http://facebook.com" (:link video))
+                 :target "_blank"} "Link to Facebook Video"]]]
           (title-control video)
           (thumb-control video)
           [tags-control video]

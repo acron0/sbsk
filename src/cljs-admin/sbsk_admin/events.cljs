@@ -1,6 +1,8 @@
 (ns sbsk-admin.events
-    (:require [re-frame.core :as re-frame]
-              [sbsk-admin.db :as db]))
+  (:require [re-frame.core :as re-frame]
+            [sbsk-admin.db :as db]
+            [cljs-time.core :as ct]
+            [cljs-time.format :as cf]))
 
 (re-frame/reg-event-db
  :initialize-db
@@ -38,9 +40,13 @@
 
 (re-frame/reg-event-db
  :sync-db
- (fn [db [_ id]]
-   (db/refresh-all-videos!)
-   (-> db
+ (fn [db [_ full?]]
+   (db/refresh-all-videos! full?)
+   (-> (if full?
+         (-> db
+             (assoc :videos [])
+             (assoc :current-video nil))
+         db)
        (assoc :dirty? false)
        (assoc :refreshing? true))))
 
@@ -61,25 +67,29 @@
     false
     (if-not time-b
       true
-      (let [fmt (cljs-time.format/formatter "yyyyMMdd'T'HHmmss'Z'")
-            a (cljs-time.format/parse fmt time-a)
-            b (cljs-time.format/parse fmt time-b)]
-        (cljs-time.core/after? a b)))))
+      (let [fmt (cf/formatter "yyyyMMdd'T'HHmmss'Z'")
+            a (cf/parse fmt time-a)
+            b (cf/parse fmt time-b)]
+        (ct/after? a b)))))
 
 (re-frame/reg-event-db
  :update-video-metadata
  (fn [db [_ id metadata]]
    (when (= id (get-in db [:current-video :id]))
-     (let [remote-edited-time (:edited-time metadata)
-           local-edited-time (get-in db [:current-video :meta :edited-time])
-           local-is-newer? (after? local-edited-time remote-edited-time)
-           db' (-> (if local-is-newer?
-                     (assoc db :dirty? true)
-                     (assoc-in db [:current-video :meta] metadata))
-                   (assoc :current-video-loading? false))]
-       (if local-is-newer?
-         (db/reintegrate-current-video db' local-is-newer?)
-         db')))))
+     (if (clojure.string/blank? metadata)
+       (assoc db :current-video-loading? false)
+       (let [remote-edited-time (:edited-at metadata)
+             local-edited-time (get-in db [:current-video :meta :edited-at])
+             local-is-newer? (after? local-edited-time remote-edited-time)
+             db' (-> (if local-is-newer?
+                       (assoc db :dirty? true)
+                       (assoc-in db [:current-video :meta] metadata))
+                     (assoc :current-video-loading? false))]
+         (println "GOT META" metadata)
+         (db/reintegrate-current-video db' local-is-newer?
+                                       (if local-is-newer?
+                                         local-edited-time
+                                         remote-edited-time)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
