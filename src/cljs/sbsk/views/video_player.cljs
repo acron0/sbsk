@@ -67,6 +67,19 @@
       :allow-transparency "true"
       :allow-full-screen "true"}]))
 
+(defn engagements
+  [video]
+  [:div.engagements
+   [:iframe {:src "https://www.facebook.com/plugins/like.php?href=https%3A%2F%2Ffacebook.com%2Fspecialbooksbyspecialkids%2Fvideos%2F949566678478646&width=450&layout=standard&action=like&size=large&show_faces=true&share=true&height=80&appId=1843769555880658&colorscheme=dark"
+             :width "450"
+             :height "80"
+             :style {:border "none"
+                     :overflow "hidden"}
+             :scrolling "no"
+             :frame-border "0"
+             :allow-transparency "true"
+             }]])
+
 (defn tags
   [video]
   (when-let [ts (video/get-tags video)]
@@ -96,11 +109,11 @@
     [:div.inner-content
      {:on-click #(.stopPropagation %)}
      [re-com/v-box
+      :gap "10px"
       :justify :start
       :children [(fb-header video)
                  (video-info video)
                  (video-iframe video)
-                 [re-com/gap
-                  :size "10px"]
+                 (engagements video)
                  (tags video)]]]]
    (close-button)])
