@@ -105,13 +105,13 @@
                              credentials
                              component
                              metadata-cache)
-                            (wrap-basic-authentication
-                             (authenticated? username password))
                             (wrap-cors
                              :access-control-allow-origin [#".*"]
-                             :access-control-allow-methods [:get])) {:port 7000
-                                                                     :daemon? true
-                                                                     :join? false}))))
+                             :access-control-allow-methods [:get])
+                            (wrap-basic-authentication
+                             (authenticated? username password))) {:port 7000
+                                                                   :daemon? true
+                                                                   :join? false}))))
 
   (stop [component]
     (log/info "Stopping Admin")
