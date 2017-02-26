@@ -5,16 +5,17 @@
             [re-com.core :as re-com]
             [re-frame-datatable.core :as dt]
             ;;
-            [sbsk.shared.data :as sbsk-data :refer
-             [ video-highlight-width
+            [sbsk.vars :as sbsk-vars :refer
+             [video-highlight-width
               video-highlight-height
               video-small-height
               video-small-width
               video-medium-width
               video-medium-height
               video-large-width
-              video-large-height
-              clip-string]]
+              video-large-height]]
+            [sbsk.shared.data :as sbsk-data :refer
+             [clip-string]]
             [sbsk.shared.time :refer [as-moment]]))
 
 (defn title []
