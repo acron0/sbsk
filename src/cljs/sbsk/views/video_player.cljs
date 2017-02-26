@@ -51,7 +51,7 @@
   [video]
   (let [w' (or (:width video) 0)
         h' (or (:height video) 0)
-        scale-to-w 720
+        scale-to-w 799 ;; vp-content-width from css
         ratio      (when-not (zero? w')
                      (/ scale-to-w w'))
         w          (str scale-to-w "px")
@@ -69,16 +69,19 @@
 
 (defn engagements
   [video]
-  [:div.engagements
-   [:iframe {:src "https://www.facebook.com/plugins/like.php?href=https%3A%2F%2Ffacebook.com%2Fspecialbooksbyspecialkids%2Fvideos%2F949566678478646&width=450&layout=standard&action=like&size=large&show_faces=true&share=true&height=80&appId=1843769555880658&colorscheme=dark"
-             :width "450"
-             :height "80"
-             :style {:border "none"
-                     :overflow "hidden"}
-             :scrolling "no"
-             :frame-border "0"
-             :allow-transparency "true"
-             }]])
+  [re-com/h-box
+   :children [[:div.engagements
+               [:iframe {:src (str "https://www.facebook.com/plugins/like.php?href=https%3A%2F%2Ffacebook.com%2Fspecialbooksbyspecialkids%2Fvideos%2F" (:id video)  "&width=450&layout=standard&action=like&size=large&show_faces=true&share=true&height=80&appId=1843769555880658&colorscheme=dark")
+                         :width "450"
+                         :height "50"
+                         :style {:border "none"
+                                 :overflow "hidden"}
+                         :scrolling "no"
+                         :frame-border "0"
+                         :allow-transparency "true"}]]
+              #_[:a {:href (str "http://facebook.com" (:link video))}
+                 [re-com/label
+                  :label "Comment"]]]])
 
 (defn tags
   [video]
@@ -93,6 +96,19 @@
                           :class "taglink"
                           :label (str "#" t)]))]))
 
+(defn now-playing
+  [_]
+  [:div "Now Playing"])
+
+(defn further-viewing
+  [videos]
+  [re-com/v-box
+   :children
+   [[re-com/title
+     :level :level2
+     :label "Further Watching"]
+    (video/video-slider videos 4 #_{:overlay-fn now-playing})]])
+
 (defn close-button
   []
   [re-com/md-icon-button
@@ -103,17 +119,21 @@
 
 (defn panel
   [video]
-  [:div.video-player
-   {:on-click #(re-frame/dispatch [:close-video])}
-   [:div.content
-    [:div.inner-content
-     {:on-click #(.stopPropagation %)}
-     [re-com/v-box
-      :gap "10px"
-      :justify :start
-      :children [(fb-header video)
-                 (video-info video)
-                 (video-iframe video)
-                 (engagements video)
-                 (tags video)]]]]
-   (close-button)])
+  (let [additional-videos (re-frame/subscribe [:further-viewing])]
+    (fn [video]
+      [:div.video-player
+       {:on-click #(re-frame/dispatch [:close-video])}
+       [:div.content
+        [:div.inner-content
+         {:on-click #(.stopPropagation %)}
+         [re-com/v-box
+          :gap "10px"
+          :justify :start
+          :children [(fb-header video)
+                     (video-info video)
+                     (video-iframe video)
+                     (engagements video)
+                     (tags video)
+                     (further-viewing @additional-videos)
+                     [re-com/gap :size "20px"]]]]]
+       (close-button)])))

@@ -23,3 +23,17 @@
  :loading-more?
  (fn [db]
    (:loading-more? db)))
+
+(defn find-next-videos
+  [id videos]
+  (let [start (.indexOf (map :id videos) id)]
+    (drop start videos)))
+
+(re-frame/reg-sub
+ :further-viewing
+ (fn [db]
+   (let [num-videos 4]
+     (when-let [cv (:current-video db)]
+       (if-let [search-results (not-empty (:search-result-videos db))]
+         (take num-videos (find-next-videos (:id cv) search-results))
+         (take num-videos (find-next-videos (:id cv) (:videos db))))))))

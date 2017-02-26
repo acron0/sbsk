@@ -7,7 +7,9 @@
 (def thumb-scale 1.4)
 (def thumb-hover-time "0.2s")
 (def content-width 980)
-(def vp-content-width 720)
+(def video-slider-visible 4)
+(def video-gap 5)
+(def vp-content-width (+ 784 (* video-gap (dec video-slider-visible)))) ;;
 (def title-font-colour "#605E5E")
 (def menu-item-colour "#A0A09F")
 (def header-bar-bg-colour "#605E5E")
@@ -90,10 +92,12 @@
     :bottom 0
     :left 0
     :right 0
-    :background-color "rgba(66, 66, 66, 0.95)"
+    :background-color "rgba(45, 45, 45, 0.93)"
     :color 'white
     :font-size (em 1.25)
     :overflow-y :scroll}
+   [:.engagements
+    {:color 'white}]
    [:.close-button
     {:position :absolute
      :top 0
@@ -178,11 +182,12 @@
    [:&:hover
     {:color "#CCC"}]]
   [:.video-thumb
+   {:background-color 'white}
    [:img {:cursor :pointer
           :transition (transition :box-shadow thumb-hover-time
                                   :opacity thumb-hover-time)}
     [:&:hover
-     {:box-shadow [[(px 4) (px 4) (px 8) "#888"]]
-      :opacity 0.9}]]]
-  [:.noscroll
-   {:overflow-y :hidden}])
+     {:box-shadow [[(px 0) (px 0) (px 8) "#888"]]
+      :opacity 0.9}]]])
+[:.noscroll
+ {:overflow-y :hidden}]
