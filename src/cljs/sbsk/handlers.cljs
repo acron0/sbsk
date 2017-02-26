@@ -4,6 +4,7 @@
 
 (defn set-noscroll!
   [on]
+  (println "setting noscroll" on)
   (let [html (aget (.-all js/document) 0)
         classes (set (clojure.string/split (.-className html) " "))
         fun (if on conj disj)]

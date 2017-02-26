@@ -97,8 +97,11 @@
                           :label (str "#" t)]))]))
 
 (defn now-playing
-  [_]
-  [:div "Now Playing"])
+  [video]
+  (fn [v]
+    (when (= v video)
+      [:div.now-playing-video-panel
+       [:span "Currently Watching"]])))
 
 (defn further-viewing
   [videos]
@@ -107,7 +110,7 @@
    [[re-com/title
      :level :level2
      :label "Further Watching"]
-    (video/video-slider videos 4 #_{:overlay-fn now-playing})]])
+    (video/video-slider videos 4 {:overlay-fn (now-playing (first videos))})]])
 
 (defn close-button
   []

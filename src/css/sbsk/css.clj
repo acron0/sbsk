@@ -129,7 +129,19 @@
         {:font-size (em 1.1)}]]]]
     [:.taglink
      [:&:hover
-      {:color blue-highlight}]]]]
+      {:color blue-highlight}]]
+    [:.now-playing-video-panel
+     {:height (percent 100)
+      :position :relative
+      :font-size (em 0.8)
+      :text-align :center}
+     [:span
+      {:position :absolute
+       :bottom 0
+       :left 0
+       :line-height (em 2)
+       :width (percent 100)
+       :background-color "rgba(16, 63, 84, 0.92)"}]]]]
 
   ;; Content body
   [:.content-body
@@ -181,13 +193,20 @@
     :transition (transition :color "0.4s")}
    [:&:hover
     {:color "#CCC"}]]
-  [:.video-thumb
-   {:background-color 'white}
+  [:.video-thumb :.video-panel
+   {:background-color 'white
+    :position :relative}
    [:img {:cursor :pointer
           :transition (transition :box-shadow thumb-hover-time
                                   :opacity thumb-hover-time)}
     [:&:hover
      {:box-shadow [[(px 0) (px 0) (px 8) "#888"]]
-      :opacity 0.9}]]])
-[:.noscroll
- {:overflow-y :hidden}]
+      :opacity 0.9}]]
+   [:.video-panel-overlay
+    {:position :absolute
+     :top 0
+     :left 0
+     :width (percent 100)
+     :height (percent 100)}]]
+  [:.noscroll
+   {:overflow-y :hidden}])

@@ -65,7 +65,7 @@
      :class (:class opts)
      :width w
      :height h
-     :child [:div.video-thumb
+     :child [:div.video-panel
              {:style {:width "100%"
                       :height "100%"}
               :on-click (partial open-video video)}
@@ -73,7 +73,7 @@
                     :width w
                     :height h}]
              (when (:overlay-fn opts)
-               [:div.video-thumb-overlay
+               [:div.video-panel-overlay
                 {}
                 ((:overlay-fn opts) video)])]]))
 
