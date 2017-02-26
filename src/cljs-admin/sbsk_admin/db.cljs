@@ -7,7 +7,7 @@
                                       admin-port]]
             [goog.string :as gstr]
             [cljs-http.client :as http]
-            [cljs.core.async :refer [<!]]
+            [cljs.core.async :refer [<! timeout]]
             [cognitect.transit :as t]))
 
 (def empty-db
@@ -35,7 +35,8 @@
 
 (defn refresh-all-videos!
   [full?]
-  (go (let [result (<! (http/post (str "http://" admin-address
+  (go (<! (timeout 500)) ;; let any changes filter through
+      (let [result (<! (http/post (str "http://" admin-address
                                        ":" admin-port
                                        "/api/refresh")
                                   {:with-credentials? true}))]
@@ -95,10 +96,7 @@
                                       ":" admin-port
                                       "/api/video/" id "/metadata")
                                  {:with-credentials? true}))]
-        (if (or (:success result)
-                (= 404 (:status result)))
-          (re-frame/dispatch [:update-video-metadata id (:body result)])
-          (re-frame/dispatch [:error (str "Failed to fetch metadata for " id ": " result)])))))
+        (re-frame/dispatch [:update-video-metadata id (:body result)]))))
 
 (defn upload-photo!
   [id file]

@@ -38,6 +38,7 @@
                  [com.cognitect/transit-cljs "0.8.239"]
                  [hiccups "0.3.0"]
                  [cljsjs/moment "2.10.6-4"]
+                 [cljsjs/smooth-scroll "9.1.4-0"]
                  [re-frame-datatable "0.5.1" :exclusions [org.clojure/clojure]]]
   :main ^:skip-aot sbsk.core
   :target-path "target/%s"
@@ -46,7 +47,7 @@
             [lein-garden "0.2.8"]]
   :uberjar-name "sbsk.jar"
   :min-lein-version "2.5.3"
-  :source-paths ["src/clj"]
+  :source-paths ["src/clj" "src/cljc"]
   :clean-targets ^{:protect false} ["resources/public/js/compiled"
                                     "resources/public/css/compiled"
                                     "target"]
@@ -55,12 +56,12 @@
              :nrepl-port 7888}
 
   :garden {:builds [{:id           "sbsk"
-                     :source-paths ["src/css"]
+                     :source-paths ["src/css" "src/cljc"]
                      :stylesheet sbsk.css/screen
                      :compiler     {:output-to     "resources/public/css/compiled/screen.css"
                                     :pretty-print? true}}
                     {:id           "sbsk-admin"
-                     :source-paths ["src/css-admin"]
+                     :source-paths ["src/css-admin" "src/cljc"]
                      :stylesheet sbsk-admin.css/screen
                      :compiler     {:output-to     "resources/public/css/compiled/admin.css"
                                     :pretty-print? true}}]}
@@ -81,7 +82,7 @@
 
   :cljsbuild {:builds
               [{:id           "dev"
-                :source-paths ["src/cljs" "src/cljs-shared"]
+                :source-paths ["src/cljs" "src/cljs-shared" "src/cljc"]
                 :figwheel     {:on-jsload "sbsk.core/mount-root"}
                 :compiler     {:main                 sbsk.core
                                :output-to            "resources/public/js/compiled/app.js"
@@ -90,7 +91,7 @@
                                :source-map-timestamp true}}
 
                {:id           "dev-admin"
-                :source-paths ["src/cljs-admin" "src/cljs-shared"]
+                :source-paths ["src/cljs-admin" "src/cljs-shared" "src/cljc"]
                 :figwheel     {:on-jsload "sbsk-admin.core/mount-root"}
                 :compiler     {:main                 sbsk-admin.core
                                :output-to            "resources/public/js/compiled/admin.js"
@@ -99,7 +100,7 @@
                                :source-map-timestamp true}}
 
                {:id           "min"
-                :source-paths ["src/cljs" "src/cljs-shared"]
+                :source-paths ["src/cljs" "src/cljs-shared" "src/cljc"]
                 :compiler     {:main            sbsk.core
                                :output-to       "resources/public/js/compiled/app.js"
                                :optimizations   :advanced
@@ -108,7 +109,7 @@
                                :pretty-print    false}}
 
                {:id           "min-admin"
-                :source-paths ["src/cljs-admin" "src/cljs-shared"]
+                :source-paths ["src/cljs-admin" "src/cljs-shared" "src/cljc"]
                 :compiler     {:main            sbsk-admin.core
                                :output-to       "resources/public/js/compiled/admin.js"
                                :optimizations   :advanced
@@ -118,7 +119,7 @@
                                :output-dir      "resources/public/js/admin-tmp"}}
 
                {:id           "test"
-                :source-paths ["src/cljs" "src/cljs-shared" "test/cljs"]
+                :source-paths ["src/cljs" "src/cljs-shared" "test/cljs" "src/cljc"]
                 :compiler     {:output-to     "resources/public/js/compiled/test/test.js"
                                :output-dir    "resources/public/js/compiled/test"
                                :main          witan-viz.runner

@@ -21,4 +21,5 @@
 (defn ^:export init []
   (re-frame/dispatch-sync [:initialize-db])
   (dev-setup)
-  (mount-root))
+  (mount-root)
+  (.init js/smoothScroll))

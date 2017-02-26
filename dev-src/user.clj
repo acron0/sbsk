@@ -30,6 +30,7 @@
   "Initializes the current development system and starts it running."
   []
   (init [:admin :crawler])
+  #_(init [:search])
   (start))
 
 (defn reset []

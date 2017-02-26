@@ -7,11 +7,25 @@
             [cheshire.core :refer :all]
             [environ.core :refer [env]]
             [overtone.at-at :as at]
+            [me.raynes.fs :as fs]
+            [clojure.java.io :as io]
             ;;
-            [sbsk.components.database :as db]))
+            [sbsk.components.database :as db])
+  (:import  [javax.imageio ImageIO]
+            [java.io File]))
 
 (def fb-https          "https://graph.facebook.com")
 (def data-name-parts   ["data" ".json"])
+
+(defn get-image-dims [uri]
+  (let [file (fs/temp-file "sbsk")]
+    (try
+      (with-open [in (io/input-stream uri)
+                  out (io/output-stream file)]
+        (io/copy in out)
+        (when-let [img (ImageIO/read file)]
+          [(.getWidth img) (.getHeight img)]))
+      (finally (fs/delete file)))))
 
 (defn coerce-time
   [t]
@@ -60,10 +74,18 @@
                    a)))]
     data))
 
+(defn get-dimensions
+  [{:keys [width height picture]}]
+  (if (or (zero? width)
+          (zero? height))
+    (get-image-dims picture)
+    [width height]))
+
 (defn scrub
   [entry]
   (let [full-text (str (:title entry) " - " (:description entry))
-        best-format (last (sort-by :width (:format entry)))]
+        best-format (last (sort-by :width (:format entry)))
+        [w h] (get-dimensions best-format)]
     (-> entry
         (clojure.set/rename-keys {:created_time  :created-at
                                   :permalink_url :link})
@@ -73,8 +95,8 @@
                 :picture
                 :format)
         (assoc  :thumb (:picture best-format)
-                :width (:width best-format)
-                :height (:height best-format)))))
+                :width w
+                :height h))))
 
 (defn add-metadata
   [db md-keys table]

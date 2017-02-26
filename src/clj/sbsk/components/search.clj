@@ -9,11 +9,31 @@
             [clojure.string :as str]
             [cheshire.core :refer :all]))
 
+(def short-description-weight 1)
+(def description-weight 2)
+(def title-weight 3)
+(def tag-weight 10)
+
 (def data-name-parts   ["data" ".json"])
 
 (defn get-query
   [ctx]
   (second (re-find #"q=(.+)" (get ctx :query-string))))
+
+(defmacro not-blank
+  [s]
+  `(when-not (clojure.string/blank? ~s) ~s))
+
+(defn add-field
+  [add-to field-or-fields weight]
+  (cond
+    (map? field-or-fields)
+    (throw (Exception. "No maps"))
+    (coll? field-or-fields)
+    (reduce (fn [a f] (add-field a f weight)) add-to field-or-fields)
+    (nil? field-or-fields) add-to
+    :else
+    (conj add-to [field-or-fields weight])))
 
 (defn reload-index
   [index records table-name database]
@@ -26,9 +46,19 @@
     ;; load index
     (reset! index (capi/make-index))
     (run! (fn [[id record]]
-            (capi/index-text @index id (str (:title record)
-                                            " "
-                                            (:description record)))) @records)
+            (let [{:keys [short-description
+                          description
+                          title
+                          tags]} (:meta record)
+                  fields (-> []
+                             (add-field (or (not-blank title)
+                                            (:title record)) title-weight)
+                             (add-field (or (not-blank description)
+                                            (:description record)) description-weight)
+                             (add-field tags tag-weight)
+                             (add-field short-description
+                                        short-description-weight))]
+              (capi/index-text @index id fields))) @records)
     (log/info "Index ready")))
 
 (defn do-search
@@ -61,7 +91,7 @@
 (defn reload-index-handler
   [reload-fn header-name header-value]
   (fn [request]
-    (println request)
+    (log/info "Reload request" request)
     (if (and (= (:request-method request) :post)
              (= (get-in request [:headers (str/lower-case header-name)]) header-value))
       (do (future (reload-fn))

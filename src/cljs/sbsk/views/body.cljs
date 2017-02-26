@@ -6,16 +6,16 @@
             [clojure.string :as str]
             [sbsk.hiccup-help :refer [px hiccup->element]]
             [garden.core :refer [style]]
-            [sbsk.shared.data :refer [desc-title-len
-                                      video-img-div
-                                      video-highlight-width
-                                      video-highlight-height
-                                      video-small-height
-                                      video-small-width
-                                      video-medium-width
-                                      video-medium-height
-                                      video-large-width
-                                      video-large-height]]))
+            [sbsk.shared.video :as video]
+            [sbsk.vars :refer [video-highlight-width
+                               video-highlight-height
+                               video-small-height
+                               video-small-width
+                               video-medium-width
+                               video-medium-height
+                               video-large-width
+                               video-large-height]]
+            [cljsjs.smooth-scroll]))
 
 (def popular-search-terms
   ["Autism"
@@ -33,13 +33,6 @@
 
 (def search-input-id "search-nav-input")
 (defn search-input-element [] (.getElementById js/document search-input-id))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn get-thumb
-  [video]
-  (or (get-in video [:meta :thumb])
-      (get video :thumb)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -72,7 +65,6 @@
                                      {:placeholder "Search Videos"}]]]
                            [re-com/box
                             :size "32px"
-                            :class "search-button"
                             :child [re-com/md-icon-button
                                     :md-icon-name "zmdi-search"
                                     :on-click (fn [e]
@@ -97,11 +89,11 @@
      :class "video-highlight"
      :width w
      :height h
-     :child [:div.video-thumb
+     :child [:div.video-panel
              {:style {:width "100%"
                       :height "100%"}
               :on-click (partial open-video video)}
-             [:img {:src (get-thumb video)
+             [:img {:src (video/get-thumb video)
                     :width w
                     :height h}]]]))
 
@@ -142,11 +134,6 @@
    :children [(search-nav popular-search-terms)
               (video-highlights videos)]])
 
-(defn clip-string
-  [s]
-  (let [end (.indexOf s " " desc-title-len)]
-    (str (subs s 0 end) "...")))
-
 (defn videos-by-month
   [videos]
   (let [month (fn [video] (.format (js/moment
@@ -171,7 +158,7 @@
 (defn video-packed
   "This is HICCUP, not SABLONO"
   [width height video]
-  [:div.video-packed.video-thumb
+  [:div.video-packed.video-panel
    {:key (:id video)
     :style (style {:width (px width)
                    :height (px height)
@@ -185,7 +172,7 @@
                                                           "cyan"
                                                           "pink"])})}
    (let [trim 2]
-     [:img {:src (get-thumb video)
+     [:img {:src (video/get-thumb video)
             :width (px (- width (* 2 trim)))
             :height (px (- height (* 2 trim)))
             :style (style {:margin (px trim)})}])])
@@ -205,8 +192,15 @@
   [el fun]
   (aset el "onclick" fun))
 
+(defn scroll-to-mosaic
+  []
+  (.setTimeout
+   js/window
+   #(.animateScroll js/smoothScroll "#search-results")
+   100))
+
 (defn append-videos!
-  [vpd-id isotope videos added-videos]
+  [vpd-id isotope videos added-videos scroll?]
   (when isotope
     (->> videos
          (filter (comp not @added-videos :id))
@@ -218,7 +212,9 @@
               (add-onclick! video-el (partial open-video video))
               (.appendChild vpd-el video-el)
               (.appended isotope video-el)
-              (swap! added-videos conj (:id video))))))))
+              (swap! added-videos conj (:id video))))))
+    (when scroll?
+      (scroll-to-mosaic))))
 
 (defn reset-isotope!
   [vpd-id isotope added-videos]
@@ -244,13 +240,13 @@
       (fn [& _]
         (when-not @isotope
           (init-isotope! vpd-id isotope isotope-config))
-        (append-videos! vpd-id @isotope @component-videos added-videos))
+        (append-videos! vpd-id @isotope @component-videos added-videos search-term))
       :component-did-update
       (fn [old-state new-state]
         (when (and (not @isotope) search-term)
           (init-isotope! vpd-id isotope isotope-config))
         (when (or (not search-term) @render-since-reset)
-          (append-videos! vpd-id @isotope @component-videos added-videos)))
+          (append-videos! vpd-id @isotope @component-videos added-videos search-term)))
       :reagent-render
       (fn [search-term videos]
         (if (and @isotope (not= @last-search-term search-term))
@@ -270,38 +266,53 @@
   [search-results? search-term videos]
   (let [videos-by-month (when-not search-results?
                           (videos-by-month videos))]
-    [re-com/v-box
-     :class "lower"
-     :width "100%"
-     :children [[re-com/title
-                 :level :level2
-                 :label (if search-results?
-                          (str "Search Results for '" search-term "'")
-                          "All Videos")]
-                (if search-results?
-                  [:div.pure-g
-                   [:div
-                    {:style {:width "100%"}}
-                    [video-packed-display search-term videos]]]
-                  [:div.pure-g
-                   (for [month (keys videos-by-month)]
-                     ^{:key month}
-                     [:div
-                      {:style {:width "100%"}}
-                      [re-com/title
-                       :level :level3
-                       :label month]
-                      [video-packed-display nil (get videos-by-month month)]])
-                   [re-com/h-box
-                    :class "load-more"
-                    :justify :center
-                    :width "100%"
-                    :children [(if true #_@loading-more?
-                                   #_[re-com/throbber
-                                      :size :small]
-                                   [re-com/button
-                                    :label "Load More"
-                                    :on-click #(re-frame/dispatch [:load-more-videos])])]]])]]))
+    [:div.lower-body
+     [re-com/v-box
+      :class "lower"
+      :width "100%"
+      :children [[re-com/h-box
+                  :justify :start
+                  :width "100%"
+                  :children [(when search-results?
+                               [re-com/box
+                                :size "32px"
+                                :child [re-com/md-icon-button
+                                        :md-icon-name "zmdi-close"
+                                        :style {:height "100%"}
+                                        :on-click (fn [e]
+                                                    (re-frame/dispatch [:clear-search])
+                                                    (.preventDefault e))]])
+                             [re-com/box
+                              :size "auto"
+                              :child [re-com/title
+                                      :level :level2
+                                      :label (if search-results?
+                                               (str "Search Results for '" search-term "'")
+                                               "All Videos")]]]]
+                 (if search-results?
+                   [:div.pure-g
+                    [:div
+                     {:style {:width "100%"}}
+                     [video-packed-display search-term videos]]]
+                   [:div.pure-g
+                    (for [month (keys videos-by-month)]
+                      ^{:key month}
+                      [:div
+                       {:style {:width "100%"}}
+                       [re-com/title
+                        :level :level3
+                        :label month]
+                       [video-packed-display nil (get videos-by-month month)]])
+                    [re-com/h-box
+                     :class "load-more"
+                     :justify :center
+                     :width "100%"
+                     :children [(if true #_@loading-more?
+                                    #_[re-com/throbber
+                                       :size :small]
+                                    [re-com/button
+                                     :label "Load More"
+                                     :on-click #(re-frame/dispatch [:load-more-videos])])]]])]]]))
 
 (defn panel []
   (let [videos (re-frame/subscribe [:videos])

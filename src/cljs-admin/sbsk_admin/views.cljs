@@ -27,7 +27,7 @@
 
 (defn actions
   []
-  (let [dirty? (re-frame/subscribe [:dirty?])]
+  (let []
     (fn []
       [re-com/v-box
        :width "100%"
@@ -37,14 +37,9 @@
                    :gap "10px"
                    :children [[re-com/button
                                :label "Refresh Video Database"
-                               :class "btn-success"
+                               :class "btn-primary"
                                :tooltip "Fetches all the latest videos from Facebook. May take a minute or two."
-                               :on-click #(re-frame/dispatch [:sync-db true])]
-                              [re-com/button
-                               :label "Sync Admin Changes"
-                               :class (if @dirty? "btn-danger" "btn-success")
-                               :tooltip "Pushes recent changes from the admin interface into the video database."
-                               :on-click #(re-frame/dispatch [:sync-db false])]]]]])))
+                               :on-click #(re-frame/dispatch [:sync-db true])]]]]])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Videos Table
@@ -246,7 +241,8 @@
 
 (defn current-video-panel
   [video]
-  (let [current-video-loading? (re-frame/subscribe [:current-video-loading?])]
+  (let [current-video-loading? (re-frame/subscribe [:current-video-loading?])
+        dirty? (re-frame/subscribe [:dirty?])]
     (fn [video]
       (if @current-video-loading?
         [re-com/throbber]
@@ -280,8 +276,10 @@
           (short-desc-control video)
           (full-desc-control video)
           [re-com/button
-           :label "Save"
-           :class "btn-success"]]]))))
+           :label "Save and Publish Changes"
+           :class (if @dirty? "btn-success" "btn-primary")
+           :tooltip "Pushes recent changes from the admin interface into the video database."
+           :on-click #(re-frame/dispatch [:sync-db false])]]]))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tabs
