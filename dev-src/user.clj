@@ -29,8 +29,8 @@
 (defn go
   "Initializes the current development system and starts it running."
   []
-  #_(init [:admin :crawler])
-  (init [:search])
+  (init [:admin :crawler])
+  #_(init [:search])
   (start))
 
 (defn reset []

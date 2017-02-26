@@ -5,7 +5,8 @@
             [clojure.string :as str]
             [cljsjs.moment]
             [sbsk.shared.video :as video]
-            [sbsk.shared.data :refer [clip-string]]))
+            [sbsk.shared.data :refer [clip-string]]
+            [sbsk.vars :refer [vp-content-width]]))
 
 (defn fb-header
   [video]
@@ -49,9 +50,9 @@
 
 (defn video-iframe
   [video]
-  (let [w' (or (:width video) 0)
-        h' (or (:height video) 0)
-        scale-to-w 799 ;; vp-content-width from css
+  (let [w' (or (:width video) (get-in video [:meta :width]) 0)
+        h' (or (:height video (get-in video [:meta :height])) 0)
+        scale-to-w vp-content-width
         ratio      (when-not (zero? w')
                      (/ scale-to-w w'))
         w          (str scale-to-w "px")

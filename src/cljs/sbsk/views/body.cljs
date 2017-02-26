@@ -7,14 +7,14 @@
             [sbsk.hiccup-help :refer [px hiccup->element]]
             [garden.core :refer [style]]
             [sbsk.shared.video :as video]
-            [sbsk.shared.data :refer [video-highlight-width
-                                      video-highlight-height
-                                      video-small-height
-                                      video-small-width
-                                      video-medium-width
-                                      video-medium-height
-                                      video-large-width
-                                      video-large-height]]
+            [sbsk.vars :refer [video-highlight-width
+                               video-highlight-height
+                               video-small-height
+                               video-small-width
+                               video-medium-width
+                               video-medium-height
+                               video-large-width
+                               video-large-height]]
             [cljsjs.smooth-scroll]))
 
 (def popular-search-terms

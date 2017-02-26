@@ -1,13 +1,13 @@
 (ns sbsk.shared.video
   (:require [re-frame.core :as re-frame]
             [re-com.core :as re-com]
-            [sbsk.shared.data :refer [clip-string
-                                      video-small-width
-                                      video-small-height
-                                      video-medium-width
-                                      video-medium-height
-                                      video-large-width
-                                      video-large-height]]))
+            [sbsk.vars :refer [video-small-width
+                               video-small-height
+                               video-medium-width
+                               video-medium-height
+                               video-large-width
+                               video-large-height]]
+            [sbsk.shared.data :refer [clip-string]]))
 
 (defn not-blank
   [s]

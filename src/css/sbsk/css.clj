@@ -1,15 +1,12 @@
 (ns sbsk.css
   (:require [garden.def :refer [defstyles]]
             [garden.color :as c]
-            [garden.units :refer [px em percent vw vh]]))
+            [garden.units :refer [px em percent vw vh]]
+            [sbsk.vars :refer :all]))
 
 (def base-font "'Raleway', sans-serif")
 (def thumb-scale 1.4)
 (def thumb-hover-time "0.2s")
-(def content-width 980)
-(def video-slider-visible 4)
-(def video-gap 5)
-(def vp-content-width (+ 784 (* video-gap (dec video-slider-visible)))) ;;
 (def title-font-colour "#605E5E")
 (def menu-item-colour "#A0A09F")
 (def header-bar-bg-colour "#605E5E")
@@ -26,8 +23,6 @@
   [:#app
    {:overflow-y :auto
     :overflow-x :hidden
-    :position :absolute
-    :top (px 7)
     :width (percent 100)}]
   [:*
    {:font-family base-font}]
@@ -50,6 +45,7 @@
   ;; Header
   [:.header
    {:width (percent 100)
+    :margin-top (px 7)
     :min-width (px 680)}
    [:img
     {:width (px 125)
@@ -87,7 +83,8 @@
 
   ;; Video player
   [:.video-player
-   {:position :fixed
+   {:position :absolute
+    :border "5px solid green"
     :top 0
     :bottom 0
     :left 0
@@ -95,7 +92,7 @@
     :background-color "rgba(45, 45, 45, 0.93)"
     :color 'white
     :font-size (em 1.25)
-    :overflow-y :scroll}
+    :overflow :hidden}
    [:.engagements
     {:color 'white}]
    [:.close-button
@@ -105,28 +102,28 @@
      :background-color 'transparent
      :font-size (em 2)}]
    [:.content
-    {:margin [[0 (percent 5)]]
-     :height (percent 100)}
-    [:.inner-content
-     {:display :block
-      :top 0
-      :margin :auto
-      :height (percent 100)
-      :width (px vp-content-width)}
-     [:.level1
-      {:color 'white
-       :font-size (px 20)
-       :font-weight :bold}]
-     [:.video-info
-      {:margin [[(px 20) (px 60)]]
-       :line-height (em 1.3)}]
-     [:.fb-header
-      {:padding-top (px 20)}
-      [:.fb-info
-       {:margin-left (px 10)
-        :font-size (em 0.8)}
-       [:.level1
-        {:font-size (em 1.1)}]]]]
+    {:width (percent 100)
+     :height (percent 100)
+     :overflow-y :scroll}]
+   [:.inner-content
+    {:margin :auto
+     :display :block
+     :height (percent 100)
+     :width (px vp-content-width)}
+    [:.level1
+     {:color 'white
+      :font-size (px 20)
+      :font-weight :bold}]
+    [:.video-info
+     {:margin [[(px 20) (px 60)]]
+      :line-height (em 1.3)}]
+    [:.fb-header
+     {:padding-top (px 20)}
+     [:.fb-info
+      {:margin-left (px 10)
+       :font-size (em 0.8)}
+      [:.level1
+       {:font-size (em 1.1)}]]]
     [:.taglink
      [:&:hover
       {:color blue-highlight}]]
