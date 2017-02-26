@@ -4,7 +4,6 @@
 
 (defn set-noscroll!
   [on]
-  (println "setting noscroll" on)
   (let [html (aget (.-all js/document) 0)
         classes (set (clojure.string/split (.-className html) " "))
         fun (if on conj disj)]
@@ -57,3 +56,11 @@
  :search-results
  (fn  [db [_ results]]
    (db/reset-search-results db results)))
+
+(re-frame/reg-event-db
+ :clear-search
+ (fn  [db [_ results]]
+   (assoc db
+          :search nil
+          :search-result-videos []
+          :search-pending? false)))

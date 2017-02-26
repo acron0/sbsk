@@ -164,15 +164,6 @@
        :background-color header-bar-bg-colour
        :color 'white
        :padding-left (em 0.75)}]
-     [:.search-button
-      {:color 'white
-       :background-color (c/darken header-bar-bg-colour 15)
-       :border-radius 0}
-      [:.rc-md-icon-button
-       {:margin :auto
-        :display :block}]
-      [:&:hover
-       [:i {:color 'silver}]]]
      [:.level2
       {:width (percent 100)}]]]
    [:.popular-search-term
@@ -185,7 +176,22 @@
    [:.video-packed-display]
    [:.video-packed]
    [:.load-more
-    {:margin (em 1)}]]
+    {:margin (em 1)}]
+   [:.lower-body
+    [:div.level2
+     {:width (percent 99)}]]
+   [:.rc-md-icon-button
+    {:color 'white
+     :background-color (c/darken header-bar-bg-colour 15)
+     :border-radius 0
+     :width (px 32)
+     :height (px 32)
+     :margin :auto
+     :display :block}
+    [:i
+     {:margin-top (px 4)}]
+    [:&:hover
+     [:i {:color 'silver}]]]]
 
   ;; General
   [:.clickable-string
@@ -193,7 +199,7 @@
     :transition (transition :color "0.4s")}
    [:&:hover
     {:color "#CCC"}]]
-  [:.video-thumb :.video-panel
+  [:.video-panel
    {:background-color 'white
     :position :relative}
    [:img {:cursor :pointer
@@ -207,6 +213,7 @@
      :top 0
      :left 0
      :width (percent 100)
-     :height (percent 100)}]]
+     :height (percent 100)
+     :pointer-events :none}]]
   [:.noscroll
    {:overflow-y :hidden}])

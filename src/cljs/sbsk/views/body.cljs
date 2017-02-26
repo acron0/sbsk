@@ -65,7 +65,6 @@
                                      {:placeholder "Search Videos"}]]]
                            [re-com/box
                             :size "32px"
-                            :class "search-button"
                             :child [re-com/md-icon-button
                                     :md-icon-name "zmdi-search"
                                     :on-click (fn [e]
@@ -90,7 +89,7 @@
      :class "video-highlight"
      :width w
      :height h
-     :child [:div.video-thumb
+     :child [:div.video-panel
              {:style {:width "100%"
                       :height "100%"}
               :on-click (partial open-video video)}
@@ -159,7 +158,7 @@
 (defn video-packed
   "This is HICCUP, not SABLONO"
   [width height video]
-  [:div.video-packed.video-thumb
+  [:div.video-packed.video-panel
    {:key (:id video)
     :style (style {:width (px width)
                    :height (px height)
@@ -267,15 +266,29 @@
   [search-results? search-term videos]
   (let [videos-by-month (when-not search-results?
                           (videos-by-month videos))]
-    [:div#search-results
+    [:div.lower-body
      [re-com/v-box
       :class "lower"
       :width "100%"
-      :children [[re-com/title
-                  :level :level2
-                  :label (if search-results?
-                           (str "Search Results for '" search-term "'")
-                           "All Videos")]
+      :children [[re-com/h-box
+                  :justify :start
+                  :width "100%"
+                  :children [(when search-results?
+                               [re-com/box
+                                :size "32px"
+                                :child [re-com/md-icon-button
+                                        :md-icon-name "zmdi-close"
+                                        :style {:height "100%"}
+                                        :on-click (fn [e]
+                                                    (re-frame/dispatch [:clear-search])
+                                                    (.preventDefault e))]])
+                             [re-com/box
+                              :size "auto"
+                              :child [re-com/title
+                                      :level :level2
+                                      :label (if search-results?
+                                               (str "Search Results for '" search-term "'")
+                                               "All Videos")]]]]
                  (if search-results?
                    [:div.pure-g
                     [:div
