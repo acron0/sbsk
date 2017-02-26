@@ -1,4 +1,4 @@
-(defproject sbsk "0.2.4"
+(defproject sbsk "0.2.5-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
