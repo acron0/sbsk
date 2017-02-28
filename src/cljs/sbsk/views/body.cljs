@@ -266,7 +266,7 @@
   [search-results? search-term videos]
   (let [videos-by-month (when-not search-results?
                           (videos-by-month videos))]
-    [:div.lower-body
+    [:div#search-results.lower-body
      [re-com/v-box
       :class "lower"
       :width "100%"
