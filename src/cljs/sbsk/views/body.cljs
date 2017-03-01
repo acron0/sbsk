@@ -264,8 +264,7 @@
 
 (defn lower-body
   [search-results? search-term videos]
-  (let [videos-by-month (when-not search-results?
-                          (videos-by-month videos))]
+  (let [videos-to-show videos]
     [:div#search-results.lower-body
      [re-com/v-box
       :class "lower"
@@ -289,30 +288,20 @@
                                       :label (if search-results?
                                                (str "Search Results for '" search-term "'")
                                                "All Videos")]]]]
-                 (if search-results?
-                   [:div.pure-g
-                    [:div
-                     {:style {:width "100%"}}
-                     [video-packed-display search-term videos]]]
-                   [:div.pure-g
-                    (for [month (keys videos-by-month)]
-                      ^{:key month}
-                      [:div
-                       {:style {:width "100%"}}
-                       [re-com/title
-                        :level :level3
-                        :label month]
-                       [video-packed-display nil (get videos-by-month month)]])
-                    [re-com/h-box
-                     :class "load-more"
-                     :justify :center
-                     :width "100%"
-                     :children [(if true #_@loading-more?
-                                    #_[re-com/throbber
-                                       :size :small]
-                                    [re-com/button
-                                     :label "Load More"
-                                     :on-click #(re-frame/dispatch [:load-more-videos])])]]])]]]))
+                 [:div.pure-g
+                  [:div
+                   {:style {:width "100%"}}
+                   [video-packed-display search-term videos]]]
+                 [re-com/h-box
+                  :class "load-more"
+                  :justify :center
+                  :width "100%"
+                  :children [(if true #_@loading-more?
+                                 #_[re-com/throbber
+                                    :size :small]
+                                 [re-com/button
+                                  :label "Load More"
+                                  :on-click #(re-frame/dispatch [:load-more-videos])])]]]]]))
 
 (defn panel []
   (let [videos (re-frame/subscribe [:videos])
@@ -330,7 +319,7 @@
                         (lower-body search-results
                                     @search-term
                                     (or search-results
-                                        (drop noof-highlight-videos all-videos)))]]
+                                        all-videos))]]
             [re-com/box
              :height "100%"
              :width "100%"
