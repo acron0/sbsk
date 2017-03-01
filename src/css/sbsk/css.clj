@@ -4,7 +4,7 @@
             [garden.units :refer [px em percent vw vh]]
             [sbsk.vars :refer :all]))
 
-(def base-font "'Raleway', sans-serif")
+(def base-font "din-light, 'Raleway', sans-serif")
 (def thumb-scale 1.4)
 (def thumb-hover-time "0.2s")
 (def title-font-colour "#605E5E")
@@ -20,6 +20,9 @@
        (clojure.string/join ", ")))
 
 (defstyles screen
+  ["@font-face"
+   {:font-family "din-light"
+    :src "url(../../fonts/din-light.ttf) format(\"truetype\")"}]
   [:#app
    {:overflow-y :auto
     :overflow-x :hidden
@@ -27,8 +30,8 @@
   [:*
    {:font-family base-font}]
   [:.level1 {:font-family base-font
-             :font-size (px 36)
-             :letter-spacing (px 1)
+             :margin-top (px 5)
+             :letter-spacing (px -1)
              :color title-font-colour}]
   [:.level3 {:font-family base-font
              :font-size (px 14)
@@ -46,14 +49,16 @@
   [:.header
    {:width (percent 100)
     :margin-top (px 7)
+    :margin-bottom (px 10)
     :min-width (px 680)}
    [:img
     {:width (px 125)
      :height (px 128)}]
    [:.menu-item
-    {:margin [[(em 0.8) (em 1)]]
+    {:margin [[(em 0.7) (em 0.9)]]
      :font-size (px 18)
      :color menu-item-colour
+     :letter-spacing (px -0.5)
      :text-decoration :none}]]
 
   ;; Footer
