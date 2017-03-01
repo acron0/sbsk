@@ -16,6 +16,7 @@
 
 (def fb-https          "https://graph.facebook.com")
 (def data-name-parts   ["data" ".json"])
+(def tags-key-name     "tags.json")
 
 (defn get-image-dims [uri]
   (let [file (fs/temp-file "sbsk")]
@@ -99,12 +100,15 @@
                 :height h))))
 
 (defn add-metadata
-  [db md-keys table]
+  [db md-keys table tags]
   (fn [video]
     (let [key-name (:id video)
           exists? (contains? md-keys key-name)]
       (if exists?
         (let [md (db/read-record-as-obj db table key-name)]
+          (run! (fn [tag] (when-not (contains? @tags tag)
+                            (log/debug "Caching unseen tag:" tag)
+                            (swap! tags conj tag))) (:tags md))
           (log/debug "Adding metadata for" key-name)
           (assoc video :meta md))
         video))))
@@ -125,6 +129,16 @@
       (when (< (inc n) (count r-segs))
         (recur (inc n))))))
 
+(defn load-tags!
+  [database table default-tags]
+  (try
+    (let [r (:tags (db/read-record-as-obj database table tags-key-name))
+          all-tags (set (clojure.set/union default-tags r))]
+      (log/info "Loaded" (count all-tags) "tags")
+      all-tags)
+    (catch Exception e (log/warn "Failed to load tags. Returning default tags only")
+           default-tags)))
+
 (defprotocol OnDemandCrawler
   (crawl-now! [this]))
 
@@ -133,17 +147,18 @@
 (defrecord Crawler [database
                     interval facebook bucket-full
                     hash-reset-interval bucket-segments records-per-segment
-                    metadata-bucket]
+                    metadata-bucket default-tags]
   OnDemandCrawler
   (crawl-now! [{:keys [hash-atom]}]
     (locking lock
       (log/debug "Starting crawler process...")
       (let [{:keys [app-id app-secret page-id]} facebook
+            tags (atom (load-tags! database bucket-segments default-tags))
             md-keys (set (db/list-keys database metadata-bucket))
             records (->> (fetch app-id app-secret page-id)
                          (filter :embeddable)
                          (map scrub)
-                         (map (add-metadata database md-keys metadata-bucket)))
+                         (map (add-metadata database md-keys metadata-bucket tags)))
             new-hash (hash records)]
         ;; hash is unreliable so disable until we can do this better
         (if true #_(not= new-hash @hash-atom)
@@ -157,10 +172,17 @@
                         "segments...")
               (upload-segments records database bucket-segments records-per-segment))
             (log/debug "No change observed"))
+        (log/info "Uploading" (count @tags) "tags")
+        ;;
+        (db/write-record!
+         database
+         bucket-segments
+         tags-key-name
+         {:tags @tags})
         (reset! hash-atom new-hash))))
   component/Lifecycle
   (start [component]
-    (log/info "Starting Crawler" interval)
+    (log/info "Starting Crawler")
     (let [pool (at/mk-pool)
           hash-atom (atom nil)]
       (assoc component

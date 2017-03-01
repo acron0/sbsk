@@ -3,6 +3,7 @@
                    [sbsk.macros :refer [cljs-env]])
   (:require [re-frame.core :as re-frame]
             [sbsk.shared.data :refer [fetch-videos
+                                      fetch-tags
                                       admin-address
                                       admin-port]]
             [goog.string :as gstr]
@@ -24,6 +25,7 @@
 (defn init-db
   []
   (run! fetch-videos (range 2))
+  (fetch-tags)
   empty-db)
 
 (defn load-more-videos

@@ -20,10 +20,14 @@
   (or (cljs-env :sbsk-admin-address) "localhost"))
 (def admin-port
   (or (cljs-env :sbsk-admin-port) "7000"))
+(def data-bucket
+  "https://s3-us-west-2.amazonaws.com/sbsk-data-segmented/")
 (def data-loc-prefix
-  "https://s3-us-west-2.amazonaws.com/sbsk-data-segmented/data.")
+  (str data-bucket "data."))
 (def data-loc-suffix
   ".json")
+(def tag-loc
+  (str data-bucket "tags.json"))
 
 (def desc-title-len 24)
 
@@ -49,3 +53,12 @@
                 m       (t/read reader body)
                 results (map keywordize m)]
             (re-frame/dispatch [:add-videos results n]))))))
+
+(defn fetch-tags
+  []
+  (go (let [response (<! (http/get tag-loc {:with-credentials? false}))]
+        (when (= 200 (:status response))
+          (let [body    (:body response)
+                reader  (t/reader :json)
+                m       (t/read reader body)]
+            (re-frame/dispatch [:add-tags (get m "tags")]))))))

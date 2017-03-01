@@ -20,6 +20,11 @@
               :loading-more? false))))
 
 (re-frame/reg-event-db
+ :add-tags
+ (fn  [db [_ tags]]
+   (update db :tags #(clojure.set/union % tags))))
+
+(re-frame/reg-event-db
  :load-more-videos
  (fn  [db [_]]
    (db/load-more-videos db)))
@@ -95,12 +100,14 @@
 (re-frame/reg-event-db
  :edit-current-video/add-tag
  (fn  [db [_ tag]]
-   (let [db' (-> db
-                 (assoc :dirty? true)
-                 (update-in [:current-video :meta :tags] set)
-                 (update-in [:current-video :meta :tags] conj tag)
-                 (update-in [:tags] conj tag))]
-     (db/reintegrate-current-video db'))))
+   (if-not (clojure.string/blank? tag)
+     (let [db' (-> db
+                   (assoc :dirty? true)
+                   (update-in [:current-video :meta :tags] set)
+                   (update-in [:current-video :meta :tags] conj tag)
+                   (update-in [:tags] conj tag))]
+       (db/reintegrate-current-video db'))
+     db)))
 
 (re-frame/reg-event-db
  :edit-current-video/remove-tag
@@ -157,3 +164,11 @@
                    (assoc-in [:current-video :meta :thumb] url))]
        (db/reintegrate-current-video db' sync?))
      db)))
+
+(re-frame/reg-event-db
+ :edit-current-video/remove-thumb
+ (fn  [db _]
+   (let [db' (-> db
+                 (assoc :dirty? true)
+                 (update-in [:current-video :meta] dissoc :thumb))]
+     (db/reintegrate-current-video db'))))
