@@ -151,7 +151,8 @@
            :label "or"]
           [re-com/button
            :class "btn-danger"
-           :label "Revert to Default Picture"]]]
+           :label "Revert to Default Picture"
+           :on-click #(re-frame/dispatch [:edit-current-video/remove-thumb])]]]
         [re-com/v-box
          :gap "10px"
          :children
@@ -199,7 +200,7 @@
         tag-atom (r/atom nil)
         tag-search (fn [s]
                      (into []
-                           (filter #(re-find (re-pattern (str "(?i)" s)) %) @all-tags)))]
+                           (take 10 (filter #(re-find (re-pattern (str "(?i)" s)) %) @all-tags))))]
     (fn [video]
       (let [tags (get-in video [:meta :tags])]
         [re-com/v-box
