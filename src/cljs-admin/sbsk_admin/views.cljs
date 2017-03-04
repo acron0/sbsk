@@ -31,7 +31,6 @@
   (let []
     (fn []
       [re-com/v-box
-       :width "100%"
        :align :center
        :class "actions"
        :children [[re-com/h-box
@@ -85,13 +84,51 @@
   []
   (let []
     (fn []
-      [:div "Coming Soon"])))
+      [re-com/v-box
+       :align :center
+       :gap "10px"
+       :children [[re-com/gap :size "10px"]
+                  [re-com/button
+                   :label "Add New Playlist"
+                   :class "btn-secondary"
+                   :on-click #(re-frame/dispatch [:create-new-playlist])]
+                  [dt/datatable
+                   :playlists
+                   [:playlists]
+                   [{::dt/column-key   [:title]
+                     ::dt/sorting      {::dt/enabled? false}
+                     ::dt/column-label "Title"}
+                    {::dt/column-key   [:created-at]
+                     ::dt/sorting      {::dt/enabled? true}
+                     ::dt/column-label "Created At"
+                     ::dt/render-fn     (fn [val]
+                                          [:span
+                                           (as-moment val)])}
+                    {::dt/column-key   [:videos]
+                     ::dt/sorting      {::dt/enabled? false}
+                     ::dt/column-label ""
+                     ::dt/render-fn     (fn [val]
+                                          [:span (str (count val) " video(s)")])}
+                    {::dt/column-key   [:id]
+                     ::dt/column-label "Actions"
+                     ::dt/render-fn    (fn [id]
+                                         [re-com/h-box
+                                          :gap "5px"
+                                          :children
+                                          [[re-com/button
+                                            :label "Edit"
+                                            :on-click #(re-frame/dispatch [:start-edit-playlist id])]
+                                           [re-com/button
+                                            :label "Delete"
+                                            :on-click #(re-frame/dispatch [:delete-playlist id])]]])}]
+                   {::dt/pagination    {::dt/enabled? false}
+                    ::dt/table-classes ["ii" "table" "celled"]}]]])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Current Video
 
 (defn title-control
-  [video]
+  [video event-key]
   (let [default-title (or (:title video) (clip-string (:description video)))
         meta-title (get-in video [:meta :title])
         current-title (if-not (clojure.string/blank? meta-title)
@@ -109,7 +146,7 @@
                  :width "100%"
                  :model current-title
                  :placeholder default-title
-                 :on-change #(re-frame/dispatch [:edit-current-video/title %])]]]))
+                 :on-change #(re-frame/dispatch [event-key %])]]]))
 
 (defn thumb-control
   [video]
@@ -272,7 +309,7 @@
            [[:i.zmdi.zmdi-hc-fw-rc.zmdi-link]
             [:a {:href (str "http://facebook.com" (:link video))
                  :target "_blank"} "Link to Facebook Video"]]]
-          (title-control video)
+          (title-control video :edit-current-video/title)
           (thumb-control video)
           [tags-control video]
           (short-desc-control video)
@@ -284,6 +321,23 @@
            :on-click #(re-frame/dispatch [:sync-db false])]]]))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Current Playlist
+
+(defn current-playlist-panel
+  [playlist]
+  (let []
+    (fn [playlist]
+      [re-com/v-box
+       :width "100%"
+       :class "current-playlist-edit"
+       :gap "15px"
+       :children
+       [[re-com/hyperlink
+         :label "< Back to Playlists"
+         :on-click #(re-frame/dispatch [:stop-edit-playlist])]
+        (title-control playlist :edit-current-playlist/title)]])))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tabs
 
 (defn tabs
@@ -293,7 +347,8 @@
               {:id :playlists
                :label "Playlists"}]
         current-tab (r/atom :videos)
-        current-video (re-frame/subscribe [:current-video])]
+        current-video (re-frame/subscribe [:current-video])
+        current-playlist (re-frame/subscribe [:current-playlist])]
     (fn []
       [re-com/v-box
        :children [[re-com/horizontal-tabs
@@ -301,12 +356,14 @@
                    :model current-tab
                    :on-change #(do
                                  (re-frame/dispatch [:stop-edit-video])
+                                 (re-frame/dispatch [:stop-edit-playlist])
                                  (reset! current-tab %))]
-                  (if @current-video
-                    [current-video-panel @current-video]
-                    (case @current-tab
-                      :videos [videos]
-                      :playlists [playlists]))]])))
+                  (cond
+                    @current-video [current-video-panel @current-video]
+                    @current-playlist [current-playlist-panel @current-playlist]
+                    :else (case @current-tab
+                            :videos [videos]
+                            :playlists [playlists]))]])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

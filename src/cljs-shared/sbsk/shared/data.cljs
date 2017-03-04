@@ -28,6 +28,8 @@
   ".json")
 (def tag-loc
   (str data-bucket "tags.json"))
+(def playlist-loc
+  (str data-bucket "playlists.json"))
 
 (def desc-title-len 24)
 
@@ -62,3 +64,13 @@
                 reader  (t/reader :json)
                 m       (t/read reader body)]
             (re-frame/dispatch [:add-tags (get m "tags")]))))))
+
+(defn fetch-playlists
+  []
+  (go (let [response (<! (http/get playlist-loc {:with-credentials? false}))]
+        (when (= 200 (:status response))
+          (let [body    (:body response)
+                reader  (t/reader :json)
+                m       (t/read reader body)
+                results (mapv keywordize (vals m))]
+            (re-frame/dispatch [:add-playlists results]))))))

@@ -4,6 +4,7 @@
   (:require [re-frame.core :as re-frame]
             [sbsk.shared.data :refer [fetch-videos
                                       fetch-tags
+                                      fetch-playlists
                                       admin-address
                                       admin-port]]
             [goog.string :as gstr]
@@ -14,18 +15,41 @@
 (def empty-db
   {:error nil
    :videos []
+   :playlists []
    :tags #{}
    :dirty? false
    :refreshing? false
    :current-video-loading? false
    :current-video nil
+   :current-playlist nil
    :latest-data -1
    :loading-more? false})
+
+(defn get-time
+  []
+  (let [now (js/Date. (.now js/Date))]
+    (gstr/format "%d%02d%02dT%02d%02d%02dZ"
+                 (.getFullYear now)
+                 (inc (.getMonth now))
+                 (.getDate now)
+                 (.getHours now)
+                 (.getMinutes now)
+                 (.getSeconds now))))
+
+(defn new-playlist
+  []
+  (let [t (get-time)]
+    {:id (str (random-uuid))
+     :title "New Playlist"
+     :created-at t
+     :videos []
+     :edited-at t}))
 
 (defn init-db
   []
   (run! fetch-videos (range 2))
   (fetch-tags)
+  (fetch-playlists)
   empty-db)
 
 (defn load-more-videos
@@ -55,23 +79,28 @@
                                        ":" admin-port
                                        "/api/video/" (:id video) "/metadata")
                                   {:with-credentials? true
-                                   :json-params (:meta video)}))]
-        #_(when (:success result)
-            (re-frame/dispatch [:search-results (:body result)])))))
+                                   :json-params (:meta video)}))])))
+
+(defn sync-to-playlist-database!
+  [playlist]
+  (go (let [result (<! (http/post (str "http://" admin-address
+                                       ":" admin-port
+                                       "/api/playlist/" (:id playlist))
+                                  {:with-credentials? true
+                                   :json-params playlist}))])))
+
+(defn delete-playlist!
+  [playlist-id]
+  (go (let [result (<! (http/delete (str "http://" admin-address
+                                         ":" admin-port
+                                         "/api/playlist/" playlist-id)
+                                    {:with-credentials? true}))])))
 
 (defn reintegrate-current-video
   ([db]
    (reintegrate-current-video db true))
   ([db sync?]
-   (let [now (js/Date. (.now js/Date))
-         edited-time (gstr/format "%d%02d%02dT%02d%02d%02dZ"
-                                  (.getFullYear now)
-                                  (inc (.getMonth now))
-                                  (.getDate now)
-                                  (.getHours now)
-                                  (.getMinutes now)
-                                  (.getSeconds now))]
-     (reintegrate-current-video db sync? edited-time)))
+   (reintegrate-current-video db sync? (get-time)))
   ([db sync? edited-time]
    (let [cv (assoc-in (:current-video db)
                       [:meta :edited-at]
@@ -91,6 +120,26 @@
                 (if (= (:id cv) (:id video))
                   cv
                   video)) videos))))))
+
+(defn reintegrate-current-playlist
+  ([db]
+   (reintegrate-current-playlist db true))
+  ([db sync?]
+   (reintegrate-current-playlist db sync? (get-time)))
+  ([db sync? edited-time]
+   (let [cp (assoc-in (:current-playlist db)
+                      [:edited-at]
+                      edited-time)]
+     (when sync?
+       (sync-to-playlist-database! cp))
+     (update
+      db
+      :playlists
+      (fn [playlists]
+        (mapv (fn [playlist]
+                (if (= (:id cp) (:id playlist))
+                  cp
+                  playlist)) playlists))))))
 
 (defn fetch-video-meta
   [id]

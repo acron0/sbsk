@@ -14,6 +14,8 @@
  :admin    {:username #or [#env SBSK_ADMIN_USERNAME "sbsk"]
             :password #or [#env SBSK_ADMIN_PASSWORD "password"]
             :metadata-bucket ^:ref [:metadata :bucket]
+            :public-bucket ^:ref [:crawler :bucket-segments]
+            :playlists-key "playlists.json"
             :photo-bucket "sbsk-pictures"
             :photo-bucket-region "us-west-2"
             :credentials ^:ref [:aws-credentials]}

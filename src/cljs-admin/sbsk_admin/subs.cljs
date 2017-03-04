@@ -8,9 +8,19 @@
    (:videos db)))
 
 (re-frame/reg-sub
+ :playlists
+ (fn [db]
+   (:playlists db)))
+
+(re-frame/reg-sub
  :current-video
  (fn [db]
    (:current-video db)))
+
+(re-frame/reg-sub
+ :current-playlist
+ (fn [db]
+   (:current-playlist db)))
 
 (re-frame/reg-sub
  :tags

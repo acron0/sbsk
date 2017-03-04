@@ -25,6 +25,11 @@
    (update db :tags #(clojure.set/union % tags))))
 
 (re-frame/reg-event-db
+ :add-playlists
+ (fn  [db [_ playlists]]
+   (assoc db :playlists playlists)))
+
+(re-frame/reg-event-db
  :load-more-videos
  (fn  [db [_]]
    (db/load-more-videos db)))
@@ -94,6 +99,45 @@
                                        (if local-is-newer?
                                          local-edited-time
                                          remote-edited-time)))))))
+
+(re-frame/reg-event-db
+ :create-new-playlist
+ (fn [db _]
+   (let [playlist (db/new-playlist)]
+     (-> db
+         (update :playlists conj playlist)
+         (assoc :current-playlist playlist)))))
+
+(re-frame/reg-event-db
+ :start-edit-playlist
+ (fn [db [_ id]]
+   (-> db
+       (assoc :current-playlist (some #(when (= id (:id %))
+                                         %) (:playlists db))))))
+
+(re-frame/reg-event-db
+ :stop-edit-playlist
+ (fn [db [_ id]]
+   (-> db
+       (assoc :current-playlist nil))))
+
+(re-frame/reg-event-db
+ :delete-playlist
+ (fn [db [_ id]]
+   (db/delete-playlist! id)
+   (-> db
+       (assoc :current-playlist nil)
+       (update :playlists (fn [ps] (vec (filter #(not= id (:id %)) ps)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(re-frame/reg-event-db
+ :edit-current-playlist/title
+ (fn  [db [_ title]]
+   (let [db' (-> db
+                 (assoc :dirty? true)
+                 (assoc-in [:current-playlist :title] title))]
+     (db/reintegrate-current-playlist db'))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
