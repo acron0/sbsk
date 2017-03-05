@@ -6,8 +6,7 @@
             [cljs.core.async :refer [<!]]
             [cognitect.transit :as t]
             [sbsk.shared.data :refer [fetch-videos
-                                      server-address
-                                      server-port]]))
+                                      search-videos]]))
 
 (def empty-db
   {:videos []
@@ -29,19 +28,6 @@
   (let [n (inc (:latest-data db))
         new-db (assoc db :loading-more? true)]
     (fetch-videos n)
-    new-db))
-
-(defn search-videos
-  [db query]
-  (let [new-db (assoc db
-                      :search-pending? true
-                      :search query)]
-    (when (> (count query) 3)
-      (go (let [result (<! (http/get (str "http://" server-address ":" server-port)
-                                     {:query-params {:q query}
-                                      :with-credentials? false}))]
-            (when (:success result)
-              (re-frame/dispatch [:search-results (:body result)])))))
     new-db))
 
 (defn reset-search-results

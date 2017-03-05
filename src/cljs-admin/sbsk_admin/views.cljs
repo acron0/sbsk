@@ -14,6 +14,8 @@
               video-medium-height
               video-large-width
               video-large-height]]
+            [sbsk.shared.video :as sbsk-video :refer
+             [get-title]]
             [sbsk.shared.data :as sbsk-data :refer
              [clip-string]]
             [sbsk.shared.time :refer [as-moment]]))
@@ -58,6 +60,11 @@
                                       [:img {:src val
                                              :width 120
                                              :height 80}])}
+                {::dt/column-key   [:title]
+                 ::dt/sorting      {::dt/enabled? true}
+                 ::dt/column-label "Title"
+                 ::dt/render-fn     (fn [_ video]
+                                      [:span (get-title video)])}
                 {::dt/column-key   [:created-at]
                  ::dt/sorting      {::dt/enabled? true}
                  ::dt/column-label "Created At"
@@ -200,8 +207,9 @@
           [re-com/gap :size "10px"]]]]]]]))
 
 (defn short-desc-control
-  [video]
-  (let [short-desc (or (get-in video [:meta :short-description]) "")]
+  [video event-key]
+  (let [short-desc (or (get-in video [:meta :short-description])
+                       (get-in video [:short-description])"")]
     [re-com/v-box
      :width "50%"
      :children [[re-com/title
@@ -211,7 +219,7 @@
                  :width "100%"
                  :model short-desc
                  :placeholder "Provide a brief description, ideally a single sentence."
-                 :on-change #(re-frame/dispatch [:edit-current-video/short-description %])]]]))
+                 :on-change #(re-frame/dispatch [event-key %])]]]))
 
 (defn full-desc-control
   [video]
@@ -312,7 +320,7 @@
           (title-control video :edit-current-video/title)
           (thumb-control video)
           [tags-control video]
-          (short-desc-control video)
+          (short-desc-control video :edit-current-video/short-description)
           (full-desc-control video)
           [re-com/button
            :label "Save and Publish Changes"
@@ -322,6 +330,70 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Current Playlist
+
+(defn manage-deferred-search
+  [value timeout]
+  (when @timeout
+    (js/clearTimeout @timeout))
+  (reset! timeout
+          (js/setTimeout
+           #(do
+              (reset! timeout nil)
+              (re-frame/dispatch [:video-search value]))
+           1000)))
+
+(defn video-search
+  []
+  (let [timeout (atom nil)]
+    (fn []
+      [re-com/v-box
+       :width "100%"
+       :children
+       [[re-com/title
+         :level :level2
+         :label "Video Search"]
+        [re-com/input-text
+         :model ""
+         :width "95%"
+         :change-on-blur? false
+         :on-change #(do (println "> " %)
+                         (manage-deferred-search % timeout))
+         :placeholder "Search for videos"]
+        [dt/datatable
+         :video-search-results-table
+         [:search-results]
+         [{::dt/column-key   [:thumb]
+           ::dt/sorting      {::dt/enabled? false}
+           ::dt/column-label ""
+           ::dt/render-fn     (fn [val]
+                                [:img {:src val
+                                       :width 120
+                                       :height 80}])}
+          {::dt/column-key   [:title]
+           ::dt/sorting      {::dt/enabled? true}
+           ::dt/column-label "Title"
+           ::dt/render-fn     (fn [_ video]
+                                [:span (get-title video)])}
+          {::dt/column-key   [:id]
+           ::dt/column-label "Actions"
+           ::dt/render-fn    (fn [id]
+                               [re-com/button
+                                :label "Add"
+                                :class "btn-success"
+                                :on-click #(re-frame/dispatch [:edit-current-playlist/add-video id])])}]
+         {::dt/pagination    {::dt/enabled? false}
+          ::dt/table-classes ["ii" "table" "celled"]}]
+        ]])))
+
+(defn playlist-videos
+  []
+  (let []
+    (fn []
+      [re-com/v-box
+       :children
+       [[re-com/title
+         :level :level2
+         :label "Playlist Videos"]]])))
 
 (defn current-playlist-panel
   [playlist]
@@ -335,7 +407,22 @@
        [[re-com/hyperlink
          :label "< Back to Playlists"
          :on-click #(re-frame/dispatch [:stop-edit-playlist])]
-        (title-control playlist :edit-current-playlist/title)]])))
+        (title-control playlist :edit-current-playlist/title)
+        (short-desc-control playlist :edit-current-playlist/short-description)
+        [re-com/h-box
+         :width "100%"
+         :height "600px"
+         :children
+         [[re-com/box
+           :size "auto"
+           :child
+           [video-search]]
+          [re-com/line]
+          [re-com/box
+           :size "auto"
+           :justify :end
+           :child
+           [playlist-videos]]]]]])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tabs

@@ -129,6 +129,16 @@
        (assoc :current-playlist nil)
        (update :playlists (fn [ps] (vec (filter #(not= id (:id %)) ps)))))))
 
+(re-frame/reg-event-db
+ :video-search
+ (fn [db [_ search]]
+   (db/perform-video-search! db search)))
+
+(re-frame/reg-event-db
+ :search-results
+ (fn [db [_ results]]
+   (assoc db :video-search-results results)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (re-frame/reg-event-db
@@ -137,6 +147,14 @@
    (let [db' (-> db
                  (assoc :dirty? true)
                  (assoc-in [:current-playlist :title] title))]
+     (db/reintegrate-current-playlist db'))))
+
+(re-frame/reg-event-db
+ :edit-current-playlist/short-description
+ (fn  [db [_ short-desc]]
+   (let [db' (-> db
+                 (assoc :dirty? true)
+                 (assoc-in [:current-playlist :short-description] short-desc))]
      (db/reintegrate-current-playlist db'))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

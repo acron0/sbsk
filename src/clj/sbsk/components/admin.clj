@@ -67,7 +67,6 @@
   (let [playlist-id (get-in req [:params :id])]
     (when (empty? (:playlists @cache))
       (swap! cache assoc :playlists (load-playlists! db bucket playlists-key)))
-    (log/debug "?????" @cache playlist-id)
     (swap! cache update :playlists dissoc playlist-id)
     (log/info "Deleteing playlist" playlist-id)
     (write-playlists! db bucket playlists-key cache)

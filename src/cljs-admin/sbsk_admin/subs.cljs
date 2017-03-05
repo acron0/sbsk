@@ -46,3 +46,8 @@
  :refreshing?
  (fn [db]
    (:refreshing? db)))
+
+(re-frame/reg-sub
+ :search-results
+ (fn [db]
+   (:video-search-results db)))

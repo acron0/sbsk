@@ -6,7 +6,8 @@
                                       fetch-tags
                                       fetch-playlists
                                       admin-address
-                                      admin-port]]
+                                      admin-port
+                                      search-videos]]
             [goog.string :as gstr]
             [cljs-http.client :as http]
             [cljs.core.async :refer [<! timeout]]
@@ -23,7 +24,10 @@
    :current-video nil
    :current-playlist nil
    :latest-data -1
-   :loading-more? false})
+   :loading-more? false
+   :search nil
+   :search-pending? false
+   :video-search-results []})
 
 (defn get-time
   []
@@ -41,6 +45,7 @@
   (let [t (get-time)]
     {:id (str (random-uuid))
      :title "New Playlist"
+     :short-description nil
      :created-at t
      :videos []
      :edited-at t}))
@@ -165,3 +170,7 @@
                                   id true])
               (re-frame/dispatch [:error (str "Failed to upload photo to S3 for " id ": " upload-result)])))
           (re-frame/dispatch [:error (str "Failed to create upload link for " id ": " result)])))))
+
+(defn perform-video-search!
+  [db search]
+  (search-videos db search))

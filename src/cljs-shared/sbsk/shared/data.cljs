@@ -74,3 +74,16 @@
                 m       (t/read reader body)
                 results (mapv keywordize (vals m))]
             (re-frame/dispatch [:add-playlists results]))))))
+
+(defn search-videos
+  [db query]
+  (let [new-db (assoc db
+                      :search-pending? true
+                      :search query)]
+    (when (> (count query) 3)
+      (go (let [result (<! (http/get (str "http://" server-address ":" server-port)
+                                     {:query-params {:q query}
+                                      :with-credentials? false}))]
+            (when (:success result)
+              (re-frame/dispatch [:search-results (:body result)])))))
+    new-db))
