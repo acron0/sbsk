@@ -1,6 +1,7 @@
 (ns sbsk.handlers
   (:require [re-frame.core :as re-frame]
-            [sbsk.db :as db]))
+            [sbsk.db :as db]
+            [sbsk.shared.data :refer [search-videos]]))
 
 (defn set-noscroll!
   [on]
@@ -49,7 +50,7 @@
  :search
  (fn  [db [_ query]]
    (if (not= (:search db) query)
-     (db/search-videos db query)
+     (search-videos db query)
      db)))
 
 (re-frame/reg-event-db

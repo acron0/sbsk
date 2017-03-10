@@ -79,13 +79,14 @@
 
 (defn video-slider
   [videos num-videos & [opts]]
-  (let [width (* num-videos video-small-width)]
+  (let [gap-size 2
+        width (- (* num-videos (+ video-small-width gap-size)) gap-size)]
     [re-com/h-box
      :class "video-slider"
      :justify :start
      :width (px width)
      :children (interpose
-                [re-com/gap :size "5px"]
+                [re-com/gap :size (px gap-size)]
                 (for [video videos]
                   [re-com/box
                    :size (px video-small-width)

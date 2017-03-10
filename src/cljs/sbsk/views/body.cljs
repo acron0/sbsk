@@ -51,7 +51,7 @@
   [re-com/v-box
    :class "search-nav"
    :height "100%"
-   :width (px 180)
+   :width (px (- video-small-width 16))
    :children (concat
               [[re-com/h-box
                 :align :stretch
@@ -81,50 +81,81 @@
                                      (dispatch-search term))}
                         term])))])
 
-(defn video-highlight
-  [video]
-  (let [w (px video-highlight-width)
-        h (px video-highlight-height)]
-    [re-com/box
-     :class "video-highlight"
-     :width w
-     :height h
-     :child [:div.video-panel
-             {:style {:width "100%"
-                      :height "100%"}
-              :on-click (partial open-video video)}
-             [:img {:src (video/get-thumb video)
-                    :width w
-                    :height h}]]]))
+#_(defn video-highlight
+    [video]
+    (let [w (px video-highlight-width)
+          h (px video-highlight-height)]
+      [re-com/box
+       :class "video-highlight"
+       :width w
+       :height h
+       :child [:div.video-panel
+               {:style {:width "100%"
+                        :height "100%"}
+                :on-click (partial open-video video)}
+               [:img {:src (video/get-thumb video)
+                      :width w
+                      :height h}]]]))
 
-(defn video-highlight-row
-  [videos height gap]
-  [re-com/h-box
-   :width "100%"
-   :height height
-   :gap gap
-   :children (doall
-              (for [video videos]
-                ^{:key (:id video)}
-                (video-highlight video)))])
+#_(defn video-highlight-row
+    [videos height gap]
+    [re-com/h-box
+     :width "100%"
+     :height height
+     :gap gap
+     :children (doall
+                (for [video videos]
+                  ^{:key (:id video)}
+                  (video-highlight video)))])
+
+#_(defn video-highlights
+    [videos]
+    (let [noof-rows 2
+          vids-per-row (/ (count videos) noof-rows)
+          rows (partition vids-per-row videos)
+          hperc (str (/ 100 noof-rows) "%")
+          gap (px 5)]
+      [re-com/v-box
+       :size "auto"
+       :gap gap
+       :children (concat [[re-com/title
+                           :level :level2
+                           :label "Latest Videos"]]
+                         (doall
+                          (for [row rows]
+                            ^{:key (apply str (map :id row))}
+                            (video-highlight-row row hperc gap))))]))
+
+(defn latest-videos-slider
+  [videos]
+  [re-com/v-box
+   :gap "2px"
+   :children
+   [[re-com/title
+     :level :level2
+     :label "Latest Videos"]
+    (video/video-slider (take 8 videos) 4)]])
+
+(defn playlist-slider
+  []
+  (let []
+    (fn []
+      [re-com/v-box
+       :gap "2px"
+       :children
+       [[re-com/title
+         :level :level2
+         :label "Playlists"]
+        #_(video/video-slider videos 4 {:overlay-fn (now-playing (first videos))})]])))
 
 (defn video-highlights
   [videos]
-  (let [noof-rows 2
-        vids-per-row (/ (count videos) noof-rows)
-        rows (partition vids-per-row videos)
-        hperc (str (/ 100 noof-rows) "%")
-        gap (px 5)]
-    [re-com/v-box
-     :size "auto"
-     :gap gap
-     :children (concat [[re-com/title
-                         :level :level2
-                         :label "Latest Videos"]]
-                       (doall
-                        (for [row rows]
-                          ^{:key (apply str (map :id row))}
-                          (video-highlight-row row hperc gap))))]))
+  [re-com/v-box
+   :size "auto"
+   :gap "5px"
+   :children
+   [[playlist-slider]
+    (latest-videos-slider videos)]])
 
 (defn upper-body
   [videos]
@@ -264,45 +295,50 @@
 
 (defn lower-body
   [search-results? search-term videos]
-  (let [videos-to-show videos]
-    [:div#search-results.lower-body
-     [re-com/v-box
-      :class "lower"
-      :width "100%"
-      :children [[re-com/h-box
-                  :justify :start
-                  :width "100%"
-                  :children [(when search-results?
-                               [re-com/box
-                                :size "32px"
-                                :child [re-com/md-icon-button
-                                        :md-icon-name "zmdi-close"
-                                        :style {:height "100%"}
-                                        :on-click (fn [e]
-                                                    (re-frame/dispatch [:clear-search])
-                                                    (.preventDefault e))]])
+  [:div.lower-body
+   [re-com/v-box
+    :class "lower"
+    :width "100%"
+    :children [[re-com/h-box
+                :justify :start
+                :width "100%"
+                :children [(when search-results?
                              [re-com/box
-                              :size "auto"
-                              :child [re-com/title
-                                      :level :level2
-                                      :label (if search-results?
-                                               (str "Search Results for '" search-term "'")
-                                               "All Videos")]]]]
+                              :size "32px"
+                              :child [re-com/md-icon-button
+                                      :md-icon-name "zmdi-close"
+                                      :style {:height "100%"}
+                                      :on-click (fn [e]
+                                                  (re-frame/dispatch [:clear-search])
+                                                  (.preventDefault e))]])
+                           [re-com/box
+                            :size "auto"
+                            :child [re-com/title
+                                    :level :level2
+                                    :label (if search-results?
+                                             (str "Search Results for '" search-term "'")
+                                             "All Videos")]]]]
+               (if search-results?
                  [:div.pure-g
+                  {:key "search-results"}
                   [:div
                    {:style {:width "100%"}}
                    [video-packed-display search-term videos]]]
-                 [re-com/h-box
-                  :class "load-more"
-                  :justify :center
-                  :width "100%"
-                  :children [(if true #_@loading-more?
-                                 #_[re-com/throbber
-                                    :size :small]
-                                 [re-com/button
-                                  :label "Load More"
-                                  :on-click #(re-frame/dispatch [:load-more-videos])])]]]]]))
-
+                 [:div.pure-g
+                  {:key "all-videos"}
+                  [:div
+                   {:style {:width "100%"}}
+                   [video-packed-display nil videos]]
+                  [re-com/h-box
+                   :class "load-more"
+                   :justify :center
+                   :width "100%"
+                   :children [(if true #_@loading-more?
+                                  #_[re-com/throbber
+                                     :size :small]
+                                  [re-com/button
+                                   :label "Load More"
+                                   :on-click #(re-frame/dispatch [:load-more-videos])])]]])]]])
 (defn panel []
   (let [videos (re-frame/subscribe [:videos])
         search-term (re-frame/subscribe [:search])
