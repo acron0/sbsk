@@ -87,3 +87,13 @@
             (when (:success result)
               (re-frame/dispatch [:search-results (:body result)])))))
     new-db))
+
+(defn search-videos-by-id
+  [db videos]
+  (when (not-empty videos)
+    (go (let [result (<! (http/get (str "http://" server-address ":" server-port)
+                                   {:query-params {:id (clojure.string/join "," videos)}
+                                    :with-credentials? false}))]
+          (when (:success result)
+            (re-frame/dispatch [:search-by-id-results (:body result)])))))
+  db)

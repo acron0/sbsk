@@ -352,13 +352,19 @@
        [[re-com/title
          :level :level2
          :label "Video Search"]
-        [re-com/input-text
-         :model ""
-         :width "95%"
-         :change-on-blur? false
-         :on-change #(do (println "> " %)
-                         (manage-deferred-search % timeout))
-         :placeholder "Search for videos"]
+        [re-com/h-box
+         :gap "5px"
+         :align :center
+         :children
+         [[re-com/input-text
+           :model ""
+           :width "80%"
+           :change-on-blur? false
+           :on-change #(manage-deferred-search % timeout)
+           :placeholder "Search for videos"]
+          [re-com/hyperlink
+           :label "Clear"
+           :on-click #(re-frame/dispatch [:clear-search])]]]
         [dt/datatable
          :video-search-results-table
          [:search-results]
@@ -390,10 +396,54 @@
   (let []
     (fn []
       [re-com/v-box
+       :width "100%"
+       :align :end
        :children
        [[re-com/title
          :level :level2
-         :label "Playlist Videos"]]])))
+         :label "Playlist Videos"]
+        [re-com/title
+         :level :level4
+         :label "The following videos are included in this playlist:"]
+        [re-com/gap :size "5px"]
+        [dt/datatable
+         :playlist-videos-table
+         [:current-playlist-videos]
+         [{::dt/column-key   [:thumb]
+           ::dt/sorting      {::dt/enabled? false}
+           ::dt/column-label ""
+           ::dt/render-fn     (fn [val]
+                                [:img {:src val
+                                       :width 120
+                                       :height 80}])}
+          {::dt/column-key   [:title]
+           ::dt/sorting      {::dt/enabled? true}
+           ::dt/column-label "Title"
+           ::dt/render-fn     (fn [_ video]
+                                (when video
+                                  [:span (get-title video)]))}
+          {::dt/column-key   [:id]
+           ::dt/column-label "Actions"
+           ::dt/render-fn    (fn [id]
+                               [re-com/h-box
+                                :align :center
+                                :children
+                                [[re-com/button
+                                  :label "Remove"
+                                  :class "btn-danger"
+                                  :on-click #(re-frame/dispatch [:edit-current-playlist/remove-video id])]
+                                 [re-com/gap :size "10px"]
+                                 [re-com/md-icon-button
+                                  :md-icon-name "zmdi-long-arrow-up"
+                                  :emphasise? true
+                                  :on-click #(re-frame/dispatch [:edit-current-playlist/move-video-up id])]
+                                 [re-com/gap :size "2px"]
+                                 [re-com/md-icon-button
+                                  :md-icon-name "zmdi-long-arrow-down"
+                                  :emphasise? true
+                                  :on-click #(re-frame/dispatch [:edit-current-playlist/move-video-down id])]]])}]
+         {::dt/pagination    {::dt/enabled? false}
+          ::dt/table-classes ["ii" "table" "celled"]}]]])))
 
 (defn current-playlist-panel
   [playlist]
@@ -411,16 +461,15 @@
         (short-desc-control playlist :edit-current-playlist/short-description)
         [re-com/h-box
          :width "100%"
-         :height "600px"
+         :height "100%"
          :children
          [[re-com/box
-           :size "auto"
+           :size "50%"
            :child
            [video-search]]
           [re-com/line]
           [re-com/box
-           :size "auto"
-           :justify :end
+           :size "50%"
            :child
            [playlist-videos]]]]]])))
 

@@ -113,7 +113,8 @@
  (fn [db [_ id]]
    (-> db
        (assoc :current-playlist (some #(when (= id (:id %))
-                                         %) (:playlists db))))))
+                                         %) (:playlists db)))
+       (db/update-current-playlist-videos))))
 
 (re-frame/reg-event-db
  :stop-edit-playlist
@@ -135,9 +136,20 @@
    (db/perform-video-search! db search)))
 
 (re-frame/reg-event-db
+ :clear-search
+ (fn [db _]
+   (assoc db :video-search-results [])))
+
+(re-frame/reg-event-db
  :search-results
  (fn [db [_ results]]
    (assoc db :video-search-results results)))
+
+(re-frame/reg-event-db
+ :search-by-id-results
+ (fn [db [_ results]]
+   (assoc db :current-playlist-videos
+          (reduce #(assoc %1 (:id %2) %2) {} results))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -156,6 +168,55 @@
                  (assoc :dirty? true)
                  (assoc-in [:current-playlist :short-description] short-desc))]
      (db/reintegrate-current-playlist db'))))
+
+(re-frame/reg-event-db
+ :edit-current-playlist/add-video
+ (fn  [db [_ video-id]]
+   (-> db
+       (assoc :dirty? true)
+       (update-in [:current-playlist :videos] #(conj % video-id))
+       (db/update-current-playlist-videos)
+       (db/reintegrate-current-playlist))))
+
+(re-frame/reg-event-db
+ :edit-current-playlist/remove-video
+ (fn  [db [_ video-id]]
+   (-> db
+       (assoc :dirty? true)
+       (update-in [:current-playlist :videos] #(remove #{video-id} %))
+       (db/update-current-playlist-videos)
+       (db/reintegrate-current-playlist))))
+
+(defn move-video
+  [video-id direction]
+  (fn [videos]
+    (let [videos-vec (vec videos)
+          [idx to-swap] (first (keep-indexed #(when (= %2 video-id) [%1 %2]) videos))
+          new-idx (case direction
+                    :up   (max 0 (dec idx))
+                    :down (min (dec (count videos)) (inc idx)))]
+      (if-not (= new-idx idx)
+        (let [current-at-new-idx (nth videos new-idx)]
+          (-> videos
+              (assoc new-idx to-swap)
+              (assoc idx current-at-new-idx)))
+        videos))))
+
+(re-frame/reg-event-db
+ :edit-current-playlist/move-video-up
+ (fn  [db [_ video-id]]
+   (-> db
+       (assoc :dirty? true)
+       (update-in [:current-playlist :videos] (move-video video-id :up))
+       (db/reintegrate-current-playlist))))
+
+(re-frame/reg-event-db
+ :edit-current-playlist/move-video-down
+ (fn  [db [_ video-id]]
+   (-> db
+       (assoc :dirty? true)
+       (update-in [:current-playlist :videos] (move-video video-id :down))
+       (db/reintegrate-current-playlist))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

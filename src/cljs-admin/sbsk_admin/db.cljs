@@ -7,7 +7,8 @@
                                       fetch-playlists
                                       admin-address
                                       admin-port
-                                      search-videos]]
+                                      search-videos
+                                      search-videos-by-id]]
             [goog.string :as gstr]
             [cljs-http.client :as http]
             [cljs.core.async :refer [<! timeout]]
@@ -23,6 +24,7 @@
    :current-video-loading? false
    :current-video nil
    :current-playlist nil
+   :current-playlist-videos []
    :latest-data -1
    :loading-more? false
    :search nil
@@ -174,3 +176,8 @@
 (defn perform-video-search!
   [db search]
   (search-videos db search))
+
+(defn update-current-playlist-videos
+  [db]
+  (let [playlist-video-ids (set (get-in db [:current-playlist :videos]))]
+    (search-videos-by-id db playlist-video-ids)))
