@@ -45,6 +45,10 @@
      (let [v' (if (map? v) (keywordize v) v)]
        (assoc a (keyword k) v'))) {} x))
 
+(defn px
+  [x]
+  (str x "px"))
+
 (defn fetch-videos
   [n]
   (go (let [address (str data-loc-prefix n data-loc-suffix)

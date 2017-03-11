@@ -7,7 +7,8 @@
                                video-medium-height
                                video-large-width
                                video-large-height]]
-            [sbsk.shared.data :refer [clip-string]]))
+            [sbsk.shared.data :refer [clip-string px]]
+            [sbsk.shared.slider :refer [slider-control]]))
 
 (defn not-blank
   [s]
@@ -39,10 +40,6 @@
       (clip-string (get-description video))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn px
-  [x]
-  (str x "px"))
 
 (defn open-video
   [video]
@@ -79,16 +76,9 @@
 
 (defn video-slider
   [videos num-videos & [opts]]
-  (let [gap-size 2
-        width (- (* num-videos (+ video-small-width gap-size)) gap-size)]
-    [re-com/h-box
-     :class "video-slider"
-     :justify :start
-     :width (px width)
-     :children (interpose
-                [re-com/gap :size (px gap-size)]
-                (for [video videos]
-                  [re-com/box
-                   :size (px video-small-width)
-                   :child (video-panel :small video {:class "video-slider-video-panel"
-                                                     :overlay-fn (:overlay-fn opts)})]))]))
+  (slider-control "video-slider"
+                  #(video-panel :small % {:class "video-slider-video-panel"
+                                          :overlay-fn (:overlay-fn opts)})
+                  videos
+                  num-videos
+                  video-small-width))

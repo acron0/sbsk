@@ -65,3 +65,13 @@
           :search nil
           :search-result-videos []
           :search-pending? false)))
+
+(re-frame/reg-event-db
+ :add-tags
+ (fn  [db [_ results]]
+   (assoc db :tags results)))
+
+(re-frame/reg-event-db
+ :add-playlists
+ (fn  [db [_ results]]
+   (assoc db :playlists results)))

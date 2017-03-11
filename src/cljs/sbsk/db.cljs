@@ -6,10 +6,14 @@
             [cljs.core.async :refer [<!]]
             [cognitect.transit :as t]
             [sbsk.shared.data :refer [fetch-videos
+                                      fetch-tags
+                                      fetch-playlists
                                       search-videos]]))
 
 (def empty-db
   {:videos []
+   :tags []
+   :playlists []
    :search-result-videos []
    :search nil
    :current-video nil
@@ -21,6 +25,8 @@
 (defn init-db
   []
   (run! fetch-videos (range 2))
+  (fetch-tags)
+  (fetch-playlists)
   empty-db)
 
 (defn load-more-videos

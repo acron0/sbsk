@@ -7,6 +7,7 @@
             [sbsk.hiccup-help :refer [px hiccup->element]]
             [garden.core :refer [style]]
             [sbsk.shared.video :as video]
+            [sbsk.shared.playlist :as playlist]
             [sbsk.vars :refer [video-highlight-width
                                video-highlight-height
                                video-small-height
@@ -138,7 +139,7 @@
 
 (defn playlist-slider
   []
-  (let []
+  (let [playlists (re-frame/subscribe [:playlists])]
     (fn []
       [re-com/v-box
        :gap "2px"
@@ -146,7 +147,7 @@
        [[re-com/title
          :level :level2
          :label "Playlists"]
-        #_(video/video-slider videos 4 {:overlay-fn (now-playing (first videos))})]])))
+        (playlist/playlist-slider @playlists 4)]])))
 
 (defn video-highlights
   [videos]

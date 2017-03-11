@@ -24,6 +24,11 @@
  (fn [db]
    (:loading-more? db)))
 
+(re-frame/reg-sub
+ :playlists
+ (fn [db]
+   (:playlists db)))
+
 (defn find-next-videos
   [id videos]
   (let [start (.indexOf (map :id videos) id)]
