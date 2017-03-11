@@ -148,7 +148,7 @@
   [:.content-body
    {:width (percent 100)}
    [:.upper :.lower
-    {:margin-bottom (em 3)}]
+    {:margin-bottom (px 20)}]
    [:.content
     {:width (px content-width)
      :display :block

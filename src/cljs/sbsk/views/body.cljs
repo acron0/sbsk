@@ -8,9 +8,7 @@
             [garden.core :refer [style]]
             [sbsk.shared.video :as video]
             [sbsk.shared.playlist :as playlist]
-            [sbsk.vars :refer [video-highlight-width
-                               video-highlight-height
-                               video-small-height
+            [sbsk.vars :refer [video-small-height
                                video-small-width
                                video-medium-width
                                video-medium-height
@@ -82,51 +80,6 @@
                                      (dispatch-search term))}
                         term])))])
 
-#_(defn video-highlight
-    [video]
-    (let [w (px video-highlight-width)
-          h (px video-highlight-height)]
-      [re-com/box
-       :class "video-highlight"
-       :width w
-       :height h
-       :child [:div.video-panel
-               {:style {:width "100%"
-                        :height "100%"}
-                :on-click (partial open-video video)}
-               [:img {:src (video/get-thumb video)
-                      :width w
-                      :height h}]]]))
-
-#_(defn video-highlight-row
-    [videos height gap]
-    [re-com/h-box
-     :width "100%"
-     :height height
-     :gap gap
-     :children (doall
-                (for [video videos]
-                  ^{:key (:id video)}
-                  (video-highlight video)))])
-
-#_(defn video-highlights
-    [videos]
-    (let [noof-rows 2
-          vids-per-row (/ (count videos) noof-rows)
-          rows (partition vids-per-row videos)
-          hperc (str (/ 100 noof-rows) "%")
-          gap (px 5)]
-      [re-com/v-box
-       :size "auto"
-       :gap gap
-       :children (concat [[re-com/title
-                           :level :level2
-                           :label "Latest Videos"]]
-                         (doall
-                          (for [row rows]
-                            ^{:key (apply str (map :id row))}
-                            (video-highlight-row row hperc gap))))]))
-
 (defn latest-videos-slider
   [videos]
   [re-com/v-box
@@ -153,7 +106,7 @@
   [videos]
   [re-com/v-box
    :size "auto"
-   :gap "5px"
+   :gap "20px"
    :children
    [[playlist-slider]
     (latest-videos-slider videos)]])
@@ -175,7 +128,7 @@
 
 (defn random-video-dimensions
   []
-  (let [prop [[10 [video-small-width video-small-height]]
+  (let [prop [[7 [video-small-width video-small-height]]
               [5  [video-medium-width video-medium-height]]
               [1  [video-large-width video-large-height]]]
         pick (rand-nth (range (apply + (map first prop))))]
@@ -296,7 +249,7 @@
 
 (defn lower-body
   [search-results? search-term videos]
-  [:div.lower-body
+  [:div#search-results.lower-body
    [re-com/v-box
     :class "lower"
     :width "100%"

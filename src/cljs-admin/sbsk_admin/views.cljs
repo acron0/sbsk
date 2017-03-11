@@ -173,7 +173,8 @@
          [[re-com/label :label "Replacement Picture"]
           [:div
            {:style {:position :relative}}
-           [:img {:src meta-thumb
+           [:img {:src (or meta-thumb
+                           (str "http://placehold.it/" video-large-width "x" video-large-height))
                   :width video-large-width
                   :height video-large-height}]
            (when uploading?
@@ -200,7 +201,7 @@
         [re-com/v-box
          :gap "10px"
          :children
-         [[re-com/label :label "Default  Picture"]
+         [[re-com/label :label "Default Picture"]
           [:img {:src (:thumb video)
                  :width video-large-width
                  :height video-large-height}]
@@ -301,6 +302,9 @@
          [[re-com/hyperlink
            :label "< Back to Videos"
            :on-click #(re-frame/dispatch [:stop-edit-video])]
+          [re-com/title
+           :level :level2
+           :label "Editing Video"]
           [re-com/h-box
            :align :center
            :gap "10px"
@@ -341,6 +345,43 @@
               (reset! timeout nil)
               (re-frame/dispatch [:video-search value]))
            1000)))
+
+(defn playlist-thumb-control
+  [playlist]
+  (let [meta-thumb (get-in playlist [:thumb])
+        uploading? (and meta-thumb (clojure.string/starts-with? meta-thumb "data:"))]
+    [re-com/v-box
+     :children
+     [[re-com/title
+       :level :level3
+       :label "Picture"]
+      [re-com/h-box
+       :gap "10px"
+       :children
+       [[re-com/v-box
+         :gap "10px"
+         :children
+         [[:div
+           {:style {:position :relative}}
+           [:img {:src (or meta-thumb
+                           (str "http://placehold.it/" video-medium-width "x" video-medium-height))
+                  :width video-medium-width
+                  :height video-medium-height}]
+           (when uploading?
+             [:div.uploading-thumb
+              {:style {:width video-large-width
+                       :height video-large-height}}
+              "Uploading..."
+              [re-com/throbber
+               :color "#000"]])]
+          [re-com/label
+           :label "Select a Picture (6x4):"]
+          [:input {:type "file"
+                   :id "additional-picture-input"
+                   :on-change
+                   (fn [e]
+                     (let [file (first (array-seq (.. e -target -files)))]
+                       (re-frame/dispatch [:edit-current-playlist/thumb file])))}]]]]]]]))
 
 (defn video-search
   []
@@ -457,8 +498,12 @@
        [[re-com/hyperlink
          :label "< Back to Playlists"
          :on-click #(re-frame/dispatch [:stop-edit-playlist])]
+        [re-com/title
+         :level :level2
+         :label "Editing Playlist"]
         (title-control playlist :edit-current-playlist/title)
         (short-desc-control playlist :edit-current-playlist/short-description)
+        (playlist-thumb-control playlist)
         [re-com/h-box
          :width "100%"
          :height "100%"

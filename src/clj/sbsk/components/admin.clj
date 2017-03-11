@@ -99,7 +99,7 @@
 
 (defn create-upload-link!
   [creds endpoint id bucket]
-  (log/info "Providing upload link for " id)
+  (log/info "Providing upload link for" id)
   {:status 200
    :body (str (s3/generate-presigned-url
                (assoc creds :endpoint endpoint)
@@ -123,7 +123,7 @@
                    (save-video-meta! request database metadata-bucket cache))
              (GET  "/video/:id/metadata" [id]
                    (fetch-video-meta id database metadata-bucket cache))
-             (GET "/video/:id/photo/upload-link" [id]
+             (GET "/photo/:id/upload-link" [id]
                   (create-upload-link! creds photo-bucket-region id photo-bucket)))
     (route/resources "/")))
 

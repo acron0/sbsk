@@ -157,17 +157,17 @@
         (re-frame/dispatch [:update-video-metadata id (:body result)]))))
 
 (defn upload-photo!
-  [id file]
+  [id file key]
   (go (let [result (<! (http/get (str "http://" admin-address
                                       ":" admin-port
-                                      "/api/video/" id "/photo/upload-link")
+                                      "/api/photo/" id "/upload-link")
                                  {:with-credentials? true}))]
         (if (:success result)
           (let [upload-result (<! (http/put (:body result)
                                             {:with-credentials? false
                                              :body file}))]
             (if (:success upload-result)
-              (re-frame/dispatch [:edit-current-video/thumb-update
+              (re-frame/dispatch [key
                                   (str "https://s3-us-west-2.amazonaws.com/sbsk-pictures/" id)
                                   id true])
               (re-frame/dispatch [:error (str "Failed to upload photo to S3 for " id ": " upload-result)])))

@@ -218,6 +218,30 @@
        (update-in [:current-playlist :videos] (move-video video-id :down))
        (db/reintegrate-current-playlist))))
 
+(re-frame/reg-event-db
+ :edit-current-playlist/thumb
+ (fn  [db [_ file]]
+   (let [reader (js/FileReader.)]
+     (set! (.-onload reader) #(re-frame/dispatch [:edit-current-playlist/thumb-update
+                                                  (.. % -target -result)
+                                                  (get-in db [:current-playlist :id])
+                                                  false]))
+     (.readAsDataURL reader file)
+     (db/upload-photo! (get-in db [:current-playlist :id]) file
+                       :edit-current-playlist/thumb-update)
+     (-> db
+         (assoc :dirty? true)))))
+
+(re-frame/reg-event-db
+ :edit-current-playlist/thumb-update
+ (fn  [db [_ url playlist-id sync?]]
+   (if (= playlist-id (get-in db [:current-playlist :id]))
+     (let [db' (-> db
+                   (assoc :dirty? true)
+                   (assoc-in [:current-playlist :thumb] url))]
+       (db/reintegrate-current-playlist db' sync?))
+     db)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (re-frame/reg-event-db
@@ -274,7 +298,8 @@
                                                   (get-in db [:current-video :id])
                                                   false]))
      (.readAsDataURL reader file)
-     (db/upload-photo! (get-in db [:current-video :id]) file)
+     (db/upload-photo! (get-in db [:current-video :id]) file
+                       :edit-current-video/thumb-update)
      (-> db
          (assoc :dirty? true)))))
 

@@ -24,8 +24,6 @@
 (def video-medium-height (* 2 video-small-height))
 (def video-large-width (* 3 video-small-width))
 (def video-large-height (* 3 video-small-height))
-(def video-highlight-width video-small-width)
-(def video-highlight-height video-small-height)
 
 (def vp-content-width
   "Calculates the video-player content width - 4 videos + gaps"
