@@ -181,3 +181,10 @@
   [db]
   (let [playlist-video-ids (set (get-in db [:current-playlist :videos]))]
     (search-videos-by-id db playlist-video-ids)))
+
+(defn move-playlist!
+  [dir playlist-id]
+  (http/put (str "http://" admin-address
+                 ":" admin-port
+                 "/api/playlist/" playlist-id "/" (name dir))
+            {:with-credentials? true}))

@@ -4,6 +4,32 @@
             [cljs-time.core :as ct]
             [cljs-time.format :as cf]))
 
+(defn move-item
+  [pred direction]
+  (fn [items]
+    (let [items-vec (vec items)
+          [idx to-swap] (first (keep-indexed #(when (pred %2) [%1 %2]) items))
+          new-idx (case direction
+                    :up   (max 0 (dec idx))
+                    :down (min (dec (count items)) (inc idx)))]
+      (if-not (= new-idx idx)
+        (let [current-at-new-idx (nth items new-idx)]
+          (-> items
+              (assoc new-idx to-swap)
+              (assoc idx current-at-new-idx)))
+        items))))
+
+(defn after?
+  [time-a time-b]
+  (if-not time-a
+    false
+    (if-not time-b
+      true
+      (let [fmt (cf/formatter "yyyyMMdd'T'HHmmss'Z'")
+            a (cf/parse fmt time-a)
+            b (cf/parse fmt time-b)]
+        (ct/after? a b)))))
+
 (re-frame/reg-event-db
  :initialize-db
  (fn  [_ _]
@@ -70,17 +96,6 @@
  :error
  (fn [db [_ msg]]
    (assoc db :error msg)))
-
-(defn after?
-  [time-a time-b]
-  (if-not time-a
-    false
-    (if-not time-b
-      true
-      (let [fmt (cf/formatter "yyyyMMdd'T'HHmmss'Z'")
-            a (cf/parse fmt time-a)
-            b (cf/parse fmt time-b)]
-        (ct/after? a b)))))
 
 (re-frame/reg-event-db
  :update-video-metadata
@@ -151,6 +166,18 @@
    (assoc db :current-playlist-videos
           (reduce #(assoc %1 (:id %2) %2) {} results))))
 
+(re-frame/reg-event-db
+ :move-playlist-up
+ (fn [db [_ id]]
+   (db/move-playlist! :up id)
+   (update db :playlists (move-item #(= (:id %) id) :up))))
+
+(re-frame/reg-event-db
+ :move-playlist-down
+ (fn [db [_ id]]
+   (db/move-playlist! :down id)
+   (update db :playlists (move-item #(= (:id %) id) :down))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (re-frame/reg-event-db
@@ -187,27 +214,12 @@
        (db/update-current-playlist-videos)
        (db/reintegrate-current-playlist))))
 
-(defn move-video
-  [video-id direction]
-  (fn [videos]
-    (let [videos-vec (vec videos)
-          [idx to-swap] (first (keep-indexed #(when (= %2 video-id) [%1 %2]) videos))
-          new-idx (case direction
-                    :up   (max 0 (dec idx))
-                    :down (min (dec (count videos)) (inc idx)))]
-      (if-not (= new-idx idx)
-        (let [current-at-new-idx (nth videos new-idx)]
-          (-> videos
-              (assoc new-idx to-swap)
-              (assoc idx current-at-new-idx)))
-        videos))))
-
 (re-frame/reg-event-db
  :edit-current-playlist/move-video-up
  (fn  [db [_ video-id]]
    (-> db
        (assoc :dirty? true)
-       (update-in [:current-playlist :videos] (move-video video-id :up))
+       (update-in [:current-playlist :videos] (move-item #(= % video-id) :up))
        (db/reintegrate-current-playlist))))
 
 (re-frame/reg-event-db
@@ -215,7 +227,7 @@
  (fn  [db [_ video-id]]
    (-> db
        (assoc :dirty? true)
-       (update-in [:current-playlist :videos] (move-video video-id :down))
+       (update-in [:current-playlist :videos] (move-item #(= % video-id) :down))
        (db/reintegrate-current-playlist))))
 
 (re-frame/reg-event-db

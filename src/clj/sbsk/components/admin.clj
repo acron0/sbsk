@@ -17,6 +17,22 @@
             [sbsk.components.crawler :as crawler])
   (:import [com.amazonaws.services.s3.model AmazonS3Exception]))
 
+(defn move-item
+  [pred direction]
+  (fn [items]
+    (log/debug "??" items)
+    (let [items-vec (vec items)
+          [idx to-swap] (first (keep-indexed #(when (pred %2) [%1 %2]) items))
+          new-idx (case direction
+                    :up   (max 0 (dec idx))
+                    :down (min (dec (count items)) (inc idx)))]
+      (if-not (= new-idx idx)
+        (let [current-at-new-idx (nth items new-idx)]
+          (-> items
+              (assoc new-idx to-swap)
+              (assoc idx current-at-new-idx)))
+        items))))
+
 (defn save-video-meta!
   [req db metadata-bucket cache]
   (if (= "application/json" (:content-type req))
@@ -72,6 +88,19 @@
     (write-playlists! db bucket playlists-key cache)
     {:status 202}))
 
+(defn move-playlist!
+  [dir req db bucket playlists-key cache]
+  (let [playlist-id (get-in req [:params :id])]
+    (when (empty? (:playlists @cache))
+      (swap! cache assoc :playlists (load-playlists! db bucket playlists-key)))
+    (swap! cache update :playlists
+           (fn [pls]
+             (let [moved-pls ((move-item #(= (:id %) playlist-id) dir) (vec (vals pls)))]
+               (reduce #(assoc %1 (:id %2) %2) {} moved-pls))))
+    (log/info "Moving playlist" playlist-id dir)
+    (write-playlists! db bucket playlists-key cache)
+    {:status 200}))
+
 (defn fetch-video-meta
   [id db metadata-bucket cache]
   (if-let [from-cache (get-in @cache [:video-meta id])]
@@ -119,6 +148,10 @@
                    (save-playlist! request database public-bucket playlists-key cache))
              (DELETE "/playlist/:id" request
                      (delete-playlist! request database public-bucket playlists-key cache))
+             (PUT "/playlist/:id/up" request
+                  (move-playlist! :up request database public-bucket playlists-key cache))
+             (PUT "/playlist/:id/down" request
+                  (move-playlist! :down request database public-bucket playlists-key cache))
              (POST "/video/:id/metadata" request
                    (save-video-meta! request database metadata-bucket cache))
              (GET  "/video/:id/metadata" [id]

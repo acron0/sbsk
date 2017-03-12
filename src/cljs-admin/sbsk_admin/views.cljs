@@ -6,9 +6,7 @@
             [re-frame-datatable.core :as dt]
             ;;
             [sbsk.vars :as sbsk-vars :refer
-             [video-highlight-width
-              video-highlight-height
-              video-small-height
+             [video-small-height
               video-small-width
               video-medium-width
               video-medium-height
@@ -102,7 +100,15 @@
                   [dt/datatable
                    :playlists
                    [:playlists]
-                   [{::dt/column-key   [:title]
+                   [{::dt/column-key   [:thumb]
+                     ::dt/sorting      {::dt/enabled? false}
+                     ::dt/column-label ""
+                     ::dt/render-fn     (fn [val]
+                                          [:img {:src (or val
+                                                          (str "http://placehold.it/" video-medium-width "x" video-medium-height))
+                                                 :width 120
+                                                 :height 80}])}
+                    {::dt/column-key   [:title]
                      ::dt/sorting      {::dt/enabled? false}
                      ::dt/column-label "Title"}
                     {::dt/column-key   [:created-at]
@@ -121,13 +127,24 @@
                      ::dt/render-fn    (fn [id]
                                          [re-com/h-box
                                           :gap "5px"
+                                          :align :center
                                           :children
                                           [[re-com/button
                                             :label "Edit"
                                             :on-click #(re-frame/dispatch [:start-edit-playlist id])]
                                            [re-com/button
                                             :label "Delete"
-                                            :on-click #(re-frame/dispatch [:delete-playlist id])]]])}]
+                                            :on-click #(when (js/confirm "Are you sure you want to delete this playlist?")
+                                                         (re-frame/dispatch [:delete-playlist id]))]
+                                           [re-com/gap :size "2px"]
+                                           [re-com/md-icon-button
+                                            :md-icon-name "zmdi-long-arrow-up"
+                                            :emphasise? true
+                                            :on-click #(re-frame/dispatch [:move-playlist-up id])]
+                                           [re-com/md-icon-button
+                                            :md-icon-name "zmdi-long-arrow-down"
+                                            :emphasise? true
+                                            :on-click #(re-frame/dispatch [:move-playlist-down id])]]])}]
                    {::dt/pagination    {::dt/enabled? false}
                     ::dt/table-classes ["ii" "table" "celled"]}]]])))
 
