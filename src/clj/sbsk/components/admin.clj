@@ -20,7 +20,6 @@
 (defn move-item
   [pred direction]
   (fn [items]
-    (log/debug "??" items)
     (let [items-vec (vec items)
           [idx to-swap] (first (keep-indexed #(when (pred %2) [%1 %2]) items))
           new-idx (case direction
