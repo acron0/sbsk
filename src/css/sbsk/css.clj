@@ -216,7 +216,7 @@
      :width (percent 100)
      :height (percent 100)
      :pointer-events :none}]]
-  [:.video-slider
+  [:.video-slider :.playlist-slider
    {:overflow :hidden}]
   [:.noscroll
    {:overflow-y :hidden}])
