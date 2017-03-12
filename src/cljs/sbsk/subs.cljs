@@ -30,10 +30,13 @@
    (:playlists db)))
 
 (defn find-next-videos
-  [id videos]
+  [id videos minimum]
   (let [start (.indexOf (map :id videos) id)
-        remainder (drop start videos)]
-    remainder))
+        remainder (drop start videos)
+        diff (- minimum (count remainder))]
+    (if (pos? diff)
+      (concat remainder (take diff videos))
+      remainder)))
 
 (re-frame/reg-sub
  :further-viewing
@@ -41,10 +44,10 @@
    (let [num-videos 4]
      (when-let [cv (:current-video db)]
        (let [videos (if-let [playlist-videos (not-empty (:current-playlist-videos db))]
-                      (take num-videos (find-next-videos (:id cv) playlist-videos))
+                      (take num-videos (find-next-videos (:id cv) playlist-videos num-videos))
                       (if-let [search-results (not-empty (:search-result-videos db))]
-                        (take num-videos (find-next-videos (:id cv) search-results))
-                        (take num-videos (find-next-videos (:id cv) (:videos db)))))
+                        (take num-videos (find-next-videos (:id cv) search-results num-videos))
+                        (take num-videos (find-next-videos (:id cv) (:videos db) num-videos))))
              title (if-let [cpt (get-in db [:current-playlist :title])]
                      (str cpt " Playlist")
                      "Further Watching")]

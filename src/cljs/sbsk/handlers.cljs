@@ -57,7 +57,6 @@
 (re-frame/reg-event-db
  :close-video
  (fn  [db [_ video-id]]
-   (println "closing video")
    (set-noscroll! false)
    (assoc db
           :current-video nil
