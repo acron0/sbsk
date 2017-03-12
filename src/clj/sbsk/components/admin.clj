@@ -86,7 +86,7 @@
     (swap! cache update :playlists dissoc playlist-id)
     (log/info "Deleteing playlist" playlist-id)
     (write-playlists! db bucket playlists-key cache)
-    {:status 202}))
+    {:status 202})
 
 (defn move-playlist!
   [dir req db bucket playlists-key cache]
@@ -99,7 +99,7 @@
                (reduce #(assoc %1 (:id %2) %2) {} moved-pls))))
     (log/info "Moving playlist" playlist-id dir)
     (write-playlists! db bucket playlists-key cache)
-    {:status 200}))
+    {:status 200})))
 
 (defn fetch-video-meta
   [id db metadata-bucket cache]

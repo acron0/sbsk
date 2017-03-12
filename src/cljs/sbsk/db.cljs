@@ -8,7 +8,8 @@
             [sbsk.shared.data :refer [fetch-videos
                                       fetch-tags
                                       fetch-playlists
-                                      search-videos]]))
+                                      search-videos
+                                      search-videos-by-id]]))
 
 (def empty-db
   {:videos []
@@ -20,7 +21,9 @@
    :latest-data -1
    :loading-more? false
    :search-pending? false
-   :isotope nil})
+   :isotope nil
+   :current-playlist nil
+   :current-playlist-videos []})
 
 (defn init-db
   []
@@ -41,3 +44,7 @@
   (assoc db
          :search-pending? false
          :search-result-videos results))
+
+(defn load-playlist-videos!
+  [db playlist]
+  (search-videos-by-id db (:videos playlist)))

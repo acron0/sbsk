@@ -33,13 +33,36 @@
    (assoc db :current-video (or (some #(when (= (:id %) video-id) %)
                                       (get db :search-result-videos))
                                 (some #(when (= (:id %) video-id) %)
-                                      (get db :videos))))))
+                                      (get db :videos))
+                                (some #(when (= (:id %) video-id) %)
+                                      (get db :current-playlist-videos))))))
+
+(re-frame/reg-event-db
+ :open-playlist
+ (fn  [db [_ playlist-id]]
+   (set-noscroll! true)
+   (let [playlist (some #(when (= (:id %) playlist-id) %) (:playlists db))]
+     (-> db
+         (db/load-playlist-videos! playlist)
+         (assoc :current-playlist playlist
+                :current-video :loading)))))
+
+(re-frame/reg-event-db
+ :search-by-id-results
+ (fn  [db [_ results]]
+   (assoc db
+          :current-playlist-videos results
+          :current-video (first results))))
 
 (re-frame/reg-event-db
  :close-video
  (fn  [db [_ video-id]]
+   (println "closing video")
    (set-noscroll! false)
-   (assoc db :current-video nil)))
+   (assoc db
+          :current-video nil
+          :current-playlist nil
+          :current-playlist-videos [])))
 
 (re-frame/reg-event-db
  :load-more-videos

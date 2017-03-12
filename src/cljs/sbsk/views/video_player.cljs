@@ -105,12 +105,12 @@
        [:span "Currently Watching"]])))
 
 (defn further-viewing
-  [videos]
+  [fvtitle videos]
   [re-com/v-box
    :children
    [[re-com/title
      :level :level2
-     :label "Further Watching"]
+     :label fvtitle]
     (video/video-slider videos 4 {:overlay-fn (now-playing (first videos))})]])
 
 (defn close-button
@@ -123,21 +123,32 @@
 
 (defn panel
   [video]
-  (let [additional-videos (re-frame/subscribe [:further-viewing])]
+  (let [further-viewing-sub (re-frame/subscribe [:further-viewing])]
     (fn [video]
-      [:div.video-player
-       {:on-click #(re-frame/dispatch [:close-video])}
-       [:div.content
-        [:div.inner-content
-         {:on-click #(.stopPropagation %)}
-         [re-com/v-box
-          :gap "10px"
-          :justify :start
-          :children [(fb-header video)
-                     (video-info video)
-                     (video-iframe video)
-                     (engagements video)
-                     (tags video)
-                     (further-viewing @additional-videos)
-                     [re-com/gap :size "20px"]]]]]
-       (close-button)])))
+      (let [[further-viewing-title additional-videos] @further-viewing-sub]
+        [:div.video-player
+         {:on-click #(re-frame/dispatch [:close-video])}
+         (if (= video :loading)
+           [:div.loading-video
+            [re-com/box
+             :height "400px"
+             :align :center
+             :justify :center
+             :child
+             [re-com/throbber
+              :size :large
+              :color "#FFF"]]]
+           [:div.content
+            [:div.inner-content
+             {:on-click #(.stopPropagation %)}
+             [re-com/v-box
+              :gap "10px"
+              :justify :start
+              :children [(fb-header video)
+                         (video-info video)
+                         (video-iframe video)
+                         (engagements video)
+                         (tags video)
+                         (further-viewing further-viewing-title additional-videos)
+                         [re-com/gap :size "20px"]]]]])
+         (close-button)]))))
