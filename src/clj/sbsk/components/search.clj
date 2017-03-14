@@ -18,7 +18,11 @@
 
 (defn get-query
   [ctx]
-  (second (re-find #"q=(.+)" (get ctx :query-string))))
+  (let [qs (get ctx :query-string)]
+    (if-let [query (second (re-find #"q=(.+)" qs))]
+      {:query query}
+      (when-let [id (second (re-find #"id=(.+)" qs))]
+        {:id id}))))
 
 (defmacro not-blank
   [s]
@@ -62,11 +66,16 @@
     (log/info "Index ready")))
 
 (defn do-search
-  [query index records]
-  (if (and @index (not (clojure.string/blank? query)))
-    (let [results (capq/do-search @index query :or)]
-      (mapv (fn [[id _]]
-              (get @records id)) results))
+  [{:keys [query id]} index records]
+  (if @index
+    (cond (not (clojure.string/blank? query))
+          (let [results (capq/do-search @index query :or)]
+            (mapv (fn [[rid _]]
+                    (get @records rid)) results))
+          (not (clojure.string/blank? id))
+          (let [results (clojure.string/split id #"%2C|,")]
+            (mapv (fn [rid]
+                    (get @records rid)) results)))
     []))
 
 (defn search-handler

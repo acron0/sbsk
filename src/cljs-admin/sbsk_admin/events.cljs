@@ -4,6 +4,32 @@
             [cljs-time.core :as ct]
             [cljs-time.format :as cf]))
 
+(defn move-item
+  [pred direction]
+  (fn [items]
+    (let [items-vec (vec items)
+          [idx to-swap] (first (keep-indexed #(when (pred %2) [%1 %2]) items))
+          new-idx (case direction
+                    :up   (max 0 (dec idx))
+                    :down (min (dec (count items)) (inc idx)))]
+      (if-not (= new-idx idx)
+        (let [current-at-new-idx (nth items new-idx)]
+          (-> items
+              (assoc new-idx to-swap)
+              (assoc idx current-at-new-idx)))
+        items))))
+
+(defn after?
+  [time-a time-b]
+  (if-not time-a
+    false
+    (if-not time-b
+      true
+      (let [fmt (cf/formatter "yyyyMMdd'T'HHmmss'Z'")
+            a (cf/parse fmt time-a)
+            b (cf/parse fmt time-b)]
+        (ct/after? a b)))))
+
 (re-frame/reg-event-db
  :initialize-db
  (fn  [_ _]
@@ -23,6 +49,11 @@
  :add-tags
  (fn  [db [_ tags]]
    (update db :tags #(clojure.set/union % tags))))
+
+(re-frame/reg-event-db
+ :add-playlists
+ (fn  [db [_ playlists]]
+   (assoc db :playlists playlists)))
 
 (re-frame/reg-event-db
  :load-more-videos
@@ -66,17 +97,6 @@
  (fn [db [_ msg]]
    (assoc db :error msg)))
 
-(defn after?
-  [time-a time-b]
-  (if-not time-a
-    false
-    (if-not time-b
-      true
-      (let [fmt (cf/formatter "yyyyMMdd'T'HHmmss'Z'")
-            a (cf/parse fmt time-a)
-            b (cf/parse fmt time-b)]
-        (ct/after? a b)))))
-
 (re-frame/reg-event-db
  :update-video-metadata
  (fn [db [_ id metadata]]
@@ -94,6 +114,145 @@
                                        (if local-is-newer?
                                          local-edited-time
                                          remote-edited-time)))))))
+
+(re-frame/reg-event-db
+ :create-new-playlist
+ (fn [db _]
+   (let [playlist (db/new-playlist)]
+     (-> db
+         (update :playlists conj playlist)
+         (assoc :current-playlist playlist)))))
+
+(re-frame/reg-event-db
+ :start-edit-playlist
+ (fn [db [_ id]]
+   (-> db
+       (assoc :current-playlist (some #(when (= id (:id %))
+                                         %) (:playlists db)))
+       (db/update-current-playlist-videos))))
+
+(re-frame/reg-event-db
+ :stop-edit-playlist
+ (fn [db [_ id]]
+   (-> db
+       (assoc :current-playlist nil))))
+
+(re-frame/reg-event-db
+ :delete-playlist
+ (fn [db [_ id]]
+   (db/delete-playlist! id)
+   (-> db
+       (assoc :current-playlist nil)
+       (update :playlists (fn [ps] (vec (filter #(not= id (:id %)) ps)))))))
+
+(re-frame/reg-event-db
+ :video-search
+ (fn [db [_ search]]
+   (db/perform-video-search! db search)))
+
+(re-frame/reg-event-db
+ :clear-search
+ (fn [db _]
+   (assoc db :video-search-results [])))
+
+(re-frame/reg-event-db
+ :search-results
+ (fn [db [_ results]]
+   (assoc db :video-search-results results)))
+
+(re-frame/reg-event-db
+ :search-by-id-results
+ (fn [db [_ results]]
+   (assoc db :current-playlist-videos
+          (reduce #(assoc %1 (:id %2) %2) {} results))))
+
+(re-frame/reg-event-db
+ :move-playlist-up
+ (fn [db [_ id]]
+   (db/move-playlist! :up id)
+   (update db :playlists (move-item #(= (:id %) id) :up))))
+
+(re-frame/reg-event-db
+ :move-playlist-down
+ (fn [db [_ id]]
+   (db/move-playlist! :down id)
+   (update db :playlists (move-item #(= (:id %) id) :down))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(re-frame/reg-event-db
+ :edit-current-playlist/title
+ (fn  [db [_ title]]
+   (let [db' (-> db
+                 (assoc :dirty? true)
+                 (assoc-in [:current-playlist :title] title))]
+     (db/reintegrate-current-playlist db'))))
+
+(re-frame/reg-event-db
+ :edit-current-playlist/short-description
+ (fn  [db [_ short-desc]]
+   (let [db' (-> db
+                 (assoc :dirty? true)
+                 (assoc-in [:current-playlist :short-description] short-desc))]
+     (db/reintegrate-current-playlist db'))))
+
+(re-frame/reg-event-db
+ :edit-current-playlist/add-video
+ (fn  [db [_ video-id]]
+   (-> db
+       (assoc :dirty? true)
+       (update-in [:current-playlist :videos] #(conj % video-id))
+       (db/update-current-playlist-videos)
+       (db/reintegrate-current-playlist))))
+
+(re-frame/reg-event-db
+ :edit-current-playlist/remove-video
+ (fn  [db [_ video-id]]
+   (-> db
+       (assoc :dirty? true)
+       (update-in [:current-playlist :videos] #(remove #{video-id} %))
+       (db/update-current-playlist-videos)
+       (db/reintegrate-current-playlist))))
+
+(re-frame/reg-event-db
+ :edit-current-playlist/move-video-up
+ (fn  [db [_ video-id]]
+   (-> db
+       (assoc :dirty? true)
+       (update-in [:current-playlist :videos] (move-item #(= % video-id) :up))
+       (db/reintegrate-current-playlist))))
+
+(re-frame/reg-event-db
+ :edit-current-playlist/move-video-down
+ (fn  [db [_ video-id]]
+   (-> db
+       (assoc :dirty? true)
+       (update-in [:current-playlist :videos] (move-item #(= % video-id) :down))
+       (db/reintegrate-current-playlist))))
+
+(re-frame/reg-event-db
+ :edit-current-playlist/thumb
+ (fn  [db [_ file]]
+   (let [reader (js/FileReader.)]
+     (set! (.-onload reader) #(re-frame/dispatch [:edit-current-playlist/thumb-update
+                                                  (.. % -target -result)
+                                                  (get-in db [:current-playlist :id])
+                                                  false]))
+     (.readAsDataURL reader file)
+     (db/upload-photo! (get-in db [:current-playlist :id]) file
+                       :edit-current-playlist/thumb-update)
+     (-> db
+         (assoc :dirty? true)))))
+
+(re-frame/reg-event-db
+ :edit-current-playlist/thumb-update
+ (fn  [db [_ url playlist-id sync?]]
+   (if (= playlist-id (get-in db [:current-playlist :id]))
+     (let [db' (-> db
+                   (assoc :dirty? true)
+                   (assoc-in [:current-playlist :thumb] url))]
+       (db/reintegrate-current-playlist db' sync?))
+     db)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -151,7 +310,8 @@
                                                   (get-in db [:current-video :id])
                                                   false]))
      (.readAsDataURL reader file)
-     (db/upload-photo! (get-in db [:current-video :id]) file)
+     (db/upload-photo! (get-in db [:current-video :id]) file
+                       :edit-current-video/thumb-update)
      (-> db
          (assoc :dirty? true)))))
 

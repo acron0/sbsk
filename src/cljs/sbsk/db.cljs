@@ -6,22 +6,30 @@
             [cljs.core.async :refer [<!]]
             [cognitect.transit :as t]
             [sbsk.shared.data :refer [fetch-videos
-                                      server-address
-                                      server-port]]))
+                                      fetch-tags
+                                      fetch-playlists
+                                      search-videos
+                                      search-videos-by-id]]))
 
 (def empty-db
   {:videos []
+   :tags []
+   :playlists []
    :search-result-videos []
    :search nil
    :current-video nil
    :latest-data -1
    :loading-more? false
    :search-pending? false
-   :isotope nil})
+   :isotope nil
+   :current-playlist nil
+   :current-playlist-videos []})
 
 (defn init-db
   []
   (run! fetch-videos (range 2))
+  (fetch-tags)
+  (fetch-playlists)
   empty-db)
 
 (defn load-more-videos
@@ -31,21 +39,12 @@
     (fetch-videos n)
     new-db))
 
-(defn search-videos
-  [db query]
-  (let [new-db (assoc db
-                      :search-pending? true
-                      :search query)]
-    (when (> (count query) 3)
-      (go (let [result (<! (http/get (str "http://" server-address ":" server-port)
-                                     {:query-params {:q query}
-                                      :with-credentials? false}))]
-            (when (:success result)
-              (re-frame/dispatch [:search-results (:body result)])))))
-    new-db))
-
 (defn reset-search-results
   [db results]
   (assoc db
          :search-pending? false
          :search-result-videos results))
+
+(defn load-playlist-videos!
+  [db playlist]
+  (search-videos-by-id db (:videos playlist)))

@@ -18,7 +18,7 @@
   [:* {:font-family base-font}]
   [:.actions
    {:margin (em 1)}]
-  [:.current-video-edit
+  [:.current-video-edit :.current-playlist-edit
    {:padding (em 1)}]
   [:.rc-typeahead-suggestions-container
    {:margin-top (px 34)}]

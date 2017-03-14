@@ -148,7 +148,7 @@
   [:.content-body
    {:width (percent 100)}
    [:.upper :.lower
-    {:margin-bottom (em 3)}]
+    {:margin-bottom (px 20)}]
    [:.content
     {:width (px content-width)
      :display :block
@@ -200,7 +200,7 @@
     :transition (transition :color "0.4s")}
    [:&:hover
     {:color "#CCC"}]]
-  [:.video-panel
+  [:.video-panel :.playlist-panel
    {:background-color 'white
     :position :relative}
    [:img {:cursor :pointer
@@ -209,12 +209,14 @@
     [:&:hover
      {:box-shadow [[(px 0) (px 0) (px 8) "#888"]]
       :opacity 0.9}]]
-   [:.video-panel-overlay
+   [:.video-panel-overlay :.playlist-panel-overlay
     {:position :absolute
      :top 0
      :left 0
      :width (percent 100)
      :height (percent 100)
      :pointer-events :none}]]
+  [:.video-slider :.playlist-slider
+   {:overflow :hidden}]
   [:.noscroll
    {:overflow-y :hidden}])

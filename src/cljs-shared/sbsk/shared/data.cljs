@@ -28,6 +28,8 @@
   ".json")
 (def tag-loc
   (str data-bucket "tags.json"))
+(def playlist-loc
+  (str data-bucket "playlists.json"))
 
 (def desc-title-len 24)
 
@@ -42,6 +44,10 @@
    (fn [a k v]
      (let [v' (if (map? v) (keywordize v) v)]
        (assoc a (keyword k) v'))) {} x))
+
+(defn px
+  [x]
+  (str x "px"))
 
 (defn fetch-videos
   [n]
@@ -62,3 +68,36 @@
                 reader  (t/reader :json)
                 m       (t/read reader body)]
             (re-frame/dispatch [:add-tags (get m "tags")]))))))
+
+(defn fetch-playlists
+  []
+  (go (let [response (<! (http/get playlist-loc {:with-credentials? false}))]
+        (when (= 200 (:status response))
+          (let [body    (:body response)
+                reader  (t/reader :json)
+                m       (t/read reader body)
+                results (mapv keywordize (vals m))]
+            (re-frame/dispatch [:add-playlists results]))))))
+
+(defn search-videos
+  [db query]
+  (let [new-db (assoc db
+                      :search-pending? true
+                      :search query)]
+    (when (> (count query) 3)
+      (go (let [result (<! (http/get (str "http://" server-address ":" server-port)
+                                     {:query-params {:q query}
+                                      :with-credentials? false}))]
+            (when (:success result)
+              (re-frame/dispatch [:search-results (:body result)])))))
+    new-db))
+
+(defn search-videos-by-id
+  [db videos]
+  (when (not-empty videos)
+    (go (let [result (<! (http/get (str "http://" server-address ":" server-port)
+                                   {:query-params {:id (clojure.string/join "," videos)}
+                                    :with-credentials? false}))]
+          (when (:success result)
+            (re-frame/dispatch [:search-by-id-results (:body result)])))))
+  db)

@@ -1,6 +1,7 @@
 (ns sbsk.handlers
   (:require [re-frame.core :as re-frame]
-            [sbsk.db :as db]))
+            [sbsk.db :as db]
+            [sbsk.shared.data :refer [search-videos]]))
 
 (defn set-noscroll!
   [on]
@@ -32,13 +33,35 @@
    (assoc db :current-video (or (some #(when (= (:id %) video-id) %)
                                       (get db :search-result-videos))
                                 (some #(when (= (:id %) video-id) %)
-                                      (get db :videos))))))
+                                      (get db :videos))
+                                (some #(when (= (:id %) video-id) %)
+                                      (get db :current-playlist-videos))))))
+
+(re-frame/reg-event-db
+ :open-playlist
+ (fn  [db [_ playlist-id]]
+   (set-noscroll! true)
+   (let [playlist (some #(when (= (:id %) playlist-id) %) (:playlists db))]
+     (-> db
+         (db/load-playlist-videos! playlist)
+         (assoc :current-playlist playlist
+                :current-video :loading)))))
+
+(re-frame/reg-event-db
+ :search-by-id-results
+ (fn  [db [_ results]]
+   (assoc db
+          :current-playlist-videos results
+          :current-video (first results))))
 
 (re-frame/reg-event-db
  :close-video
  (fn  [db [_ video-id]]
    (set-noscroll! false)
-   (assoc db :current-video nil)))
+   (assoc db
+          :current-video nil
+          :current-playlist nil
+          :current-playlist-videos [])))
 
 (re-frame/reg-event-db
  :load-more-videos
@@ -49,7 +72,7 @@
  :search
  (fn  [db [_ query]]
    (if (not= (:search db) query)
-     (db/search-videos db query)
+     (search-videos db query)
      db)))
 
 (re-frame/reg-event-db
@@ -64,3 +87,13 @@
           :search nil
           :search-result-videos []
           :search-pending? false)))
+
+(re-frame/reg-event-db
+ :add-tags
+ (fn  [db [_ results]]
+   (assoc db :tags results)))
+
+(re-frame/reg-event-db
+ :add-playlists
+ (fn  [db [_ results]]
+   (assoc db :playlists results)))
