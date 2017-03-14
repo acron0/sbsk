@@ -85,10 +85,10 @@
     (swap! cache update :playlists dissoc playlist-id)
     (log/info "Deleteing playlist" playlist-id)
     (write-playlists! db bucket playlists-key cache)
-    {:status 202})
+    {:status 202}))
 
 (defn move-playlist!
-  [dir req db bucket playlists-key cache]
+  [req dir db bucket playlists-key cache]
   (let [playlist-id (get-in req [:params :id])]
     (when (empty? (:playlists @cache))
       (swap! cache assoc :playlists (load-playlists! db bucket playlists-key)))
@@ -98,7 +98,7 @@
                (reduce #(assoc %1 (:id %2) %2) {} moved-pls))))
     (log/info "Moving playlist" playlist-id dir)
     (write-playlists! db bucket playlists-key cache)
-    {:status 200})))
+    {:status 200}))
 
 (defn fetch-video-meta
   [id db metadata-bucket cache]
@@ -148,9 +148,9 @@
              (DELETE "/playlist/:id" request
                      (delete-playlist! request database public-bucket playlists-key cache))
              (PUT "/playlist/:id/up" request
-                  (move-playlist! :up request database public-bucket playlists-key cache))
+                  (move-playlist! request :up database public-bucket playlists-key cache))
              (PUT "/playlist/:id/down" request
-                  (move-playlist! :down request database public-bucket playlists-key cache))
+                  (move-playlist! request :down database public-bucket playlists-key cache))
              (POST "/video/:id/metadata" request
                    (save-video-meta! request database metadata-bucket cache))
              (GET  "/video/:id/metadata" [id]
