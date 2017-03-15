@@ -1,5 +1,6 @@
 (ns sbsk.components.crawler
   (:require [com.stuartsierra.component :as component]
+            [clojure.core.async :as async]
             [taoensso.timbre :as log]
             [clj-time.core :as t]
             [clj-time.format :as tf]
@@ -9,10 +10,21 @@
             [overtone.at-at :as at]
             [me.raynes.fs :as fs]
             [clojure.java.io :as io]
+            [amazonica.aws.ec2 :as ec2]
             ;;
             [sbsk.components.database :as db])
   (:import  [javax.imageio ImageIO]
             [java.io File]))
+
+(defn find-search-instances
+  [creds]
+  (let [instances
+        (-> creds
+            (ec2/describe-instances :filters [{:name "tag:search" :values [""]}])
+            :reservations)]
+    (->> instances
+         (mapcat :instances)
+         (map :private-ip-address))))
 
 (def fb-https          "https://graph.facebook.com")
 (def data-name-parts   ["data" ".json"])
@@ -139,17 +151,36 @@
     (catch Exception e (log/warn "Failed to load tags. Returning default tags only")
            default-tags)))
 
+(defn start-re-index-request-loop!
+  [re-index-chan re-index-port creds]
+  (log/info "Starting RRI loop.")
+  (async/go-loop []
+    (let [go? (async/<! re-index-chan)]
+      (when go?
+        (log/info "Broadcasting re-index instruction to search instances:")
+        (let [search-instances (map #(str "http://" % ":" re-index-port)
+                                    (find-search-instances creds))]
+          (log/info "/" (vec search-instances))
+          (run! #(future
+                   (try
+                     (client/post % {:socket-timeout 2000
+                                     :conn-timeout 2000})
+                     (catch Exception e
+                       (log/error (str "Failed to communicate with search instance " % " - " (.getMessage e)))))) search-instances))
+        (recur))))
+  (log/info "Finished RRI loop."))
+
 (defprotocol OnDemandCrawler
   (crawl-now! [this]))
 
 (def lock (Object.))
 
 (defrecord Crawler [database
-                    interval facebook bucket-full
+                    interval facebook bucket-full credentials
                     hash-reset-interval bucket-segments records-per-segment
-                    metadata-bucket default-tags]
+                    metadata-bucket default-tags re-index-port]
   OnDemandCrawler
-  (crawl-now! [{:keys [hash-atom]}]
+  (crawl-now! [{:keys [hash-atom re-index-chan] :as opts}]
     (locking lock
       (log/debug "Starting crawler process...")
       (let [{:keys [app-id app-secret page-id]} facebook
@@ -170,7 +201,8 @@
               (log/info "Uploading"
                         (int (Math/ceil (/ (count records) records-per-segment)))
                         "segments...")
-              (upload-segments records database bucket-segments records-per-segment))
+              (upload-segments records database bucket-segments records-per-segment)
+              (async/put! re-index-chan true))
             (log/debug "No change observed"))
         (log/info "Uploading" (count @tags) "tags")
         ;;
@@ -184,14 +216,18 @@
   (start [component]
     (log/info "Starting Crawler")
     (let [pool (at/mk-pool)
-          hash-atom (atom nil)]
+          hash-atom (atom nil)
+          re-index-chan (async/chan)]
+      (start-re-index-request-loop! re-index-chan re-index-port credentials)
       (assoc component
+             :re-index-chan re-index-chan
              :hash-atom hash-atom
              :scheduled-fns
              [(at/interspaced
                interval
                #(crawl-now! (assoc component
-                                   :hash-atom hash-atom))
+                                   :hash-atom hash-atom
+                                   :re-index-chan re-index-chan))
                pool)
               (at/every
                hash-reset-interval
@@ -201,9 +237,10 @@
                pool)]
              :pool pool)))
 
-  (stop [{:keys [pool scheduled-fns] :as component}]
+  (stop [{:keys [pool scheduled-fns re-index-chan] :as component}]
     (log/info "Stopping Crawler")
     (run! at/kill scheduled-fns)
     (at/stop-and-reset-pool! pool :strategy :kill)
     (log/info "All schedules are now stopped")
-    (dissoc component :pool :scheduled-fns :hash-atom :lock-atom)))
+    (async/close! re-index-chan)
+    (dissoc component :pool :scheduled-fns :hash-atom :lock-atom :re-index-chan)))

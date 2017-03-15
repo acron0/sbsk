@@ -9,7 +9,9 @@
             :bucket-segments "sbsk-data-segmented"
             :records-per-segment 10
             :metadata-bucket ^:ref [:metadata :bucket]
-            :default-tags #include "default-tags.edn"}
+            :default-tags #include "default-tags.edn"
+            :credentials ^:ref [:aws-credentials]
+            :re-index-port 7000}
  :database {:credentials ^:ref [:aws-credentials]}
  :admin    {:username #or [#env SBSK_ADMIN_USERNAME "sbsk"]
             :password #or [#env SBSK_ADMIN_PASSWORD "password"]

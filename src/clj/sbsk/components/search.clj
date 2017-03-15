@@ -111,8 +111,9 @@
 (defrecord Search [database bucket-full secret-header-name secret-header-value]
   component/Lifecycle
   (start [component]
-    (log/info "Starting Search")
-    (let [index (atom nil)
+    (let [port 3000
+          _ (log/info "Starting Search" (str "port=" port))
+          index (atom nil)
           records (atom [])
           reload-fun (fn [] (reload-index index records bucket-full database))]
       (reload-fun)
@@ -122,7 +123,7 @@
              :servers
              [(run-jetty (wrap-cors (search-handler index records)
                                     :access-control-allow-origin [#".*"]
-                                    :access-control-allow-methods [:get]) {:port 3000
+                                    :access-control-allow-methods [:get]) {:port port
                                                                            :daemon? true
                                                                            :join? false})
               (run-jetty (reload-index-handler

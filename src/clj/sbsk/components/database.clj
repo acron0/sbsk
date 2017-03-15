@@ -33,7 +33,7 @@
     (let [as-json (generate-string record)
           some-bytes (.getBytes as-json "UTF-8")
           input-stream (java.io.ByteArrayInputStream. some-bytes)]
-      (log/info "Writing" key-name (str "(" (count some-bytes) ")") "into" table)
+      (log/debug "Writing" key-name (str "(" (count some-bytes) ")") "into" table)
       (s3/put-object credentials
                      :bucket-name table
                      :key key-name
