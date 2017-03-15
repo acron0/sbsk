@@ -13,7 +13,7 @@
             :metadata-bucket ^:ref [:metadata :bucket]
             :default-tags #include "default-tags.edn"
             :credentials ^:ref [:aws-credentials]
-            :re-index-port 7000
+            :re-index-port 4000
             :secret-header-name ^:ref [:secret-header-name]
             :secret-header-value ^:ref [:secret-header-value]}
  :database {:credentials ^:ref [:aws-credentials]}
