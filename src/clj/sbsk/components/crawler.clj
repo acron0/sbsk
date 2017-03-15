@@ -152,7 +152,7 @@
            default-tags)))
 
 (defn start-re-index-request-loop!
-  [re-index-chan re-index-port creds]
+  [{:keys[ch port creds header-name header-value]}]
   (log/info "Starting RRI loop.")
   (async/go-loop []
     (let [go? (async/<! re-index-chan)]
@@ -164,7 +164,8 @@
           (run! #(future
                    (try
                      (client/post % {:socket-timeout 2000
-                                     :conn-timeout 2000})
+                                     :conn-timeout 2000
+                                     :headers {header-name header-value}})
                      (catch Exception e
                        (log/error (str "Failed to communicate with search instance " % " - " (.getMessage e)))))) search-instances))
         (recur))))
@@ -178,7 +179,8 @@
 (defrecord Crawler [database
                     interval facebook bucket-full credentials
                     hash-reset-interval bucket-segments records-per-segment
-                    metadata-bucket default-tags re-index-port]
+                    metadata-bucket default-tags re-index-port
+                    secret-header-name secret-header-value]
   OnDemandCrawler
   (crawl-now! [{:keys [hash-atom re-index-chan] :as opts}]
     (locking lock
@@ -218,7 +220,11 @@
     (let [pool (at/mk-pool)
           hash-atom (atom nil)
           re-index-chan (async/chan)]
-      (start-re-index-request-loop! re-index-chan re-index-port credentials)
+      (start-re-index-request-loop! {:ch re-index-chan
+                                     :port re-index-port
+                                     :creds credentials
+                                     :header-name secret-header-name
+                                     :header-value secret-header-value})
       (assoc component
              :re-index-chan re-index-chan
              :hash-atom hash-atom
