@@ -152,19 +152,19 @@
            default-tags)))
 
 (defn start-re-index-request-loop!
-  [{:keys[ch port creds header-name header-value]}]
+  [{:keys [ch port creds header-name header-value]}]
   (log/info "Starting RRI loop.")
   (async/go-loop []
-    (let [go? (async/<! re-index-chan)]
+    (let [go? (async/<! ch)]
       (when go?
         (log/info "Broadcasting re-index instruction to search instances:")
-        (let [search-instances (map #(str "http://" % ":" re-index-port)
+        (let [search-instances (map #(str "http://" % ":" port)
                                     (find-search-instances creds))]
           (log/info "/" (vec search-instances))
           (run! #(future
                    (try
-                     (client/post % {:socket-timeout 2000
-                                     :conn-timeout 2000
+                     (client/post % {:socket-timeout 4000
+                                     :conn-timeout 4000
                                      :headers {header-name header-value}})
                      (catch Exception e
                        (log/error (str "Failed to communicate with search instance " % " - " (.getMessage e)))))) search-instances))
