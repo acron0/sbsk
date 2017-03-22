@@ -6,6 +6,7 @@
             [clojure.string :as str]
             [sbsk.hiccup-help :refer [px hiccup->element]]
             [garden.core :refer [style]]
+            [sbsk.shared.time :as time]
             [sbsk.shared.video :as video]
             [sbsk.shared.playlist :as playlist]
             [sbsk.vars :refer [video-small-height
@@ -34,6 +35,18 @@
 (defn search-input-element [] (.getElementById js/document search-input-id))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn small-video-overlay
+  [video]
+  [:div
+   [:span (video/get-title video)]
+   [:p [:span (video/get-short-description video)]]])
+
+(defn small-video-date-overlay
+  [video]
+  [:div
+   [:span (time/as-moment-short-date (:created-at video))]
+   [:p [:span (video/get-short-description video)]]])
 
 (defn dispatch-search
   ([s]
@@ -88,7 +101,13 @@
    [[re-com/title
      :level :level2
      :label "Latest Videos"]
-    (video/video-slider (take 8 videos) 4)]])
+    (video/video-slider (take 8 videos) 4 {:overlay-fn small-video-date-overlay})]])
+
+(defn playlist-overlay
+  [playlist]
+  [:div
+   [:span (:title playlist)]
+   [:p [:span (:short-description playlist)]]])
 
 (defn playlist-slider
   []
@@ -100,7 +119,7 @@
        [[re-com/title
          :level :level2
          :label "Playlists"]
-        (playlist/playlist-slider @playlists 4)]])))
+        (playlist/playlist-slider @playlists 4 {:overlay-fn playlist-overlay})]])))
 
 (defn video-highlights
   [videos]

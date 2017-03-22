@@ -27,7 +27,8 @@
 
 (defn get-short-description
   [video]
-  (not-blank (get-in video [:meta :short-description])))
+  (or (not-blank (get-in video [:meta :short-description]))
+      (clip-string (get-description video) 64)))
 
 (defn get-tags
   [video]

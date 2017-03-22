@@ -165,6 +165,14 @@
        :background-color header-bar-bg-colour
        :color 'white
        :padding-left (em 0.75)}]
+     ["*::-webkit-input-placeholder"
+      {:color 'silver}]
+     ["*:-moz-placeholder"
+      {:color 'silver}]
+     ["*::-moz-placeholder"
+      {:color 'silver}]
+     ["*:-ms-input-placeholder"
+      {:color 'silver}]
      [:.level2
       {:width (percent 100)}]]]
    [:.popular-search-term
@@ -211,11 +219,21 @@
       :opacity 0.9}]]
    [:.video-panel-overlay :.playlist-panel-overlay
     {:position :absolute
-     :top 0
+     :padding-top (px 10)
+     :top (px (- video-small-height 32))
      :left 0
      :width (percent 100)
-     :height (percent 100)
-     :pointer-events :none}]]
+     :height (px video-small-height)
+     :cursor :pointer
+     ;;:pointer-events :none
+     :color 'white
+     :text-align :center
+     :background-color "rgba(45, 45, 45, 0.7)"
+     :transition (transition :top "0.5s")}
+    [:p
+     {:padding (px 10)}]
+    [:&:hover
+     {:top 0}]]]
   [:.video-slider :.playlist-slider
    {:overflow :hidden}]
   [:.noscroll

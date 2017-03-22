@@ -34,9 +34,11 @@
 (def desc-title-len 24)
 
 (defn clip-string
-  [s]
-  (let [end (.indexOf s " " desc-title-len)]
-    (str (subs s 0 end) "...")))
+  ([s]
+   (clip-string s desc-title-len))
+  ([s len]
+   (let [end (.indexOf s " " len)]
+     (str (subs s 0 end) "..."))))
 
 (defn keywordize
   [x]
