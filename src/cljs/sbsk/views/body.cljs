@@ -36,17 +36,20 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn small-video-overlay
-  [video]
+(defn video-overlay
+  [video nletters]
   [:div
    [:span (video/get-title video)]
-   [:p [:span (video/get-short-description video)]]])
+   [:p [:span (video/get-short-description video nletters)]]])
 
 (defn small-video-date-overlay
   [video]
   [:div
    [:span (time/as-moment-short-date (:created-at video))]
-   [:p [:span (video/get-short-description video)]]])
+   [:p
+    [:span (video/get-title video)]
+    [:br] [:br]
+    [:span (video/get-short-description video)]]])
 
 (defn dispatch-search
   ([s]
@@ -147,9 +150,9 @@
 
 (defn random-video-dimensions
   []
-  (let [prop [[7 [video-small-width video-small-height]]
-              [5  [video-medium-width video-medium-height]]
-              [1  [video-large-width video-large-height]]]
+  (let [prop [[7  [video-small-width video-small-height :small]]
+              [5  [video-medium-width video-medium-height :medium]]
+              [1  [video-large-width video-large-height :large]]]
         pick (rand-nth (range (apply + (map first prop))))]
     (loop [props prop
            total 0]
@@ -161,25 +164,27 @@
 
 (defn video-packed
   "This is HICCUP, not SABLONO"
-  [width height video]
-  [:div.video-packed.video-panel
-   {:key (:id video)
-    :style (style {:width (px width)
-                   :height (px height)
-                   :background-color "white" #_(rand-nth ["red"
-                                                          "blue"
-                                                          "green"
-                                                          "yellow"
-                                                          "magenta"
-                                                          "orange"
-                                                          "black"
-                                                          "cyan"
-                                                          "pink"])})}
-   (let [trim 2]
+  [size width height video]
+  (let [trim 2]
+    [:div.video-packed.video-panel
+     {:key (:id video)
+      :style (style {:width (px width)
+                     :height (px height)
+                     :background-color "white" })}
      [:img {:src (video/get-thumb video)
             :width (px (- width (* 2 trim)))
             :height (px (- height (* 2 trim)))
-            :style (style {:margin (px trim)})}])])
+            :style (style {:margin (px trim)})}]
+     [:div
+      {:class (str "video-panel-overlay video-packed-panel-overlay-" (name size))
+       :style (style {:width (px (- width (* 2 trim)))
+                      :height (px (- height (* 2 trim)))
+                      :margin (px trim)})}
+      (video-overlay video
+                     (case size
+                       :small 64
+                       :medium 128
+                       :large 256))]]))
 
 (def isotope-config
   #js {:itemSelector ".video-packed"
@@ -210,8 +215,8 @@
          (filter (comp not @added-videos :id))
          (run!
           (fn [video]
-            (let [[w h] (random-video-dimensions)
-                  video-el (.item (hiccup->element (video-packed w h video)) 0)
+            (let [[w h size] (random-video-dimensions)
+                  video-el (.item (hiccup->element (video-packed size w h video)) 0)
                   vpd-el (.getElementById js/document vpd-id)]
               (add-onclick! video-el (partial open-video video))
               (.appendChild vpd-el video-el)

@@ -14,7 +14,7 @@
 
 (def video-gap-px
   "The gap between videos"
-  5)
+  2)
 
 #_(def video-img-div 4.663)
 ;;

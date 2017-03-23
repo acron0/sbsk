@@ -133,16 +133,12 @@
       {:color blue-highlight}]]
     [:.now-playing-video-panel
      {:height (percent 100)
-      :position :relative
-      :font-size (em 0.8)
-      :text-align :center}
-     [:span
-      {:position :absolute
-       :bottom 0
-       :left 0
-       :line-height (em 2)
-       :width (percent 100)
-       :background-color "rgba(16, 63, 84, 0.92)"}]]]]
+      :margin-top (px -10)
+      :padding-top (px 10)
+      :font-size (px 14)}]
+    [:.now-playing-video-panel.current
+     {:font-size (px 16)
+      :background-color "rgba(16, 63, 84, 0.92)"}]]]
 
   ;; Content body
   [:.content-body
@@ -183,7 +179,20 @@
      :margin 0
      :cursor :pointer}]
    [:.video-packed-display]
-   [:.video-packed]
+   [:.video-packed
+    [:&:hover
+     [:.video-packed-panel-overlay-small
+      {:top (px 0)}]
+     [:.video-packed-panel-overlay-medium
+      {:top (px (/ video-medium-height 2))}]
+     [:.video-packed-panel-overlay-large
+      {:top (px (/ video-large-height 2))}]]
+    [:.video-packed-panel-overlay-small
+     {:top (px video-small-height)}]
+    [:.video-packed-panel-overlay-medium
+     {:top (px video-medium-height)}]
+    [:.video-packed-panel-overlay-large
+     {:top (px video-large-height)}]]
    [:.load-more
     {:margin (em 1)}]
    [:.lower-body
@@ -210,13 +219,17 @@
     {:color "#CCC"}]]
   [:.video-panel :.playlist-panel
    {:background-color 'white
-    :position :relative}
+    :position :relative
+    :overflow :hidden}
    [:img {:cursor :pointer
           :transition (transition :box-shadow thumb-hover-time
                                   :opacity thumb-hover-time)}
     [:&:hover
      {:box-shadow [[(px 0) (px 0) (px 8) "#888"]]
       :opacity 0.9}]]
+   [:&:hover
+    [:.video-panel-overlay :.playlist-panel-overlay
+     {:top 0}]]
    [:.video-panel-overlay :.playlist-panel-overlay
     {:position :absolute
      :padding-top (px 10)
@@ -225,15 +238,14 @@
      :width (percent 100)
      :height (px video-small-height)
      :cursor :pointer
-     ;;:pointer-events :none
+     :pointer-events :none
      :color 'white
      :text-align :center
      :background-color "rgba(45, 45, 45, 0.7)"
-     :transition (transition :top "0.5s")}
+     :transition (transition :top "0.5s")
+     :letter-spacing :initial}
     [:p
-     {:padding (px 10)}]
-    [:&:hover
-     {:top 0}]]]
+     {:padding (px 10)}]]]
   [:.video-slider :.playlist-slider
    {:overflow :hidden}]
   [:.noscroll
