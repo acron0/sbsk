@@ -100,9 +100,15 @@
 (defn now-playing
   [video]
   (fn [v]
-    (when (= v video)
-      [:div.now-playing-video-panel
-       [:span "Currently Watching"]])))
+    [:div
+     {:class (str "now-playing-video-panel" (when (= v video) " current"))}
+     (if (= v video)
+       [:div
+        [:span.current "Currently Watching"]
+        [:p [:span (video/get-title v)]]]
+       [:div
+        [:span (video/get-title v)]
+        [:p [:span (video/get-short-description v)]]])]))
 
 (defn further-viewing
   [fvtitle videos]
