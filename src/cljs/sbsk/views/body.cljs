@@ -99,7 +99,7 @@
 (defn latest-videos-slider
   [videos]
   [re-com/v-box
-   :gap "2px"
+   :gap "0px"
    :children
    [[re-com/title
      :level :level2
@@ -117,7 +117,7 @@
   (let [playlists (re-frame/subscribe [:playlists])]
     (fn []
       [re-com/v-box
-       :gap "2px"
+       :gap "0px"
        :children
        [[re-com/title
          :level :level2
@@ -130,8 +130,8 @@
    :size "auto"
    :gap "20px"
    :children
-   [[playlist-slider]
-    (latest-videos-slider videos)]])
+   [(latest-videos-slider videos)
+    [playlist-slider]]])
 
 (defn upper-body
   [videos]
@@ -140,13 +140,6 @@
    :gap (px 10)
    :children [(search-nav popular-search-terms)
               (video-highlights videos)]])
-
-(defn videos-by-month
-  [videos]
-  (let [month (fn [video] (.format (js/moment
-                                    (:created-at video)
-                                    "YYYYMMDD'T'HHmmss'Z'") "MMMM, YYYY"))]
-    (group-by month videos)))
 
 (defn random-video-dimensions
   []
@@ -165,7 +158,7 @@
 (defn video-packed
   "This is HICCUP, not SABLONO"
   [size width height video]
-  (let [trim 2]
+  (let [trim 1]
     [:div.video-packed.video-panel
      {:key (:id video)
       :style (style {:width (px width)
@@ -278,6 +271,7 @@
     :class "lower"
     :width "100%"
     :children [[re-com/h-box
+                :class "search-results-title"
                 :justify :start
                 :width "100%"
                 :children [(when search-results?

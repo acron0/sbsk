@@ -8,7 +8,7 @@
 
 (def region "us-west-2")
 (def dir "resources/public")
-(def blacklist #{"data.json"})
+(def blacklist #{"data.json" "admin.html"})
 (def profile "sbsk-fb-crawler")
 (def bucket "videos.specialbooksbyspecialkids.org")
 

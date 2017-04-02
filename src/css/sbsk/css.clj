@@ -178,6 +178,9 @@
      :padding 0
      :margin 0
      :cursor :pointer}]
+   [:.search-results-title
+    {:z-index 1
+     :margin-bottom (px -1)}]
    [:.video-packed-display]
    [:.video-packed
     [:&:hover
