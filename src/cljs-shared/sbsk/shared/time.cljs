@@ -3,7 +3,6 @@
 
 (defn as-moment-short-date
   [time]
-
   (.format (.locale (js/moment
                      time
                      "YYYYMMDD'T'HHmmss'Z'")
@@ -17,6 +16,7 @@
 
 (defn as-moment
   [time]
-  (.calendar (js/moment
-              time
-              "YYYYMMDD'T'HHmmss'Z'")))
+  (.calendar (.locale (js/moment
+                       time
+                       "YYYYMMDD'T'HHmmss'Z'")
+                      (aget (.-languages js/navigator) 0))))

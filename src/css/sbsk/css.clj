@@ -96,7 +96,8 @@
     :background-color "rgba(45, 45, 45, 0.93)"
     :color 'white
     :font-size (em 1.25)
-    :overflow :hidden}
+    :overflow :hidden
+    :z-index 2}
    [:.engagements
     {:color 'white}]
    [:.close-button
