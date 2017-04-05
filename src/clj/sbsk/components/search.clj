@@ -59,7 +59,7 @@
                                             (:title record)) title-weight)
                              (add-field (or (not-blank description)
                                             (:description record)) description-weight)
-                             (add-field tags tag-weight)
+                             (add-field (map clojure.string/trim tags) tag-weight)
                              (add-field short-description
                                         short-description-weight))]
               (capi/index-text @index id fields))) @records)

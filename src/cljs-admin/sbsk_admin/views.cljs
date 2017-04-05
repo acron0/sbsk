@@ -260,48 +260,55 @@
 (defn tags-control
   [video]
   (let [all-tags (re-frame/subscribe [:tags])
-        tag-atom (r/atom nil)
-        tag-search (fn [s]
-                     (into []
-                           (take 10 (filter #(re-find (re-pattern (str "(?i)" s)) %) @all-tags))))]
+        tag-atom (atom nil)
+        added? (atom nil)]
     (fn [video]
-      (let [tags (get-in video [:meta :tags])]
-        [re-com/v-box
-         :width "50%"
-         :children [[re-com/title
-                     :level :level3
-                     :label "Tags"]
-                    [re-com/h-box
-                     :width "100%"
-                     :children [[re-com/typeahead
-                                 :model ""
+      (let [tags (get-in video [:meta :tags])
+            items (r/atom (sort-by :label (into [] (set (map (fn [t] {:id t :label t}) @all-tags)))))
+            selections (r/atom (set tags))]
+        [re-com/h-box
+         :children [[re-com/v-box
+                     :width "50%"
+                     :children [[re-com/title
+                                 :level :level3
+                                 :label "Tags"]
+                                [re-com/selection-list
+                                 :choices items
+                                 :model selections
+                                 :max-height "200px"
+                                 :id-fn :id
+                                 :label-fn :label
+                                 :on-change #(re-frame/dispatch [:edit-current-video/set-tags %])]
+                                [re-com/h-box
                                  :width "100%"
-                                 :rigid? false
-                                 :data-source tag-search
-                                 :placeholder "Search for tags or create a new one"
-                                 :on-change #(reset! tag-atom %)]
-                                [re-com/box
-                                 :child
-                                 [re-com/button
-                                  :label "Add"
-                                  :on-click #(re-frame/dispatch [:edit-current-video/add-tag @tag-atom])]]]]
+                                 :children [[re-com/input-text
+                                             :model ""
+                                             :width "100%"
+                                             :placeholder "Add a new tag"
+                                             :on-change #(reset! tag-atom %)]
+                                            [re-com/box
+                                             :child
+                                             [re-com/button
+                                              :label "Add"
+                                              :on-click #(do
+                                                           (reset! added? @tag-atom)
+                                                           (re-frame/dispatch [:edit-current-video/add-tag @tag-atom]))]]]]
+                                [:div (when @added?
+                                        [re-com/label
+                                         :label (str "'" @added? "' was added as a tag and checked.")])]]]
                     [re-com/gap
-                     :size "10px"]
-                    (for [t tags]
-                      [:div
-                       {:key t}
-                       [re-com/h-box
-                        :gap "5px"
-                        :children
-                        [[re-com/md-circle-icon-button
-                          :size :smaller
-                          :tooltip "Remove this tag"
-                          :md-icon-name "zmdi-close"
-                          :on-click #(re-frame/dispatch [:edit-current-video/remove-tag t])]
-                         [re-com/box
-                          :align-self :center
-                          :child [re-com/label
-                                  :label t]]]]])]]))))
+                     :size "20px"]
+                    [re-com/v-box
+                     :width "50%"
+                     :children [[re-com/title
+                                 :level :level4
+                                 :label "Currently Applied:"]
+                                (if (not-empty @selections)
+                                  [:ul
+                                   (for [t @selections]
+                                     ^{:key t}
+                                     [:li t])]
+                                  [:i "None"])]]]]))))
 
 
 (defn current-video-panel

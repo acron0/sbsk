@@ -48,7 +48,7 @@
 (re-frame/reg-event-db
  :add-tags
  (fn  [db [_ tags]]
-   (update db :tags #(clojure.set/union % tags))))
+   (update db :tags #(clojure.set/union % (map clojure.string/trim tags)))))
 
 (re-frame/reg-event-db
  :add-playlists
@@ -255,6 +255,16 @@
      db)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(re-frame/reg-event-db
+ :edit-current-video/set-tags
+ (fn  [db [_ tags]]
+   (let [tags' (set (remove clojure.string/blank? tags))
+         db' (-> db
+                 (assoc :dirty? true)
+                 (assoc-in [:current-video :meta :tags] tags)
+                 (update-in [:tags] concat tags))]
+     (db/reintegrate-current-video db'))))
 
 (re-frame/reg-event-db
  :edit-current-video/add-tag
