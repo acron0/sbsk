@@ -43,11 +43,14 @@
  (fn [db]
    (let [num-videos 4]
      (when-let [cv (:current-video db)]
-       (let [videos (if-let [playlist-videos (not-empty (:current-playlist-videos db))]
-                      (take num-videos (find-next-videos (:id cv) playlist-videos num-videos))
-                      (if-let [search-results (not-empty (:search-result-videos db))]
-                        (take num-videos (find-next-videos (:id cv) search-results num-videos))
-                        (take num-videos (find-next-videos (:id cv) (:videos db) num-videos))))
+       (let [collection (:_collection cv)
+             video-source (cond
+                            (= :search collection) (:search-result-videos db)
+                            (= :videos collection) (:videos db)
+                            (or (= :playlist collection)
+                                (not-empty (:current-playlist-videos db)))
+                            (:current-playlist-videos db))
+             videos (take num-videos (find-next-videos (:id cv) video-source num-videos))
              title (if-let [cpt (get-in db [:current-playlist :title])]
                      (str cpt " Playlist")
                      "Further Watching")]
