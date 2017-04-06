@@ -21,16 +21,18 @@
       (get video :thumb)))
 
 (defn get-description
-  [video]
-  (or (not-blank (get-in video [:meta :description]))
-      (not-blank (get video :description))))
+  ([video]
+   (get-description video 512))
+  ([video nletters]
+   (clip-string (or (not-blank (get-in video [:meta :description]))
+                    (not-blank (get video :description))) nletters)))
 
 (defn get-short-description
   ([video]
-   (get-short-description video 64))
+   (get-short-description video 256))
   ([video nletters]
-   (or (not-blank (get-in video [:meta :short-description]))
-       (clip-string (get-description video) nletters))))
+   (clip-string (or (not-blank (get-in video [:meta :short-description]))
+                    (get-description video)) nletters)))
 
 (defn get-tags
   [video]

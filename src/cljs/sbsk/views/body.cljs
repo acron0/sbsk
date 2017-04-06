@@ -37,10 +37,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn video-overlay
-  [video nletters]
-  [:div
-   [:span (video/get-title video)]
-   [:p [:span (video/get-short-description video nletters)]]])
+  [video size]
+  (let [text (case size
+               :small (video/get-short-description video 108)
+               :medium (video/get-description video 256)
+               :large (video/get-description video 512))]
+    [:div
+     [:span (video/get-title video)]
+     [:p [:span text]]]))
 
 (defn small-video-date-overlay
   [video]
@@ -49,7 +53,7 @@
    [:p
     [:span (video/get-title video)]
     [:br] [:br]
-    [:span (video/get-short-description video)]]])
+    [:span (video/get-short-description video 64)]]])
 
 (defn dispatch-search
   ([s]
@@ -173,11 +177,7 @@
        :style (style {:width (px (- width (* 2 trim)))
                       :height (px (- height (* 2 trim)))
                       :margin (px trim)})}
-      (video-overlay video
-                     (case size
-                       :small 64
-                       :medium 128
-                       :large 256))]]))
+      (video-overlay video size)]]))
 
 (def isotope-config
   #js {:itemSelector ".video-packed"
