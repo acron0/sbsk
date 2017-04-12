@@ -151,8 +151,29 @@
      :display :block
      :margin :auto}
     [:.search-nav
-     ["div:nth-child(3)"
-      {:margin-top (px 15)}]
+     [:.search-nav-inner
+      {:height "100%"
+       :position :relative}
+      [:.rc-title
+       {:margin-bottom (px 15)}]
+      [:.search-nav-typeahead
+       {:position :absolute
+        :width (percent 100)
+        :height (px 0)
+        :overflow :hidden
+        :transition (transition :height "0.5s")}
+       [:.search-nav-typeahead-content
+        {:color 'white
+         :padding-top (em 1)
+         :font-style :italic
+         :position :absolute
+         :width (percent 100)
+         :height (percent 100)}]
+       [:.search-nav-typeahead-bg
+        {:background-color "rgba(45, 45, 45, 1.0)"
+         :position :absolute
+         :width (percent 100)
+         :height (percent 100)}]]]
      [:input
       {:height (px 32)
        :border 0

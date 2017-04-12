@@ -14,7 +14,8 @@
                                video-medium-width
                                video-medium-height
                                video-large-width
-                               video-large-height]]
+                               video-large-height
+                               search-typeahead-height]]
             [cljsjs.smooth-scroll]))
 
 (def popular-search-terms
@@ -67,38 +68,57 @@
 
 (defn search-nav
   [search-terms]
-  [re-com/v-box
-   :class "search-nav"
-   :height "100%"
-   :width (px (- video-small-width 16))
-   :children (concat
-              [[re-com/h-box
-                :align :stretch
-                :children [[re-com/box
-                            :size "auto"
-                            :child [:form#search-nav-form
-                                    {:on-submit (fn [e]
-                                                  (dispatch-search)
-                                                  (.preventDefault e))}
-                                    [:input#search-nav-input
-                                     {:placeholder "Search Videos"}]]]
-                           [re-com/box
-                            :size "32px"
-                            :child [re-com/md-icon-button
-                                    :md-icon-name "zmdi-search"
-                                    :on-click (fn [e]
-                                                (dispatch-search)
-                                                (.preventDefault e))]]]]
-               [re-com/title
-                :level :level3
-                :label "Popular Search Terms"]]
-              (doall (for [term search-terms]
-                       ^{:key term}
-                       [:div.clickable-string.popular-search-term
-                        {:on-click (fn [_]
-                                     (set! (.-value (search-input-element)) term)
-                                     (dispatch-search term))}
-                        term])))])
+  (let [search-input (r/atom nil)
+        typeahead-results (re-frame/subscribe [:typeahead-results])]
+    (fn [search-terms]
+      [re-com/v-box
+       :class "search-nav"
+       :width (px (- video-small-width 16))
+       :children [[re-com/h-box
+                   :align :stretch
+                   :children [[re-com/box
+                               :size "auto"
+                               :child [:form#search-nav-form
+                                       {:autoComplete "off"
+                                        :on-submit (fn [e]
+                                                     (dispatch-search)
+                                                     (.preventDefault e))}
+                                       [:input#search-nav-input
+                                        {:placeholder "Search Videos"
+                                         :autoComplete "off"
+                                         :on-change (fn [e]
+                                                      (reset! search-input (.. e -target -value)))}]]]
+                              [re-com/box
+                               :size "32px"
+                               :child [re-com/md-icon-button
+                                       :md-icon-name "zmdi-search"
+                                       :on-click (fn [e]
+                                                   (dispatch-search)
+                                                   (.preventDefault e))]]]]
+                  [:div.search-nav-inner
+                   [:div.search-nav-typeahead
+                    {:style {:height (if (clojure.string/blank? @search-input)
+                                       0
+                                       (px search-typeahead-height))}}
+                    [:div.search-nav-typeahead-bg]
+                    [re-com/v-box
+                     :align :center
+                     :class "search-nav-typeahead-content"
+                     :children [[re-com/label :label "Try using these tags:"]
+                                [re-com/gap :size "5px"]
+                                (if @typeahead-results
+                                  [:div]
+                                  [re-com/throbber])]]]
+                   [re-com/title
+                    :level :level3
+                    :label "Popular Search Terms"]
+                   (doall (for [term search-terms]
+                            ^{:key term}
+                            [:div.clickable-string.popular-search-term
+                             {:on-click (fn [_]
+                                          (set! (.-value (search-input-element)) term)
+                                          (dispatch-search term))}
+                             term]))]]])))
 
 (defn latest-videos-slider
   [videos]
@@ -142,7 +162,7 @@
   [re-com/h-box
    :class "upper"
    :gap (px 10)
-   :children [(search-nav popular-search-terms)
+   :children [[search-nav popular-search-terms]
               (video-highlights videos)]])
 
 (defn random-video-dimensions

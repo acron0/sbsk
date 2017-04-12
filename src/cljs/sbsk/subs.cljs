@@ -55,3 +55,8 @@
                      (str cpt " Playlist")
                      "Further Watching")]
          [title videos])))))
+
+(re-frame/reg-sub
+ :typeahead-results
+ (fn [db]
+   (:typeahead-results db)))
