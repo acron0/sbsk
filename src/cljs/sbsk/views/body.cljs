@@ -62,6 +62,12 @@
   ([]
    (dispatch-search (.-value (search-input-element)))))
 
+(defn dispatch-tag-search
+  ([s]
+   (re-frame/dispatch [:tag-search s]))
+  ([]
+   (dispatch-tag-search (.-value (search-input-element)))))
+
 (defn open-video
   [video]
   (re-frame/dispatch [:open-video (:id video)]))
@@ -87,7 +93,9 @@
                                         {:placeholder "Search Videos"
                                          :autoComplete "off"
                                          :on-change (fn [e]
-                                                      (reset! search-input (.. e -target -value)))}]]]
+                                                      (let [s (.. e -target -value)]
+                                                        (dispatch-tag-search s)
+                                                        (reset! search-input s)))}]]]
                               [re-com/box
                                :size "32px"
                                :child [re-com/md-icon-button
@@ -96,19 +104,21 @@
                                                    (dispatch-search)
                                                    (.preventDefault e))]]]]
                   [:div.search-nav-inner
-                   [:div.search-nav-typeahead
-                    {:style {:height (if (clojure.string/blank? @search-input)
-                                       0
-                                       (px search-typeahead-height))}}
-                    [:div.search-nav-typeahead-bg]
-                    [re-com/v-box
-                     :align :center
-                     :class "search-nav-typeahead-content"
-                     :children [[re-com/label :label "Try using these tags:"]
-                                [re-com/gap :size "5px"]
-                                (if @typeahead-results
-                                  [:div]
-                                  [re-com/throbber])]]]
+                   (let [showing? (not (clojure.string/blank? @search-input))]
+                     [:div.search-nav-typeahead
+                      {:style {:height (if showing?
+                                         (px search-typeahead-height)
+                                         0)}}
+                      [:div.search-nav-typeahead-bg]
+                      (when showing?
+                        [re-com/v-box
+                         :align :center
+                         :class "search-nav-typeahead-content"
+                         :children [[re-com/label :label "Try using these tags:"]
+                                    [re-com/gap :size "5px"]
+                                    (if @typeahead-results
+                                      [:div]
+                                      [re-com/throbber])]])])
                    [re-com/title
                     :level :level3
                     :label "Popular Search Terms"]

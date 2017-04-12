@@ -16,13 +16,20 @@
 
 (def data-name-parts   ["data" ".json"])
 
+(def routes
+  {"^q=(.+)"  (fn [q] {:query q})
+   "^id=(.+)" (fn [id] {:id id})
+   "^t=(.+)"  (fn [tq] {:tag-query (str/lower-case tq)})})
+
 (defn get-query
   [ctx]
   (let [qs (get ctx :query-string)]
-    (if-let [query (second (re-find #"q=(.+)" qs))]
-      {:query query}
-      (when-let [id (second (re-find #"id=(.+)" qs))]
-        {:id id}))))
+    (some (fn [[route handler]]
+            (when-let [x (-> route
+                             (re-pattern)
+                             (re-find qs)
+                             (second))]
+              (handler x))) routes)))
 
 (defmacro not-blank
   [s]
@@ -40,7 +47,7 @@
     (conj add-to [field-or-fields weight])))
 
 (defn reload-index
-  [index records table-name database]
+  [index records tag-index table-name database]
   (log/info "Reloading index...")
   (let [data (db/read-record-as-obj
               database table-name (apply str data-name-parts))]
@@ -62,24 +69,31 @@
                              (add-field (map clojure.string/trim tags) tag-weight)
                              (add-field short-description
                                         short-description-weight))]
-              (capi/index-text @index id fields))) @records)
+              (capi/index-text @index id fields)
+              (run! #(let [tag (str/lower-case %)]
+                       (log/debug "Indexing tag:" tag)
+                       (swap! tag-index conj tag)) tags))) @records)
     (log/info "Index ready")))
 
 (defn do-search
-  [{:keys [query id]} index records]
+  [{:keys [query id tag-query]} index records tag-index]
   (if @index
     (cond (not (clojure.string/blank? query))
           (let [results (capq/do-search @index query :or)]
             (mapv (fn [[rid _]]
                     (get @records rid)) results))
+          ;;
           (not (clojure.string/blank? id))
           (let [results (clojure.string/split id #"%2C|,")]
             (mapv (fn [rid]
-                    (get @records rid)) results)))
+                    (get @records rid)) results))
+          ;;
+          (not (clojure.string/blank? tag-query))
+          (filter #(.contains % tag-query) @tag-index))
     []))
 
 (defn search-handler
-  [index records]
+  [index records tag-index]
   (fn [request]
     (if-not (get request :query-string)
       {:status 400
@@ -90,7 +104,7 @@
            :headers {"Content-Type" "application/json"}
            :body (-> request
                      (get-query)
-                     (do-search index records)
+                     (do-search index records tag-index)
                      (generate-string))}
           {:status 503})
         (catch Exception e
@@ -114,14 +128,16 @@
     (let [port 3000
           _ (log/info "Starting Search" (str "port=" port))
           index (atom nil)
+          tag-index (atom nil)
           records (atom [])
-          reload-fun (fn [] (reload-index index records bucket-full database))]
+          reload-fun (fn [] (reload-index index records tag-index bucket-full database))]
       (reload-fun)
       (assoc component
              :index index
+             :tag-index tag-index
              :records records
              :servers
-             [(run-jetty (wrap-cors (search-handler index records)
+             [(run-jetty (wrap-cors (search-handler index records tag-index)
                                     :access-control-allow-origin [#".*"]
                                     :access-control-allow-methods [:get]) {:port port
                                                                            :daemon? true
@@ -137,4 +153,6 @@
     (run! #(.stop %) servers)
     (dissoc component
             :index
+            :tag-index
+            :records
             :servers)))

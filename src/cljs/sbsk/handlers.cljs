@@ -1,7 +1,8 @@
 (ns sbsk.handlers
   (:require [re-frame.core :as re-frame]
             [sbsk.db :as db]
-            [sbsk.shared.data :refer [search-videos]]))
+            [sbsk.shared.data :refer [search-videos
+                                      search-tags]]))
 
 (defn set-noscroll!
   [on]
@@ -98,3 +99,10 @@
  :add-playlists
  (fn  [db [_ results]]
    (assoc db :playlists results)))
+
+(re-frame/reg-event-db
+ :tag-search
+ (fn  [db [_ query]]
+   (if (not= (:tag-search db) query)
+     (search-tags db query)
+     db)))

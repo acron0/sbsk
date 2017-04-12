@@ -90,7 +90,8 @@
   (let [new-db (assoc db
                       :search-pending? true
                       :search query)]
-    (when (> (count query) 3)
+    (when (and (not (clojure.string/blank? query))
+               (> (count query) 3))
       (go (let [result (<! (http/get (str "http://" server-address ":" server-port)
                                      {:query-params {:q query}
                                       :with-credentials? false}))]
@@ -107,3 +108,15 @@
           (when (:success result)
             (re-frame/dispatch [:search-by-id-results (:body result)])))))
   db)
+
+(defn search-tags
+  [db query]
+  (let [new-db (assoc db
+                      :tag-search query)]
+    (when (not (clojure.string/blank? query))
+      (go (let [result (<! (http/get (str "http://" server-address ":" server-port)
+                                     {:query-params {:t query}
+                                      :with-credentials? false}))]
+            (when (:success result)
+              (re-frame/dispatch [:tag-search-results (:body result)])))))
+    new-db))

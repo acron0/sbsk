@@ -17,6 +17,7 @@
    :playlists []
    :search-result-videos []
    :search nil
+   :tag-search nil
    :current-video nil
    :latest-data -1
    :loading-more? false
