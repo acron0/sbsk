@@ -55,9 +55,7 @@
 
 (defn parse-access-token
   [{:keys [body]}]
-  {:access_token (-> body
-                     (clojure.string/split #"=")
-                     (second))})
+  (parse-string body keyword))
 
 
 (defn fetch
@@ -78,13 +76,14 @@
                              (merge access-token
                                     {:fields "created_time,description,id,permalink_url,picture,title,embeddable,format"})})) true)]
                (let [{:keys [data paging]} page
-                     {:keys [next]} paging]
+                     {:keys [next]} paging
+                     next-data (concat a data)]
                  (if next
                    (let [r (parse-string
                             (:body
                              (client/get next)) true)]
-                     (recur (inc c) (concat a data) r))
-                   a)))]
+                     (recur (inc c) next-data r))
+                   next-data)))]
     data))
 
 (defn get-dimensions
@@ -153,7 +152,6 @@
 
 (defn start-re-index-request-loop!
   [{:keys [ch port creds header-name header-value]}]
-  (log/info "Starting RRI loop.")
   (async/go-loop []
     (let [go? (async/<! ch)]
       (when go?
@@ -168,8 +166,7 @@
                                      :headers {header-name header-value}})
                      (catch Exception e
                        (log/error (str "Failed to communicate with search instance " % " - " (.getMessage e)))))) search-instances))
-        (recur))))
-  (log/info "Finished RRI loop."))
+        (recur)))))
 
 (defprotocol OnDemandCrawler
   (crawl-now! [this]))

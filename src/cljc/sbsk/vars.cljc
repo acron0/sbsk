@@ -29,3 +29,7 @@
   "Calculates the video-player content width - 4 videos + gaps"
   (+ (* video-small-width video-slider-visible)
      (* video-gap-px (dec video-slider-visible))))
+
+(def search-typeahead-height
+  "The height of the typeahead popup box"
+  325)
