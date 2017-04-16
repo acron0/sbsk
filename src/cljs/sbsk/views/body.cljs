@@ -4,6 +4,7 @@
             [re-frame.db :as re-frame-db]
             [re-com.core :as re-com]
             [clojure.string :as str]
+            [goog.string :as gstr]
             [sbsk.hiccup-help :refer [px hiccup->element]]
             [garden.core :refer [style]]
             [sbsk.shared.time :as time]
@@ -58,19 +59,48 @@
 
 (defn dispatch-search
   ([s]
-   (re-frame/dispatch [:search s]))
+   (let [cleaned (loop [v (gstr/trim s)]
+                   (if (gstr/endsWith v ",")
+                     (recur (.slice v 0 -1))
+                     v))]
+     (re-frame/dispatch [:search cleaned])))
   ([]
    (dispatch-search (.-value (search-input-element)))))
 
 (defn dispatch-tag-search
   ([s]
-   (re-frame/dispatch [:tag-search s]))
-  ([]
-   (dispatch-tag-search (.-value (search-input-element)))))
+   (re-frame/dispatch [:tag-search (gstr/trim s)])))
 
 (defn open-video
   [video]
   (re-frame/dispatch [:open-video (:id video)]))
+
+(defn last-search-segment
+  [v]
+  (let [ci (.indexOf v ",")]
+    (if (= -1 ci)
+      v
+      (.substring v (inc ci)))))
+
+(defn append-tag
+  [v tag]
+  ;;erase everything up to comma
+  (let [suffix ", "
+        ci (.lastIndexOf v ",")]
+    (if (= -1 ci)
+      (str tag suffix)
+      (str (.substring v 0 (inc ci)) " " tag suffix))))
+
+(defn typeahead-tag
+  [tag]
+  [:div.tag-list-item
+   [:span
+    {:on-click #(let [el (search-input-element)
+                      v (.-value el)
+                      new-v (append-tag v tag)]
+                  (set! (.-value el) new-v)
+                  (.focus el))}
+    tag]])
 
 (defn search-nav
   [search-terms]
@@ -87,6 +117,7 @@
                                :child [:form#search-nav-form
                                        {:autoComplete "off"
                                         :on-submit (fn [e]
+                                                     (reset! search-input nil)
                                                      (dispatch-search)
                                                      (.preventDefault e))}
                                        [:input#search-nav-input
@@ -94,13 +125,16 @@
                                          :autoComplete "off"
                                          :on-change (fn [e]
                                                       (let [s (.. e -target -value)]
-                                                        (dispatch-tag-search s)
+                                                        (-> s
+                                                            (last-search-segment)
+                                                            (dispatch-tag-search))
                                                         (reset! search-input s)))}]]]
                               [re-com/box
                                :size "32px"
                                :child [re-com/md-icon-button
                                        :md-icon-name "zmdi-search"
                                        :on-click (fn [e]
+                                                   (reset! search-input nil)
                                                    (dispatch-search)
                                                    (.preventDefault e))]]]]
                   [:div.search-nav-inner
@@ -114,14 +148,24 @@
                         [re-com/v-box
                          :align :center
                          :class "search-nav-typeahead-content"
-                         :children [[re-com/label :label "Try using these tags:"]
-                                    [re-com/gap :size "5px"]
-                                    (if @typeahead-results
-                                      [:div]
-                                      [re-com/throbber])]])])
+                         :children (if @typeahead-results
+                                     (if (empty? @typeahead-results)
+                                       [[re-com/label :label "No tags found"]]
+                                       [[re-com/label :label "Try using these tags:"]
+                                        [re-com/gap :size "5px"]
+                                        [re-com/v-box
+                                         :class "search-nav-typeahead-tag-list"
+                                         :width "100%"
+                                         :children
+                                         (doall
+                                          (for [tag @typeahead-results]
+                                            (typeahead-tag tag)))]])
+                                     [[re-com/throbber]])
+                         ])])
                    [re-com/title
                     :level :level3
-                    :label "Popular Search Terms"]
+                    :label "Popular Search Terms"
+                    :style {:margin-bottom (px 15)}]
                    (doall (for [term search-terms]
                             ^{:key term}
                             [:div.clickable-string.popular-search-term

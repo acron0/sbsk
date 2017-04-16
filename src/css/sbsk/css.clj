@@ -154,8 +154,6 @@
      [:.search-nav-inner
       {:height "100%"
        :position :relative}
-      [:.rc-title
-       {:margin-bottom (px 15)}]
       [:.search-nav-typeahead
        {:position :absolute
         :width (percent 100)
@@ -173,7 +171,20 @@
         {:background-color "rgba(45, 45, 45, 1.0)"
          :position :absolute
          :width (percent 100)
-         :height (percent 100)}]]]
+         :height (percent 100)}]
+       [:.search-nav-typeahead-tag-list
+        {:padding-left (em 1)
+         :padding-top (em 0.5)}
+        [:.tag-list-item
+         [:span
+          {:font-style :normal
+           :line-height (em 2)
+           :color "#222"
+           :padding [[(px 6) (px 4) (px 4) (px 4)]]
+           :background-color 'silver
+           :border-radius (px 3)
+           :font-size (px 11)
+           :cursor :pointer}]]]]]
      [:input
       {:height (px 32)
        :border 0

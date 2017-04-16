@@ -7,7 +7,8 @@
             [ring.middleware.cors :refer [wrap-cors]]
             [sbsk.components.database :as db]
             [clojure.string :as str]
-            [cheshire.core :refer :all]))
+            [cheshire.core :refer :all]
+            [cemerick.url :refer [url-decode]]))
 
 (def short-description-weight 1)
 (def description-weight 2)
@@ -76,21 +77,23 @@
     (log/info "Index ready")))
 
 (defn do-search
-  [{:keys [query id tag-query]} index records tag-index]
-  (if @index
-    (cond (not (clojure.string/blank? query))
-          (let [results (capq/do-search @index query :or)]
-            (mapv (fn [[rid _]]
-                    (get @records rid)) results))
-          ;;
-          (not (clojure.string/blank? id))
-          (let [results (clojure.string/split id #"%2C|,")]
-            (mapv (fn [rid]
-                    (get @records rid)) results))
-          ;;
-          (not (clojure.string/blank? tag-query))
-          (filter #(.contains % tag-query) @tag-index))
-    []))
+  [{:keys [id] :as qs} index records tag-index]
+  (let [query (url-decode (:query qs))
+        tag-query (url-decode (:tag-query qs))]
+    (if (and @index @tag-index)
+      (cond (not (clojure.string/blank? query))
+            (let [results (capq/do-search @index query :or)]
+              (mapv (fn [[rid _]]
+                      (get @records rid)) results))
+            ;;
+            (not (clojure.string/blank? id))
+            (let [results (clojure.string/split id #"%2C|,")]
+              (mapv (fn [rid]
+                      (get @records rid)) results))
+            ;;
+            (not (clojure.string/blank? tag-query))
+            (sort (filter #(.contains % tag-query) @tag-index)))
+      [])))
 
 (defn search-handler
   [index records tag-index]

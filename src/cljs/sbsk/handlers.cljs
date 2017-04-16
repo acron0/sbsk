@@ -73,14 +73,20 @@
 (re-frame/reg-event-db
  :search
  (fn  [db [_ query]]
-   (if (not= (:search db) query)
-     (search-videos db query)
-     db)))
+   (let [new-db (dissoc db :tag-search-results)]
+     (if (not= (:search new-db) query)
+       (search-videos new-db query)
+       new-db))))
 
 (re-frame/reg-event-db
  :search-results
  (fn  [db [_ results]]
    (db/reset-search-results db results)))
+
+(re-frame/reg-event-db
+ :tag-search-results
+ (fn  [db [_ results]]
+   (assoc db :tag-search-results results)))
 
 (re-frame/reg-event-db
  :clear-search

@@ -59,4 +59,5 @@
 (re-frame/reg-sub
  :typeahead-results
  (fn [db]
-   (:typeahead-results db)))
+   (when-let [r (:tag-search-results db)]
+     (take 10 r))))
