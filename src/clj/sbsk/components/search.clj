@@ -80,7 +80,7 @@
   [{:keys [id] :as qs} index records tag-index]
   (let [query (url-decode (:query qs))
         tag-query (url-decode (:tag-query qs))]
-    (if (and @index @tag-index)
+    (if @index
       (cond (not (clojure.string/blank? query))
             (let [results (capq/do-search @index query :or)]
               (mapv (fn [[rid _]]
@@ -131,7 +131,7 @@
     (let [port 3000
           _ (log/info "Starting Search" (str "port=" port))
           index (atom nil)
-          tag-index (atom nil)
+          tag-index (atom #{})
           records (atom [])
           reload-fun (fn [] (reload-index index records tag-index bucket-full database))]
       (reload-fun)
