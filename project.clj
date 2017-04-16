@@ -23,6 +23,7 @@
                  [ring-basic-authentication "1.0.5"]
                  [caponia "0.3.3"]
                  [overtone/at-at "1.2.0"]
+                 [com.cemerick/url "0.1.1"]
 
                  ;; cljs
                  [com.google.guava/guava "19.0"]
