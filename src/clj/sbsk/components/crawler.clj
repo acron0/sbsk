@@ -117,9 +117,11 @@
           exists? (contains? md-keys key-name)]
       (if exists?
         (let [md (db/read-record-as-obj db table key-name)]
-          (run! (fn [tag] (when-not (contains? @tags tag)
-                            (log/debug "Caching unseen tag:" tag)
-                            (swap! tags conj tag))) (:tags md))
+          (run! (fn [tag] (if (contains? @tags tag)
+                            (swap! tags update tag inc)
+                            (do
+                              (log/debug "Caching unseen tag:" tag)
+                              (swap! tags assoc tag 1)))) (:tags md))
           (log/debug "Adding metadata for" key-name)
           (assoc video :meta md))
         video))))
@@ -142,13 +144,14 @@
 
 (defn load-tags!
   [database table default-tags]
-  (try
-    (let [r (:tags (db/read-record-as-obj database table tags-key-name))
-          all-tags (set (clojure.set/union default-tags r))]
-      (log/info "Loaded" (count all-tags) "tags")
-      all-tags)
-    (catch Exception e (log/warn "Failed to load tags. Returning default tags only")
-           default-tags)))
+  (let [ks (try
+             (let [r (:tags (db/read-record-as-obj database table tags-key-name))
+                   all-tags (set (clojure.set/union default-tags r))]
+               (log/info "Loaded" (count all-tags) "tags")
+               all-tags)
+             (catch Exception e (log/warn "Failed to load tags. Returning default tags only")
+                    default-tags))]
+    (zipmap ks (repeat 0))))
 
 (defn start-re-index-request-loop!
   [{:keys [ch port creds header-name header-value]}]
@@ -167,6 +170,15 @@
                      (catch Exception e
                        (log/error (str "Failed to communicate with search instance " % " - " (.getMessage e)))))) search-instances))
         (recur)))))
+
+(defn sort-tags
+  [tags]
+  (->> tags
+       (sort-by first)
+       (reverse)
+       (sort-by val)
+       (reverse)
+       (map first)))
 
 (defprotocol OnDemandCrawler
   (crawl-now! [this]))
@@ -203,13 +215,13 @@
               (upload-segments records database bucket-segments records-per-segment)
               (async/put! re-index-chan true))
             (log/debug "No change observed"))
-        (log/info "Uploading" (count @tags) "tags")
-        ;;
+        (log/info "Uploading" (count @tags) "tags" )
         (db/write-record!
          database
          bucket-segments
          tags-key-name
-         {:tags @tags})
+         {:tags (sort-tags @tags)})
+        ;;
         (reset! hash-atom new-hash))))
   component/Lifecycle
   (start [component]
