@@ -19,20 +19,6 @@
                                search-typeahead-height]]
             [cljsjs.smooth-scroll]))
 
-(def popular-search-terms
-  ["Autism"
-   "Down Syndrome"
-   "Cerebral Palsy"
-   "New Diagnosis"
-   "Adult"
-   "Child"
-   "Lessons"
-   "Siblings"
-   "Friends"
-   "Relationships"
-   "Girls"
-   "Boys"])
-
 (def search-input-id "search-nav-input")
 (defn search-input-element [] (.getElementById js/document search-input-id))
 
@@ -212,7 +198,7 @@
     [playlist-slider]]])
 
 (defn upper-body
-  [videos]
+  [videos popular-search-terms]
   [re-com/h-box
    :class "upper"
    :gap (px 10)
@@ -388,6 +374,7 @@
 (defn panel []
   (let [videos (re-frame/subscribe [:videos])
         search-term (re-frame/subscribe [:search])
+        psts (re-frame/subscribe [:popular-search-terms 12])
         noof-highlight-videos 8]
     (fn []
       (let [search-results (not-empty (:search-results @videos))
@@ -397,7 +384,8 @@
           (if (or search-results all-videos)
             [re-com/v-box
              :children [(upper-body (take noof-highlight-videos
-                                          (:all-videos @videos)))
+                                          (:all-videos @videos))
+                                    @psts)
                         (lower-body search-results
                                     @search-term
                                     (or search-results

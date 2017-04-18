@@ -29,6 +29,11 @@
  (fn [db]
    (:playlists db)))
 
+(re-frame/reg-sub
+ :popular-search-terms
+ (fn [db [_ n]]
+   (take n (:tags db))))
+
 (defn find-next-videos
   [id videos minimum]
   (let [start (.indexOf (map :id videos) id)
