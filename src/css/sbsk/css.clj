@@ -282,6 +282,38 @@
      :letter-spacing :initial}
     [:p
      {:padding (px 10)}]]]
+  [:.slider-arrow
+   {:height (percent 100)
+    :width (px 40)
+    :background-repeat :no-repeat
+    :background-color "rgba(255, 255, 255, 0.3)"
+    :opacity 0.2
+    :top (px 0)
+    :position :absolute
+    :transition (transition
+                 :background-color thumb-hover-time
+                 :opacity thumb-hover-time)
+    :cursor :pointer}
+   [:&:hover
+    {:opacity 0.6
+     :background-color "rgba(255, 255, 255, 0.6)"}]]
+  [:.slider-arrow-left
+   {:background-image "url(../../img/chev_l.svg)"
+    :background-position [[(px -6)
+                           (px (/ (- video-small-height (/ video-small-height 3)) 2))]]}]
+  [:.slider-arrow-left.hide
+   {:display :none}]
+  [:.slider-arrow-right
+   {:background-image "url(../../img/chev_r.svg)"
+    :background-position [[(px 6)
+                           (px (/ (- video-small-height (/ video-small-height 3)) 2))]]
+    :right (px 0)}]
+  [:.slider-arrow-right.hide
+   {:display :none}]
+  [:.slider-control
+   {:position :relative}
+   [:.rc-h-box
+    {:overflow-x :hidden}]]
   [:.video-slider :.playlist-slider
    {:overflow :hidden}]
   [:.noscroll

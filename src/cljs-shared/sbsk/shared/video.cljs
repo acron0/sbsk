@@ -81,9 +81,9 @@
 
 (defn video-slider
   [videos num-videos & [opts]]
-  (slider-control "video-slider"
-                  #(video-panel :small % {:class "video-slider-video-panel"
-                                          :overlay-fn (:overlay-fn opts)})
-                  videos
-                  num-videos
-                  video-small-width))
+  [slider-control "video-slider"
+   #(video-panel :small % {:class "video-slider-video-panel"
+                           :overlay-fn (:overlay-fn opts)})
+   videos
+   num-videos
+   video-small-width])

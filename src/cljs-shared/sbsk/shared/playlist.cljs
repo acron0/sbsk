@@ -31,9 +31,9 @@
 
 (defn playlist-slider
   [playlists num-playlists & [opts]]
-  (slider-control "playlist-slider"
-                  #(playlist-panel % {:class "playlist-slider-playlist-panel"
-                                      :overlay-fn (:overlay-fn opts)})
-                  playlists
-                  num-playlists
-                  video-small-width))
+  [slider-control "playlist-slider"
+   #(playlist-panel % {:class "playlist-slider-playlist-panel"
+                       :overlay-fn (:overlay-fn opts)})
+   playlists
+   num-playlists
+   video-small-width])
