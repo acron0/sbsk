@@ -21,7 +21,7 @@
   [slider start-pos end-pos lerp animating?]
   (fn [ts]
     (let [pos (+ start-pos (* (- end-pos start-pos) (ease-out lerp-fn (min lerp 1.0))))]
-      (set! (.-scrollLeft slibder) pos))
+      (set! (.-scrollLeft slider) pos))
     (if (< lerp 1.0)
       (.requestAnimationFrame
        js/window
