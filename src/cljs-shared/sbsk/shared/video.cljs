@@ -1,6 +1,7 @@
 (ns sbsk.shared.video
   (:require [re-frame.core :as re-frame]
             [re-com.core :as re-com]
+            [reagent.core :as r]
             [sbsk.vars :refer [video-small-width
                                video-small-height
                                video-medium-width
@@ -70,6 +71,10 @@
      :child [:div.video-panel
              {:style {:width "100%"
                       :height "100%"}
+              #_:on-mouse-enter #(let [t (.. % -target -parentElement)]
+                                   (.add (.-classList t) "hover-x"))
+              #_:on-mouse-leave #(let [t (.. % -target -parentElement)]
+                                   (.remove (.-classList t) "hover-x"))
               :on-click (partial open-video video)}
              [:img {:src (get-thumb video)
                     :width w

@@ -5,7 +5,9 @@
             [sbsk.handlers]
             [sbsk.subs]
             [sbsk.views :as views]
-            [sbsk.config :as config]))
+            [sbsk.config :as config]
+            ;;
+            [cljsjs.jquery]))
 
 
 (defn dev-setup []

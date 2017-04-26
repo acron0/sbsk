@@ -8,13 +8,11 @@
   [class-name render-fn items num-items item-width]
   (let [gap-size video-gap-px
         width (- (* num-items (+ item-width gap-size)) gap-size)]
-    [re-com/h-box
-     :class class-name
-     :justify :start
-     :width (px width)
-     :children (interpose
-                [re-com/gap :size (px gap-size)]
-                (for [item items]
-                  [re-com/box
-                   :size (px item-width)
-                   :child (render-fn item)]))]))
+    [:div
+     {:class class-name
+      :style {:width (px width)}}
+     (doall (for [item items]
+              [:div
+               {:style {:width (px item-width)}
+                :key (:id item)}
+               (render-fn item)]))]))
