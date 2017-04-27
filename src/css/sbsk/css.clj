@@ -283,6 +283,37 @@
     [:p
      {:padding (px 10)}]]]
   [:.video-slider :.playlist-slider
-   {:overflow :hidden}]
+   {:overflow :hidden}
+   [:&.ready]
+   [:button
+    {:height (percent 100)
+     :width (px 40)
+     :border :none
+     :background-repeat :no-repeat
+     :background-color "rgba(255, 255, 255, 0.3)"
+     :font-size 0
+     :opacity 0.2
+     :top (px 0)
+     :position :absolute
+     :transition (transition
+                  :background-color thumb-hover-time
+                  :opacity thumb-hover-time)
+     :cursor :pointer}
+    [:&.slick-arrow
+     [:&.slick-next
+      {:right (px 0)
+       :background-image "url(../../img/chev_r.svg)"
+       :background-position [[(px 6)
+                              (px (/ (- video-small-height (/ video-small-height 3)) 2))]]}]
+     [:&.slick-prev
+      {:z-index 1
+       :background-image "url(../../img/chev_l.svg)"
+       :background-position [[(px -6)
+                              (px (/ (- video-small-height (/ video-small-height 3)) 2))]]}]]
+    [:&:hover
+     {:opacity 0.6
+      :background-color "rgba(255, 255, 255, 0.6)"}]
+    [:&:focus
+     {:outline 0}]]]
   [:.noscroll
    {:overflow-y :hidden}])

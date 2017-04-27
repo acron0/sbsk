@@ -40,6 +40,7 @@
                  [hiccups "0.3.0"]
                  [cljsjs/moment "2.10.6-4"]
                  [cljsjs/smooth-scroll "9.1.4-0"]
+                 [cljsjs/jquery "2.2.4-0"]
                  [re-frame-datatable "0.5.1" :exclusions [org.clojure/clojure]]]
   :main ^:skip-aot sbsk.core
   :target-path "target/%s"
