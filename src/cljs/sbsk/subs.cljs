@@ -46,7 +46,7 @@
 (re-frame/reg-sub
  :further-viewing
  (fn [db]
-   (let [num-videos 4]
+   (let [num-videos 8]
      (when-let [cv (:current-video db)]
        (let [collection (:_collection cv)
              video-source (cond

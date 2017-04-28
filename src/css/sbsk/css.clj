@@ -282,7 +282,7 @@
      :letter-spacing :initial}
     [:p
      {:padding (px 10)}]]]
-  [:.video-slider :.playlist-slider
+  [:.video-slider :.playlist-slider :.further-viewing-slider
    {:overflow :hidden}
    [:&.ready]
    [:button

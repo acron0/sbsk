@@ -117,7 +117,8 @@
    [[re-com/title
      :level :level2
      :label fvtitle]
-    (video/video-slider videos 4 {:overlay-fn (now-playing (first videos))})]])
+    (video/video-slider videos "further-viewing-slider" 4
+                        {:overlay-fn (now-playing (first videos))})]])
 
 (defn close-button
   []
