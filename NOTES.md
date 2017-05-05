@@ -1,5 +1,5 @@
-* Download `scripts/install-environment.sh`
-* Run it
+* Download `https://raw.githubusercontent.com/acron0/sbsk/master/scripts/install-environment.sh`
+* Run it as root
 * `sudo -su sbsk`
 * Download `scripts/update.sh`
 * Run it
@@ -13,11 +13,3 @@ export SBSK_FB_APP_SECRET=...
 java -jar /home/sbsk/sbsk-app/target/uberjar/sbsk.jar -c
 ```
 * Add AWS creds and config
-
-###########################
-
-TODO
-----
-* remove 'highlight' size - replace with 'small'
-* check externs!!!!
-* search db needs to include meta data
