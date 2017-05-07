@@ -75,7 +75,9 @@
                                      (.add (.-classList t) "hover-x"))
               #_:on-mouse-leave #_#(let [t (.. % -target -parentElement)]
                                      (.remove (.-classList t) "hover-x"))
-              :on-click (partial open-video video)}
+              :on-click (if (:on-video-click opts)
+                          (partial (:on-video-click opts) video)
+                          (partial open-video video))}
              [:img {:src (get-thumb video)
                     :width w
                     :height h}]
@@ -88,7 +90,8 @@
   ([videos class-name num-videos opts]
    [slider-control class-name
     #(video-panel :small % {:class "video-slider-video-panel"
-                            :overlay-fn (:overlay-fn opts)})
+                            :overlay-fn (:overlay-fn opts)
+                            :on-video-click (:on-video-click opts)})
     videos
     num-videos
     video-small-width])

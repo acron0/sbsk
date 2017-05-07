@@ -130,6 +130,7 @@
       [:.level1
        {:font-size (em 1.1)}]]]
     [:.taglink
+     {:font-size (em 0.8)}
      [:&:hover
       {:color blue-highlight}]]
     [:.now-playing-video-panel

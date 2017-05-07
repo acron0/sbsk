@@ -12,10 +12,15 @@
                                                 :slidesToScroll num-items
                                                 :infinite false}))
 
+(defn de-slick
+  [class-name init?]
+  (.slick (js/jQuery (str "." class-name)) "unslick")
+  (reset! init? false))
+
 (defn slider-control
   [class-name render-fn items num-items item-width]
   (let [init? (r/atom false)
-        added-items (atom #{})]
+        last-items (atom nil)]
     (r/create-class
      {:component-did-mount
       (fn [& _]
@@ -29,6 +34,10 @@
           (reset! init? true)))
       :reagent-render
       (fn [class-name render-fn items num-items item-width]
+        (when (and @init? (not= @last-items items))
+          (when (and @last-items (not-empty @last-items))
+            (de-slick class-name init?))
+          (reset! last-items items))
         (let [gap-size video-gap-px
               width (- (* num-items (+ item-width gap-size)) gap-size)]
           [:div
