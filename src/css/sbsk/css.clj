@@ -98,6 +98,28 @@
     :font-size (em 1.25)
     :overflow :hidden
     :z-index 2}
+   [:a.donate-button
+    {:height (px 27)
+     :margin-right (px 4)
+     :background-color "#4267b2"
+     :border "1px solid #4267b2"
+     :color 'white
+     :display :block
+     :border-radius (px 4)
+     :padding [[(px 0) (px 6)]]}
+    [:&:hover
+     {:background-color "#365899"
+      :border "1px solid #365899"}]
+    [:&:visited
+     {:color 'white}]
+    [:span
+     {:font-family "Helvetica, Arial, sans-serif"
+      :font-weight :bold
+      :font-size (px 13)
+      :vertical-align :middle
+      :line-height (px 26)
+      :display :inline-block
+      :pointer-events :none}]]
    [:.engagements
     {:color 'white}]
    [:.close-button

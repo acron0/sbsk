@@ -71,7 +71,11 @@
 (defn engagements
   [video]
   [re-com/h-box
-   :children [[:div.engagements
+   :children [[:a.donate-button
+               {:href "https://www.paypal.com/us/cgi-bin/webscr?cmd=_flow&SESSION=wzq1ws5Plk8Ck4Nhnpuy6aRk-AhSRQurB59xGp_mbimwUB8hsPHiJ1QSh1G&dispatch=5885d80a13c0db1f8e263663d3faee8d94717bd303200c3af9aadd01a5f55080"
+                :target "_blank"}
+               [:span "Donate"]]
+              [:div.engagements
                [:iframe {:src (str "https://www.facebook.com/plugins/like.php?href=https%3A%2F%2Ffacebook.com%2Fspecialbooksbyspecialkids%2Fvideos%2F" (:id video)  "&width=450&layout=standard&action=like&size=large&show_faces=true&share=true&height=80&appId=1843769555880658&colorscheme=dark")
                          :width "450"
                          :height "50"
