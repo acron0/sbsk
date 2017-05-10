@@ -117,6 +117,7 @@
                                                         (reset! search-input s)))}]]]
                               [re-com/box
                                :size "32px"
+                               :style {:z-index 1}
                                :child [re-com/md-icon-button
                                        :md-icon-name "zmdi-search"
                                        :on-click (fn [e]
