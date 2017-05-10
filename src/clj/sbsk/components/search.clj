@@ -47,8 +47,23 @@
     :else
     (conj add-to [field-or-fields weight])))
 
+(defn collect-tag-pairs!
+  [tag-pair-index tags records]
+  (letfn [(get-tags [r] (mapv str/lower-case ((comp :tags :meta second) r)))
+          (collect-pairs-of [tag record]
+            (let [rtags (get-tags record)]
+              (when (some #{tag} rtags)
+                (do (println tag "/" rtags)
+                    (remove #{tag} (get-tags record))))))]
+    (log/debug "Collecting tag pairs..." (count tags) "x" (count records))
+    (reset! tag-pair-index
+            (reduce #(assoc %1 %2
+                            (reduce concat []
+                                    (mapv (partial collect-pairs-of %2) records)))
+                    {} tags))))
+
 (defn reload-index
-  [index records tag-index table-name database]
+  [index records tag-index tag-pair-index table-name database]
   (log/info "Reloading index...")
   (let [data (db/read-record-as-obj
               database table-name (apply str data-name-parts))]
@@ -57,6 +72,7 @@
     (reset! records (reduce (fn [a e] (assoc a (:id e) e)) {} data))
     ;; load index
     (reset! index (capi/make-index))
+    (reset! tag-index #{})
     (run! (fn [[id record]]
             (let [{:keys [short-description
                           description
@@ -67,17 +83,18 @@
                                             (:title record)) title-weight)
                              (add-field (or (not-blank description)
                                             (:description record)) description-weight)
-                             (add-field (map clojure.string/trim tags) tag-weight)
+                             (add-field (map str/trim tags) tag-weight)
                              (add-field short-description
                                         short-description-weight))]
               (capi/index-text @index id fields)
               (run! #(let [tag (str/lower-case %)]
                        (log/debug "Indexing tag:" tag)
                        (swap! tag-index conj tag)) tags))) @records)
+    (collect-tag-pairs! tag-pair-index @tag-index @records)
     (log/info "Index ready")))
 
 (defn do-search
-  [{:keys [id] :as qs} index records tag-index]
+  [{:keys [id] :as qs} index records tag-index tag-pair-index]
   (let [query (url-decode (:query qs))
         tag-query (url-decode (:tag-query qs))]
     (if @index
@@ -96,7 +113,7 @@
       [])))
 
 (defn search-handler
-  [index records tag-index]
+  [index records tag-index tag-pair-index]
   (fn [request]
     (if-not (get request :query-string)
       {:status 400
@@ -107,7 +124,7 @@
            :headers {"Content-Type" "application/json"}
            :body (-> request
                      (get-query)
-                     (do-search index records tag-index)
+                     (do-search index records tag-index tag-pair-index)
                      (generate-string))}
           {:status 503})
         (catch Exception e
@@ -132,15 +149,18 @@
           _ (log/info "Starting Search" (str "port=" port))
           index (atom nil)
           tag-index (atom #{})
+          tag-pair-index (atom {})
           records (atom [])
-          reload-fun (fn [] (reload-index index records tag-index bucket-full database))]
+          reload-fun (fn [] (reload-index index records tag-index tag-pair-index bucket-full database))]
       (reload-fun)
       (assoc component
              :index index
              :tag-index tag-index
+             :tag-pair-index tag-pair-index
              :records records
+             :reload reload-fun
              :servers
-             [(run-jetty (wrap-cors (search-handler index records tag-index)
+             [(run-jetty (wrap-cors (search-handler index records tag-index tag-pair-index)
                                     :access-control-allow-origin [#".*"]
                                     :access-control-allow-methods [:get]) {:port port
                                                                            :daemon? true
@@ -157,5 +177,7 @@
     (dissoc component
             :index
             :tag-index
+            :tag-pair-index
             :records
+            :reload
             :servers)))
