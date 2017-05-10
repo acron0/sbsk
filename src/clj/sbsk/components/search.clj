@@ -53,13 +53,13 @@
           (collect-pairs-of [tag record]
             (let [rtags (get-tags record)]
               (when (some #{tag} rtags)
-                (do (println tag "/" rtags)
-                    (remove #{tag} (get-tags record))))))]
+                (remove #{tag} (get-tags record)))))]
     (log/debug "Collecting tag pairs..." (count tags) "x" (count records))
     (reset! tag-pair-index
             (reduce #(assoc %1 %2
-                            (reduce concat []
-                                    (mapv (partial collect-pairs-of %2) records)))
+                            (set (reduce concat
+                                         []
+                                         (mapv (partial collect-pairs-of %2) records))))
                     {} tags))))
 
 (defn reload-index
@@ -93,6 +93,11 @@
     (collect-tag-pairs! tag-pair-index @tag-index @records)
     (log/info "Index ready")))
 
+(defn index-of-compare
+  [x]
+  (fn [a b]
+    (.compareTo (.indexOf a x) (.indexOf b x))))
+
 (defn do-search
   [{:keys [id] :as qs} index records tag-index tag-pair-index]
   (let [query (url-decode (:query qs))
@@ -109,7 +114,14 @@
                       (get @records rid)) results))
             ;;
             (not (clojure.string/blank? tag-query))
-            (sort (filter #(.contains % tag-query) @tag-index)))
+            (let [tag-results (filter #(.contains % tag-query) @tag-index)]
+              (if (= 1 (count tag-results))
+                (let [tag (first tag-results)]
+                  (sort (concat tag-results (map #(str tag ", " %)
+                                                 (get @tag-pair-index tag)))))
+                (->> tag-results
+                     (sort)
+                     (sort (index-of-compare tag-query))))))
       [])))
 
 (defn search-handler
