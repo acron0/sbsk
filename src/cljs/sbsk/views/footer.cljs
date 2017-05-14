@@ -36,7 +36,8 @@
   []
   [:div.donations
    [:div "You can make a tax-deductable contribution to Special Books by Special Kids through PayPal."]
-   [:iframe {:src "http://www-specialbooksbyspecialkids-org.usrfiles.com/html/94bdf2_ffe76e9111d06bd126ac7b662144d38b.html"
+   [:iframe {:id "donations-iframe"
+             :src "http://www-specialbooksbyspecialkids-org.usrfiles.com/html/94bdf2_ffe76e9111d06bd126ac7b662144d38b.html"
              :width "200px"
              :height "78px"
              :frame-border 0}]

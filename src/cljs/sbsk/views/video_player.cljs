@@ -72,7 +72,7 @@
   [video]
   [re-com/h-box
    :children [[:a.donate-button
-               {:href "https://www.paypal.com/us/cgi-bin/webscr?cmd=_flow&SESSION=wzq1ws5Plk8Ck4Nhnpuy6aRk-AhSRQurB59xGp_mbimwUB8hsPHiJ1QSh1G&dispatch=5885d80a13c0db1f8e263663d3faee8d94717bd303200c3af9aadd01a5f55080"
+               {:href "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=PS5KTSDCK25P8"
                 :target "_blank"}
                [:span "Donate"]]
               [:div.engagements
