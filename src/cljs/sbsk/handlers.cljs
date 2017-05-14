@@ -28,16 +28,31 @@
    #_(re-frame/dispatch-sync [:refresh-search])))
 
 (re-frame/reg-event-db
+ :open-previous-video
+ (fn  [db _]
+   (if-let [video (last (:previous-videos db))]
+     (do
+       (re-frame/dispatch [:open-video video true])
+       (update db :previous-videos butlast))
+     db)))
+
+(re-frame/reg-event-db
  :open-video
- (fn  [db [_ video-id]]
+ (fn  [db [_ video-id prev?]]
    (set-noscroll! true)
-   (assoc db :current-video
-          (or (some #(when (= (:id %) video-id) (assoc % :_collection :search))
-                    (get db :search-result-videos))
-              (some #(when (= (:id %) video-id) (assoc % :_collection :videos))
-                    (get db :videos))
-              (some #(when (= (:id %) video-id) (assoc % :_collection :playlist))
-                    (get db :current-playlist-videos))))))
+   (let [cv (:current-video db)
+         prevs (if (and cv (not prev?))
+                 (conj (:previous-videos db) (:id cv))
+                 (:previous-videos db))]
+     (assoc db
+            :previous-videos prevs
+            :current-video
+            (or (some #(when (= (:id %) video-id) (assoc % :_collection :search))
+                      (get db :search-result-videos))
+                (some #(when (= (:id %) video-id) (assoc % :_collection :videos))
+                      (get db :videos))
+                (some #(when (= (:id %) video-id) (assoc % :_collection :playlist))
+                      (get db :current-playlist-videos)))))))
 
 (re-frame/reg-event-db
  :open-playlist

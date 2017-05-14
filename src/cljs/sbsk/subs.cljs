@@ -62,6 +62,12 @@
          [title videos])))))
 
 (re-frame/reg-sub
+ :previous-videos
+ (fn [db]
+   (:previous-videos db)))
+
+
+(re-frame/reg-sub
  :typeahead-results
  (fn [db]
    (when-let [r (:tag-search-results db)]

@@ -128,6 +128,7 @@
      :left 0
      :background-color 'transparent
      :font-size (em 2)}]
+   [:.prev-next-buttons]
    [:.content
     {:width (percent 100)
      :height (percent 100)

@@ -19,6 +19,7 @@
    :search nil
    :tag-search nil
    :current-video nil
+   :previous-videos []
    :latest-data -1
    :loading-more? false
    :search-pending? false

@@ -68,25 +68,41 @@
       :allow-transparency "true"
       :allow-full-screen "true"}]))
 
-(defn engagements
-  [video]
+(defn prev-next-buttons
+  [prev next]
   [re-com/h-box
-   :children [[:a.donate-button
-               {:href "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=PS5KTSDCK25P8"
-                :target "_blank"}
-               [:span "Donate"]]
-              [:div.engagements
-               [:iframe {:src (str "https://www.facebook.com/plugins/like.php?href=https%3A%2F%2Ffacebook.com%2Fspecialbooksbyspecialkids%2Fvideos%2F" (:id video)  "&width=450&layout=standard&action=like&size=large&show_faces=true&share=true&height=80&appId=1843769555880658&colorscheme=dark")
-                         :width "450"
-                         :height "50"
-                         :style {:border "none"
-                                 :overflow "hidden"}
-                         :scrolling "no"
-                         :frame-border "0"
-                         :allow-transparency "true"}]]
-              #_[:a {:href (str "http://facebook.com" (:link video))}
-                 [re-com/label
-                  :label "Comment"]]]])
+   :class "prev-next-buttons"
+   :justify :between
+   :children [(when prev
+                [re-com/md-icon-button
+                 :md-icon-name "zmdi-arrow-left"
+                 :on-click #(re-frame/dispatch [:open-previous-video])])
+              [re-com/md-icon-button
+               :md-icon-name "zmdi-arrow-right"
+               :on-click #(re-frame/dispatch [:open-video (:id next)])]]])
+
+(defn engagements
+  [video prev next]
+  [re-com/h-box
+   :justify :between
+   :children [[re-com/h-box
+               :children [[:a.donate-button
+                           {:href "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=PS5KTSDCK25P8"
+                            :target "_blank"}
+                           [:span "Donate"]]
+                          [:div.engagements
+                           [:iframe {:src (str "https://www.facebook.com/plugins/like.php?href=https%3A%2F%2Ffacebook.com%2Fspecialbooksbyspecialkids%2Fvideos%2F" (:id video)  "&width=450&layout=standard&action=like&size=large&show_faces=true&share=true&height=80&appId=1843769555880658&colorscheme=dark")
+                                     :width "450"
+                                     :height "50"
+                                     :style {:border "none"
+                                             :overflow "hidden"}
+                                     :scrolling "no"
+                                     :frame-border "0"
+                                     :allow-transparency "true"}]]
+                          #_[:a {:href (str "http://facebook.com" (:link video))}
+                             [re-com/label
+                              :label "Comment"]]]]
+              (prev-next-buttons prev next)]])
 
 (defn tags
   [video]
@@ -134,7 +150,8 @@
 
 (defn panel
   [video]
-  (let [further-viewing-sub (re-frame/subscribe [:further-viewing])]
+  (let [further-viewing-sub (re-frame/subscribe [:further-viewing])
+        previous-videos (re-frame/subscribe [:previous-videos])]
     (fn [video]
       (let [[further-viewing-title additional-videos] @further-viewing-sub]
         [:div.video-player
@@ -155,11 +172,12 @@
              [re-com/v-box
               :gap "10px"
               :justify :start
-              :children [(fb-header video)
-                         (video-info video)
-                         (video-iframe video)
-                         (engagements video)
-                         (tags video)
-                         (further-viewing further-viewing-title additional-videos)
-                         [re-com/gap :size "20px"]]]]])
+              :children
+              [(fb-header video)
+               (video-info video)
+               (video-iframe video)
+               (engagements video (first @previous-videos) (second additional-videos))
+               (tags video)
+               (further-viewing further-viewing-title additional-videos)
+               [re-com/gap :size "20px"]]]]])
          (close-button)]))))

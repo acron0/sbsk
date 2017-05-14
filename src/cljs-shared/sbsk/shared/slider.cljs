@@ -14,7 +14,8 @@
 
 (defn de-slick
   [class-name init?]
-  (.slick (js/jQuery (str "." class-name)) "unslick")
+  (when-let [el (js/jQuery (str "." class-name))]
+    (.slick el "unslick"))
   (reset! init? false))
 
 (defn slider-control
