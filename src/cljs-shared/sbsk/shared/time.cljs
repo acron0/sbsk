@@ -6,7 +6,7 @@
   (.format (.locale (js/moment
                      time
                      "YYYYMMDD'T'HHmmss'Z'")
-                    (aget (.-languages js/navigator) 0)) "L"))
+                    (.-language js/navigator)) "L"))
 
 (defn as-moment-month-year
   [time]
@@ -19,4 +19,4 @@
   (.calendar (.locale (js/moment
                        time
                        "YYYYMMDD'T'HHmmss'Z'")
-                      (aget (.-languages js/navigator) 0))))
+                      (.-language js/navigator))))
