@@ -93,11 +93,23 @@
     (get-image-dims picture)
     [width height]))
 
+(defn best-format
+  [entry]
+  (let [re #"\/s([0-9]+)x[0-9]+\/"
+        results (->> (:format entry)
+                     (map #(vector (last (re-find re (:picture %))) %))
+                     (into {}))
+        best (-> results
+                 (keys)
+                 (sort)
+                 (last))]
+    (get results best)))
+
 (defn scrub
   [entry]
   (let [full-text (str (:title entry) " - " (:description entry))
-        best-format (last (sort-by :width (:format entry)))
-        [w h] (get-dimensions best-format)]
+        best-format' (best-format entry)
+        [w h] (get-dimensions best-format')]
     (-> entry
         (clojure.set/rename-keys {:created_time  :created-at
                                   :permalink_url :link})
@@ -106,7 +118,7 @@
         (dissoc :embeddable
                 :picture
                 :format)
-        (assoc  :thumb (:picture best-format)
+        (assoc  :thumb (:picture best-format')
                 :width w
                 :height h))))
 
