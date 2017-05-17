@@ -11,6 +11,14 @@
         fun (if on conj disj)]
     (set! (.-className html) (clojure.string/join " " (fun classes "noscroll")))))
 
+(defn close-video-player
+  [db]
+  (set-noscroll! false)
+  (assoc db
+         :current-video nil
+         :current-playlist nil
+         :current-playlist-videos []))
+
 (re-frame/reg-event-db
  :initialize-db
  (fn  [_ _]
@@ -74,11 +82,7 @@
 (re-frame/reg-event-db
  :close-video
  (fn  [db [_ video-id]]
-   (set-noscroll! false)
-   (assoc db
-          :current-video nil
-          :current-playlist nil
-          :current-playlist-videos [])))
+   (close-video-player db)))
 
 (re-frame/reg-event-db
  :load-more-videos
@@ -88,7 +92,9 @@
 (re-frame/reg-event-db
  :search
  (fn  [db [_ query]]
-   (let [new-db (dissoc db :tag-search-results)]
+   (let [new-db (-> db
+                    (close-video-player)
+                    (dissoc :tag-search-results))]
      (if (not= (:search new-db) query)
        (search-videos new-db query)
        new-db))))

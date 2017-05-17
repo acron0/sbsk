@@ -115,7 +115,8 @@
                        (for [t ts]
                          [re-com/hyperlink
                           :class "taglink"
-                          :label (str "#" t)]))]))
+                          :label (str "#" t)
+                          :on-click #(re-frame/dispatch [:search t])]))]))
 
 (defn now-playing
   [video]
