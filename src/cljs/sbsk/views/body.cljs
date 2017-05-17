@@ -327,51 +327,53 @@
 
 (defn lower-body
   [search-results? search-term videos]
-  [:div#search-results.lower-body
-   [re-com/v-box
-    :class "lower"
-    :width "100%"
-    :children [[re-com/h-box
-                :class "search-results-title"
-                :justify :start
-                :width "100%"
-                :children [(when search-results?
-                             [re-com/box
-                              :size "32px"
-                              :child [re-com/md-icon-button
-                                      :md-icon-name "zmdi-close"
-                                      :style {:height "100%"}
-                                      :on-click (fn [e]
-                                                  (re-frame/dispatch [:clear-search])
-                                                  (.preventDefault e))]])
-                           [re-com/box
-                            :size "auto"
-                            :child [re-com/title
-                                    :level :level2
-                                    :label (if search-results?
-                                             (str "Search Results for '" search-term "'")
-                                             "All Videos")]]]]
-               (if search-results?
-                 [:div.pure-g
-                  {:key "search-results"}
-                  [:div
-                   {:style {:width "100%"}}
-                   [video-packed-display search-term videos]]]
-                 [:div.pure-g
-                  {:key "all-videos"}
-                  [:div
-                   {:style {:width "100%"}}
-                   [video-packed-display nil videos]]
-                  [re-com/h-box
-                   :class "load-more"
-                   :justify :center
-                   :width "100%"
-                   :children [(if true #_@loading-more?
-                                  #_[re-com/throbber
+  (let [loading-more? (re-frame/subscribe [:loading-more?])]
+    (fn [search-results? search-term videos]
+      [:div#search-results.lower-body
+       [re-com/v-box
+        :class "lower"
+        :width "100%"
+        :children [[re-com/h-box
+                    :class "search-results-title"
+                    :justify :start
+                    :width "100%"
+                    :children [(when search-results?
+                                 [re-com/box
+                                  :size "32px"
+                                  :child [re-com/md-icon-button
+                                          :md-icon-name "zmdi-close"
+                                          :style {:height "100%"}
+                                          :on-click (fn [e]
+                                                      (re-frame/dispatch [:clear-search])
+                                                      (.preventDefault e))]])
+                               [re-com/box
+                                :size "auto"
+                                :child [re-com/title
+                                        :level :level2
+                                        :label (if search-results?
+                                                 (str "Search Results for '" search-term "'")
+                                                 "All Videos")]]]]
+                   (if search-results?
+                     [:div.pure-g
+                      {:key "search-results"}
+                      [:div
+                       {:style {:width "100%"}}
+                       [video-packed-display search-term videos]]]
+                     [:div.pure-g
+                      {:key "all-videos"}
+                      [:div
+                       {:style {:width "100%"}}
+                       [video-packed-display nil videos]]
+                      [re-com/h-box
+                       :class "load-more"
+                       :justify :center
+                       :width "100%"
+                       :children [(if @loading-more?
+                                    [re-com/throbber
                                      :size :small]
-                                  [re-com/button
-                                   :label "Load More"
-                                   :on-click #(re-frame/dispatch [:load-more-videos])])]]])]]])
+                                    [re-com/button
+                                     :label "Load More"
+                                     :on-click #(re-frame/dispatch [:load-more-videos])])]]])]]])))
 (defn panel []
   (let [videos (re-frame/subscribe [:videos])
         search-term (re-frame/subscribe [:search])
@@ -387,10 +389,10 @@
              :children [(upper-body (take noof-highlight-videos
                                           (:all-videos @videos))
                                     @psts)
-                        (lower-body search-results
-                                    @search-term
-                                    (or search-results
-                                        all-videos))]]
+                        [lower-body search-results
+                         @search-term
+                         (or search-results
+                             all-videos)]]]
             [re-com/box
              :height "100%"
              :width "100%"

@@ -43,8 +43,8 @@
              :frame-border 0}]
    [:div "You can even give monthly to SBSK."]
    [:iframe {:src "http://www-specialbooksbyspecialkids-org.usrfiles.com/html/94bdf2_463ba4ae5d2705c102bc547ebac647cd.html"
-             :width "200px"
-             :height "110px"
+             :width "220px"
+             :height "130px"
              :frame-border 0}]])
 
 (defn panel

@@ -254,7 +254,8 @@
     [:.video-packed-panel-overlay-large
      {:top (px video-large-height)}]]
    [:.load-more
-    {:margin (em 1)}]
+    {:margin (em 1)
+     :letter-spacing :initial}]
    [:.lower-body
     [:div.level2
      {:width (percent 99)}]]
