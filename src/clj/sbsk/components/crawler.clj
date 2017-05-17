@@ -35,9 +35,11 @@
     (try
       (with-open [in (io/input-stream uri)
                   out (io/output-stream file)]
-        (io/copy in out)
-        (when-let [img (ImageIO/read file)]
-          [(.getWidth img) (.getHeight img)]))
+        (io/copy in out))
+      (if-let [img (ImageIO/read file)]
+        [(.getWidth img) (.getHeight img)]
+        (throw (Exception. (str "Couldn't create ImageIO!"))))
+      (catch Throwable e (log/warn (str "Failed to process dimensions for " uri " - " (.getMessage e))))
       (finally (fs/delete file)))))
 
 (defn coerce-time
@@ -75,6 +77,8 @@
                             {:query-params
                              (merge access-token
                                     {:fields "created_time,description,id,permalink_url,picture,title,embeddable,format"})})) true)]
+               (when (mod c 10)
+                 (log/debug "...page" c))
                (let [{:keys [data paging]} page
                      {:keys [next]} paging
                      next-data (concat a data)]
@@ -134,7 +138,6 @@
                             (do
                               (log/debug "Caching unseen tag:" tag)
                               (swap! tags assoc tag 1)))) (:tags md))
-          (log/debug "Adding metadata for" key-name)
           (assoc video :meta md))
         video))))
 
@@ -209,6 +212,7 @@
       (let [{:keys [app-id app-secret page-id]} facebook
             tags (atom (load-tags! database bucket-segments default-tags))
             md-keys (set (db/list-keys database metadata-bucket))
+            _ (log/debug "Fetching records...")
             records (->> (fetch app-id app-secret page-id)
                          (filter :embeddable)
                          (map scrub)
