@@ -1,8 +1,16 @@
 (ns sbsk.handlers
   (:require [re-frame.core :as re-frame]
             [sbsk.db :as db]
+            [sbsk.events :refer [add-event]]
             [sbsk.shared.data :refer [search-videos
                                       search-tags]]))
+
+(defonce events
+  (do
+    (add-event js/window "resize"
+               (fn [_]
+                 (re-frame/dispatch [:window-resize [(.-innerWidth js/window)
+                                                     (.-innerHeight js/window)]])))))
 
 (defn set-noscroll!
   [on]
@@ -21,8 +29,13 @@
 
 (re-frame/reg-event-db
  :initialize-db
- (fn  [_ _]
+ (fn [_ _]
    (db/init-db)))
+
+(re-frame/reg-event-db
+ :window-resize
+ (fn  [db [_ wh]]
+   (assoc db :window-size wh)))
 
 (re-frame/reg-event-db
  :add-videos
