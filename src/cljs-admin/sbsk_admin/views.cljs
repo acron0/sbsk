@@ -202,7 +202,7 @@
               [re-com/throbber
                :color "#000"]])]
           [re-com/label
-           :label "Select a Replacement Picture (6x4):"]
+           :label "Select a Replacement Picture (MUST BE 6x4 RATIO, e.g. resolution approx. 2048 × 1365):"]
           [:input {:type "file"
                    :id "additional-picture-input"
                    :on-change
