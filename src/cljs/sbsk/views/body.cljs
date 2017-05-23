@@ -16,7 +16,8 @@
                                video-medium-height
                                video-large-width
                                video-large-height
-                               search-typeahead-height]]
+                               search-typeahead-height
+                               video-slider-visible]]
             [cljsjs.smooth-scroll]))
 
 (def search-input-id "search-nav-input")
@@ -162,14 +163,14 @@
                              term]))]]])))
 
 (defn latest-videos-slider
-  [videos]
+  [videos num-videos]
   [re-com/v-box
    :gap "0px"
    :children
    [[re-com/title
      :level :level2
      :label "Latest Videos"]
-    (video/video-slider (take 8 videos) 4 {:overlay-fn small-video-date-overlay})]])
+    (video/video-slider (take 8 videos) num-videos {:overlay-fn small-video-date-overlay})]])
 
 (defn playlist-overlay
   [playlist]
@@ -178,33 +179,39 @@
    [:p [:span (:short-description playlist)]]])
 
 (defn playlist-slider
-  []
+  [num-videos]
   (let [playlists (re-frame/subscribe [:playlists])]
-    (fn []
+    (fn [num-videos]
       [re-com/v-box
        :gap "0px"
        :children
        [[re-com/title
          :level :level2
          :label "Playlists"]
-        (playlist/playlist-slider @playlists 4 {:overlay-fn playlist-overlay})]])))
+        (playlist/playlist-slider @playlists num-videos {:overlay-fn playlist-overlay})]])))
 
 (defn video-highlights
   [videos]
-  [re-com/v-box
-   :size "auto"
-   :gap "20px"
-   :children
-   [(latest-videos-slider videos)
-    [playlist-slider]]])
+  (let [window-size (re-frame/subscribe [:window-size])]
+    (fn [videos]
+      (let [[w] @window-size
+            num-videos (video-slider-visible w)]
+        [re-com/v-box
+         :size "auto"
+         :gap "20px"
+         :align :start
+         :children
+         [(latest-videos-slider videos num-videos)
+          [playlist-slider num-videos]]]))))
 
 (defn upper-body
   [videos popular-search-terms]
   [re-com/h-box
    :class "upper"
+   :justify :center
    :gap (px 10)
    :children [[search-nav popular-search-terms]
-              (video-highlights videos)]])
+              [video-highlights videos]]])
 
 (defn random-video-dimensions
   []

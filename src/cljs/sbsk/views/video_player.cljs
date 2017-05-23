@@ -52,7 +52,7 @@
   [video]
   (let [w' (or (:width video) (get-in video [:meta :width]) 0)
         h' (or (:height video (get-in video [:meta :height])) 0)
-        scale-to-w vp-content-width
+        scale-to-w (vp-content-width 1024)
         ratio      (when-not (zero? w')
                      (/ scale-to-w w'))
         w          (str scale-to-w "px")

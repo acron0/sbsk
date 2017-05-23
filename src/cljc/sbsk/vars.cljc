@@ -8,9 +8,13 @@
   "How many videos/columns we would like horizontally across the site"
   5)
 
-(def video-slider-visible
+(defn video-slider-visible
   "How many videos visible in a slider"
-  4)
+  [width]
+  (println "!!" width)
+  (cond
+    (< width 1024) 3
+    :else 4))
 
 (def video-gap-px
   "The gap between videos"
@@ -25,10 +29,11 @@
 (def video-large-width (* 3 video-small-width))
 (def video-large-height (* 3 video-small-height))
 
-(def vp-content-width
+(defn vp-content-width
+  [width]
   "Calculates the video-player content width - 4 videos + gaps"
-  (+ (* video-small-width video-slider-visible)
-     (* video-gap-px (dec video-slider-visible))))
+  (+ (* video-small-width (video-slider-visible width))
+     (* video-gap-px (dec (video-slider-visible width)))))
 
 (def search-typeahead-height
   "The height of the typeahead popup box"

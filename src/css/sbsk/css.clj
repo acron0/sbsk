@@ -137,7 +137,7 @@
     {:margin :auto
      :display :block
      :height (percent 100)
-     :width (px vp-content-width)}
+     :width (px (double (vp-content-width 1024)))}
     [:.level1
      {:color 'white
       :font-size (px 20)
