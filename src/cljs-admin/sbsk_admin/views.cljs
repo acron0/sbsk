@@ -175,7 +175,8 @@
 (defn thumb-control
   [video]
   (let [meta-thumb (get-in video [:meta :thumb])
-        uploading? (and meta-thumb (clojure.string/starts-with? meta-thumb "data:"))]
+        uploading? (and meta-thumb (clojure.string/starts-with? meta-thumb "data:"))
+        xfactor 3.334]
     [re-com/v-box
      :children
      [[re-com/title
@@ -191,7 +192,7 @@
           [:div
            {:style {:position :relative}}
            [:img {:src (or meta-thumb
-                           (str "http://placehold.it/" video-large-width "x" video-large-height))
+                           (str "http://placehold.it/" (* video-large-width xfactor) "x" (* video-large-height xfactor)))
                   :width video-large-width
                   :height video-large-height}]
            (when uploading?
