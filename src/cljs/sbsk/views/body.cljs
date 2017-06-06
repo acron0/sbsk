@@ -200,6 +200,7 @@
          :size "auto"
          :gap "20px"
          :align :start
+         :style {:flex "0 0 auto"}
          :children
          [(latest-videos-slider videos num-videos)
           [playlist-slider num-videos]]]))))

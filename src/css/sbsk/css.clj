@@ -1,5 +1,6 @@
 (ns sbsk.css
   (:require [garden.def :refer [defstyles]]
+            [garden.stylesheet :refer [at-media]]
             [garden.color :as c]
             [garden.units :refer [px em percent vw vh]]
             [sbsk.vars :refer :all]))
@@ -49,17 +50,36 @@
   [:.header
    {:width (percent 100)
     :margin-top (px 7)
-    :margin-bottom (px 10)
-    :min-width (px 680)}
+    :margin-bottom (px 10)}
+   [:.level1
+    {:margin [[(px 0) (px 0) (px 0) (px 0)]]}]
    [:img
     {:width (px 125)
      :height (px 128)}]
-   [:.menu-item
+   (at-media
+    {:max-width (px small-content-width)}
+    [:.header-image
+     {:align-self :flex-start}]
+    [:.level1
+     {:font-size (px 26)
+      :margin [[(px 2) (px 0) (px 0) (px 4)]]}]
+    [:img
+     {:width (px (/ 125 2))
+      :height (px (/ 128 2))}])
+   [:.menu-item :.menu-dropper
     {:margin [[(em 0.7) (em 0.9)]]
      :font-size (px 18)
      :color menu-item-colour
      :letter-spacing (px -0.5)
-     :text-decoration :none}]]
+     :text-decoration :none}]
+   [:.menu-dropper
+    {:margin [[(em 0)]]}]
+   [:.menu-drop-down
+    {:height (px 0)
+     :overflow :hidden
+     :transition (transition :height "0.5s")}
+    [:&.open
+     {:height (px 300)}]]]
 
   ;; Footer
   [:.footer
@@ -68,7 +88,7 @@
     :padding (em 1)
     :font-size (em 1.25)}
    [:.content
-    {:width (px content-width)
+    {:max-width (px content-width)
      :display :block
      :margin :auto}]
    [:hr {:margin [[(em 1) (em 2) (em 3) (em 4)]]}]
@@ -171,7 +191,7 @@
    [:.upper :.lower
     {:margin-bottom (px 20)}]
    [:.content
-    {:width (px content-width)
+    {:max-width (px content-width)
      :display :block
      :margin :auto}
     [:.search-nav

@@ -14,7 +14,7 @@
   (let [current-video (re-frame/subscribe [:current-video])]
     (fn []
       [:div [re-com/v-box
-             :children [(header/panel)
+             :children [[header/panel]
                         [body/panel]
                         (footer/panel)]]
        (when @current-video
