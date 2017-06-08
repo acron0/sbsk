@@ -8,6 +8,10 @@
   "Width of the content area of the site - mobile"
   610)
 
+(def tiny-content-width
+  "Width of the content area of the site - tiny mobile"
+  405)
+
 (def videos-across
   "How many videos/columns we would like horizontally across the site"
   5)

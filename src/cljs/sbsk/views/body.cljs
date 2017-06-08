@@ -17,7 +17,8 @@
                                video-large-width
                                video-large-height
                                search-typeahead-height
-                               video-slider-visible]]
+                               video-slider-visible
+                               tiny-content-width]]
             [cljsjs.smooth-scroll]))
 
 (def search-input-id "search-nav-input")
@@ -90,13 +91,14 @@
     tag]])
 
 (defn search-nav
-  [search-terms]
+  [search-terms alignment]
   (let [search-input (r/atom nil)
         typeahead-results (re-frame/subscribe [:typeahead-results])]
     (fn [search-terms]
       [re-com/v-box
        :class "search-nav"
-       :width (px (- video-small-width 16))
+       :align alignment
+       :width (if (= alignment :center) "100%" (px (- video-small-width 16)))
        :children [[re-com/h-box
                    :align :stretch
                    :children [[re-com/box
@@ -191,7 +193,7 @@
         (playlist/playlist-slider @playlists num-videos {:overlay-fn playlist-overlay})]])))
 
 (defn video-highlights
-  [videos]
+  [videos alignment]
   (let [window-size (re-frame/subscribe [:window-size])]
     (fn [videos]
       (let [[w] @window-size
@@ -199,7 +201,7 @@
         [re-com/v-box
          :size "auto"
          :gap "20px"
-         :align :start
+         :align alignment
          :style {:flex "0 0 auto"}
          :children
          [(latest-videos-slider videos num-videos)
@@ -207,12 +209,19 @@
 
 (defn upper-body
   [videos popular-search-terms]
-  [re-com/h-box
-   :class "upper"
-   :justify :center
-   :gap (px 10)
-   :children [[search-nav popular-search-terms]
-              [video-highlights videos]]])
+  (let [window-size (re-frame/subscribe [:window-size])]
+    (fn [videos popular-search-terms]
+      (let [[container children]
+            (if (<= (first @window-size) tiny-content-width)
+              [re-com/v-box [[video-highlights videos :center]
+                             [search-nav popular-search-terms :center]]]
+              [re-com/h-box [[search-nav popular-search-terms :start]
+                             [video-highlights videos :start]]])]
+        [container
+         :class "upper"
+         :justify :center
+         :gap (px 10)
+         :children children]))))
 
 (defn random-video-dimensions
   [window-width]
@@ -398,9 +407,9 @@
          [:div.content
           (if (or search-results all-videos)
             [re-com/v-box
-             :children [(upper-body (take noof-highlight-videos
+             :children [[upper-body (take noof-highlight-videos
                                           (:all-videos @videos))
-                                    @psts)
+                         @psts]
                         [lower-body search-results
                          @search-term
                          (or search-results

@@ -66,6 +66,11 @@
     [:img
      {:width (px (/ 125 2))
       :height (px (/ 128 2))}])
+   (at-media
+    {:max-width (px tiny-content-width)}
+    [:.level1
+     {:font-size (px 20)
+      :margin [[(px 2) (px 0) (px 0) (px 4)]]}])
    [:.menu-item :.menu-dropper
     {:margin [[(em 0.7) (em 0.9)]]
      :font-size (px 18)
