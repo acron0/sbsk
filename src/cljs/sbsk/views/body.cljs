@@ -375,7 +375,7 @@
                                                  (str "Search Results for '" search-term "'")
                                                  "All Videos")]]]]
                    (if search-results?
-                     [:div.pure-g
+                     [:div
                       {:key "search-results"}
                       [:div
                        {:style {:width "100%"}}
