@@ -215,10 +215,13 @@
               [video-highlights videos]]])
 
 (defn random-video-dimensions
-  []
-  (let [prop [[7  [video-small-width video-small-height :small]]
-              [5  [video-medium-width video-medium-height :medium]]
-              [1  [video-large-width video-large-height :large]]]
+  [window-width]
+  (let [prop [[7
+               [video-small-width video-small-height :small]]
+              [(if (< window-width video-medium-width) 0 5)
+               [video-medium-width video-medium-height :medium]]
+              [(if (< window-width video-large-width) 0 1)
+               [video-large-width video-large-height :large]]]
         pick (rand-nth (range (apply + (map first prop))))]
     (loop [props prop
            total 0]
@@ -271,13 +274,13 @@
    100))
 
 (defn append-videos!
-  [vpd-id isotope videos added-videos scroll?]
+  [vpd-id isotope videos added-videos scroll? window-width]
   (when isotope
     (->> videos
          (filter (comp not @added-videos :id))
          (run!
           (fn [video]
-            (let [[w h size] (random-video-dimensions)
+            (let [[w h size] (random-video-dimensions window-width)
                   video-el (.item (hiccup->element (video-packed size w h video)) 0)
                   vpd-el (.getElementById js/document vpd-id)]
               (add-onclick! video-el (partial open-video video))
@@ -299,7 +302,7 @@
   (reset! added-videos #{}))
 
 (defn video-packed-display
-  [search-term videos]
+  [search-term videos window-width]
   (let [isotope            (atom nil)
         added-videos       (atom #{})
         component-videos   (atom nil)
@@ -311,13 +314,13 @@
       (fn [& _]
         (when-not @isotope
           (init-isotope! vpd-id isotope isotope-config))
-        (append-videos! vpd-id @isotope @component-videos added-videos search-term))
+        (append-videos! vpd-id @isotope @component-videos added-videos search-term window-width))
       :component-did-update
       (fn [old-state new-state]
         (when (and (not @isotope) search-term)
           (init-isotope! vpd-id isotope isotope-config))
         (when (or (not search-term) @render-since-reset)
-          (append-videos! vpd-id @isotope @component-videos added-videos search-term)))
+          (append-videos! vpd-id @isotope @component-videos added-videos search-term window-width)))
       :reagent-render
       (fn [search-term videos]
         (if (and @isotope (not= @last-search-term search-term))
@@ -329,13 +332,14 @@
             (reset! render-since-reset true)))
         (reset! component-videos videos)
         ;;
-        (let [videos' (map #(assoc % :thumb-dimensions (random-video-dimensions)) videos)]
+        (let [videos' (map #(assoc % :thumb-dimensions (random-video-dimensions window-width)) videos)]
           [:div.video-packed-display
            {:id vpd-id}]))})))
 
 (defn lower-body
   [search-results? search-term videos]
-  (let [loading-more? (re-frame/subscribe [:loading-more?])]
+  (let [loading-more? (re-frame/subscribe [:loading-more?])
+        window-size (re-frame/subscribe [:window-size])]
     (fn [search-results? search-term videos]
       [:div#search-results.lower-body
        [re-com/v-box
@@ -366,12 +370,12 @@
                       {:key "search-results"}
                       [:div
                        {:style {:width "100%"}}
-                       [video-packed-display search-term videos]]]
+                       [video-packed-display search-term videos (first @window-size)]]]
                      [:div.pure-g
                       {:key "all-videos"}
                       [:div
                        {:style {:width "100%"}}
-                       [video-packed-display nil videos]]
+                       [video-packed-display nil videos (first @window-size)]]
                       [re-com/h-box
                        :class "load-more"
                        :justify :center

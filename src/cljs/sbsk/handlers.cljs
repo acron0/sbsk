@@ -5,12 +5,12 @@
             [sbsk.shared.data :refer [search-videos
                                       search-tags]]))
 
-#_(defonce events
-    (do
-      (add-event js/window "resize"
-                 (fn [_]
-                   (re-frame/dispatch [:window-resize [(.-innerWidth js/window)
-                                                       (.-innerHeight js/window)]])))))
+(defonce events
+  (do
+    (add-event js/window "resize"
+               (fn [_]
+                 (re-frame/dispatch [:window-resize [(.-innerWidth js/window)
+                                                     (.-innerHeight js/window)]])))))
 
 (defn set-noscroll!
   [on]
