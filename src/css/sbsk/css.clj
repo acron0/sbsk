@@ -153,16 +153,21 @@
      :left 0
      :background-color 'transparent
      :font-size (em 2)}]
+   (at-media
+    {:max-width (px 900)}
+    [:.close-button
+     {:font-size (em 1.5)}])
    [:.prev-next-buttons]
    [:.content
     {:width (percent 100)
      :height (percent 100)
-     :overflow-y :scroll}]
+     :overflow-y :scroll
+     :overflow-x :hidden}]
    [:.inner-content
     {:margin :auto
      :display :block
      :height (percent 100)
-     :width (px (double (vp-content-width 1024)))}
+     :max-width (px (double (vp-content-width 1024)))}
     [:.level1
      {:color 'white
       :font-size (px 20)
