@@ -380,7 +380,7 @@
                       [:div
                        {:style {:width "100%"}}
                        [video-packed-display search-term videos (first @window-size)]]]
-                     [:div.pure-g
+                     [:div
                       {:key "all-videos"}
                       [:div
                        {:style {:width "100%"}}

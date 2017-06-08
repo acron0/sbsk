@@ -263,7 +263,16 @@
    [:.search-results-title
     {:z-index 1
      :margin-bottom (px -1)}]
-   [:.video-packed-display]
+   (at-media
+    {:max-width (px video-large-width)}
+    [:.video-packed-display
+     {:width (px video-medium-width)
+      :margin [[0 :auto]]}])
+   (at-media
+    {:max-width (px video-medium-width)}
+    [:.video-packed-display
+     {:width (px video-small-width)
+      :margin [[0 :auto]]}])
    [:.video-packed
     [:&:hover
      [:.video-packed-panel-overlay-small
