@@ -16,6 +16,6 @@
       [:div [re-com/v-box
              :children [[header/panel]
                         [body/panel]
-                        (footer/panel)]]
+                        [footer/panel]]]
        (when @current-video
          [video-player/panel @current-video])])))
