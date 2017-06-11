@@ -183,7 +183,8 @@
       [:.level1
        {:font-size (em 1.1)}]]]
     [:.taglink
-     {:font-size (em 0.8)}
+     {:font-size (em 0.8)
+      :line-height (em 1.6)}
      [:&:hover
       {:color blue-highlight}]]
     [:.now-playing-video-panel
@@ -379,5 +380,7 @@
       :background-color "rgba(255, 255, 255, 0.6)"}]
     [:&:focus
      {:outline 0}]]]
+  [:.further-viewing-slider
+   {:margin ["0 auto"]}]
   [:.noscroll
    {:overflow-y :hidden}])

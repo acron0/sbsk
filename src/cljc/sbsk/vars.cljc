@@ -35,12 +35,18 @@
 
 (defn video-slider-visible
   "How many videos visible in a slider"
-  [width]
-  (cond
-    (<= width small-content-width) 1
-    (<= width 816) 2
-    (< width content-width) 3
-    :else 4))
+  ([width]
+   (cond
+     (<= width small-content-width) 1
+     (<= width 816) 2
+     (< width  content-width) 3
+     :else 4))
+  ([width vwidths]
+   (cond
+     (<= width (nth vwidths 0)) 1
+     (<= width (nth vwidths 1)) 2
+     (< width  (nth vwidths 2)) 3
+     :else 4)))
 
 (defn vp-content-width
   [width]

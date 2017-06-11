@@ -6,7 +6,9 @@
             [cljsjs.moment]
             [sbsk.shared.video :as video]
             [sbsk.shared.data :refer [clip-string]]
-            [sbsk.vars :refer [vp-content-width]]))
+            [sbsk.vars :refer [vp-content-width
+                               video-slider-visible
+                               video-small-width]]))
 
 (defn fb-header
   [video]
@@ -113,6 +115,7 @@
   [video]
   (when-let [ts (video/get-tags video)]
     [re-com/h-box
+     :style {:flex-flow "row wrap"}
      :gap "5px"
      :children (concat [[re-com/label
                          :label "Tags"]
@@ -138,13 +141,21 @@
 
 (defn further-viewing
   [fvtitle videos]
-  [re-com/v-box
-   :children
-   [[re-com/title
-     :level :level2
-     :label fvtitle]
-    (video/video-slider videos "further-viewing-slider" 4
-                        {:overlay-fn (now-playing (first videos))})]])
+  (let [window-size (re-frame/subscribe [:window-size])]
+    (fn [fvtitle videos]
+      (let [num-videos (video-slider-visible (first @window-size)
+                                             [(* video-small-width 2)
+                                              (* video-small-width 3)
+                                              (* video-small-width 4)])]
+        [re-com/v-box
+         :children
+         [[re-com/title
+           :level :level2
+           :label fvtitle]
+          (video/video-slider videos
+                              "further-viewing-slider"
+                              num-videos
+                              {:overlay-fn (now-playing (first videos))})]]))))
 
 (defn close-button
   []
@@ -184,6 +195,6 @@
                [video-iframe video]
                (engagements video (first @previous-videos) (second additional-videos))
                (tags video)
-               (further-viewing further-viewing-title additional-videos)
+               [further-viewing further-viewing-title additional-videos]
                [re-com/gap :size "20px"]]]]])
          (close-button)]))))
