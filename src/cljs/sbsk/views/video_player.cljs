@@ -6,7 +6,9 @@
             [cljsjs.moment]
             [sbsk.shared.video :as video]
             [sbsk.shared.data :refer [clip-string]]
-            [sbsk.vars :refer [vp-content-width]]))
+            [sbsk.vars :refer [vp-content-width
+                               video-slider-visible
+                               video-small-width]]))
 
 (defn fb-header
   [video]
@@ -50,23 +52,28 @@
 
 (defn video-iframe
   [video]
-  (let [w' (or (:width video) (get-in video [:meta :width]) 0)
-        h' (or (:height video (get-in video [:meta :height])) 0)
-        scale-to-w vp-content-width
-        ratio      (when-not (zero? w')
-                     (/ scale-to-w w'))
-        w          (str scale-to-w "px")
-        h          (if ratio
-                     (str (* ratio h') "px")
-                     (str "100%"))]
-    [:iframe#video-frame
-     {:src (get-fb-video-link (:id video))
-      :width w
-      :height h
-      :scrolling "no"
-      :frame-border "0"
-      :allow-transparency "true"
-      :allow-full-screen "true"}]))
+  (let [window-size (re-frame/subscribe [:window-size])]
+    (fn [video]
+      (let [original-w (or (:width video) (get-in video [:meta :width]) 0)
+            w' (min (first @window-size) original-w)
+            h' (or (:height video (get-in video [:meta :height])) 0)
+            scale-to-w (min (first @window-size)
+                            (vp-content-width 1024))
+            ratio      (when-not (zero? w')
+                         (* 1.15 (/ h' original-w))
+                         #_(/ scale-to-w w'))
+            w          (str scale-to-w "px")
+            h          (if ratio
+                         (str (* ratio w') "px")
+                         (str "100%"))]
+        [:iframe#video-frame
+         {:src (get-fb-video-link (:id video))
+          :width w
+          :height h
+          :scrolling "no"
+          :frame-border "0"
+          :allow-transparency "true"
+          :allow-full-screen "true"}]))))
 
 (defn prev-next-buttons
   [prev next]
@@ -108,6 +115,7 @@
   [video]
   (when-let [ts (video/get-tags video)]
     [re-com/h-box
+     :style {:flex-flow "row wrap"}
      :gap "5px"
      :children (concat [[re-com/label
                          :label "Tags"]
@@ -133,13 +141,21 @@
 
 (defn further-viewing
   [fvtitle videos]
-  [re-com/v-box
-   :children
-   [[re-com/title
-     :level :level2
-     :label fvtitle]
-    (video/video-slider videos "further-viewing-slider" 4
-                        {:overlay-fn (now-playing (first videos))})]])
+  (let [window-size (re-frame/subscribe [:window-size])]
+    (fn [fvtitle videos]
+      (let [num-videos (video-slider-visible (first @window-size)
+                                             [(* video-small-width 2)
+                                              (* video-small-width 3)
+                                              (* video-small-width 4)])]
+        [re-com/v-box
+         :children
+         [[re-com/title
+           :level :level2
+           :label fvtitle]
+          (video/video-slider videos
+                              "further-viewing-slider"
+                              num-videos
+                              {:overlay-fn (now-playing (first videos))})]]))))
 
 (defn close-button
   []
@@ -176,9 +192,9 @@
               :children
               [(fb-header video)
                (video-info video)
-               (video-iframe video)
+               [video-iframe video]
                (engagements video (first @previous-videos) (second additional-videos))
                (tags video)
-               (further-viewing further-viewing-title additional-videos)
+               [further-viewing further-viewing-title additional-videos]
                [re-com/gap :size "20px"]]]]])
          (close-button)]))))

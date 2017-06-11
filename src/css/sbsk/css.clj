@@ -1,5 +1,6 @@
 (ns sbsk.css
   (:require [garden.def :refer [defstyles]]
+            [garden.stylesheet :refer [at-media]]
             [garden.color :as c]
             [garden.units :refer [px em percent vw vh]]
             [sbsk.vars :refer :all]))
@@ -49,17 +50,41 @@
   [:.header
    {:width (percent 100)
     :margin-top (px 7)
-    :margin-bottom (px 10)
-    :min-width (px 680)}
+    :margin-bottom (px 10)}
+   [:.level1
+    {:margin [[(px 0) (px 0) (px 0) (px 0)]]}]
    [:img
     {:width (px 125)
      :height (px 128)}]
-   [:.menu-item
+   (at-media
+    {:max-width (px small-content-width)}
+    [:.header-image
+     {:align-self :flex-start}]
+    [:.level1
+     {:font-size (px 26)
+      :margin [[(px 2) (px 0) (px 0) (px 4)]]}]
+    [:img
+     {:width (px (/ 125 2))
+      :height (px (/ 128 2))}])
+   (at-media
+    {:max-width (px tiny-content-width)}
+    [:.level1
+     {:font-size (px 20)
+      :margin [[(px 2) (px 0) (px 0) (px 4)]]}])
+   [:.menu-item :.menu-dropper
     {:margin [[(em 0.7) (em 0.9)]]
      :font-size (px 18)
      :color menu-item-colour
      :letter-spacing (px -0.5)
-     :text-decoration :none}]]
+     :text-decoration :none}]
+   [:.menu-dropper
+    {:margin [[(em 0)]]}]
+   [:.menu-drop-down
+    {:height (px 0)
+     :overflow :hidden
+     :transition (transition :height "0.5s")}
+    [:&.open
+     {:height (px 300)}]]]
 
   ;; Footer
   [:.footer
@@ -68,7 +93,7 @@
     :padding (em 1)
     :font-size (em 1.25)}
    [:.content
-    {:width (px content-width)
+    {:max-width (px content-width)
      :display :block
      :margin :auto}]
    [:hr {:margin [[(em 1) (em 2) (em 3) (em 4)]]}]
@@ -128,16 +153,21 @@
      :left 0
      :background-color 'transparent
      :font-size (em 2)}]
+   (at-media
+    {:max-width (px 900)}
+    [:.close-button
+     {:font-size (em 1.5)}])
    [:.prev-next-buttons]
    [:.content
     {:width (percent 100)
      :height (percent 100)
-     :overflow-y :scroll}]
+     :overflow-y :scroll
+     :overflow-x :hidden}]
    [:.inner-content
     {:margin :auto
      :display :block
      :height (percent 100)
-     :width (px vp-content-width)}
+     :max-width (px (double (vp-content-width 1024)))}
     [:.level1
      {:color 'white
       :font-size (px 20)
@@ -153,7 +183,8 @@
       [:.level1
        {:font-size (em 1.1)}]]]
     [:.taglink
-     {:font-size (em 0.8)}
+     {:font-size (em 0.8)
+      :line-height (em 1.6)}
      [:&:hover
       {:color blue-highlight}]]
     [:.now-playing-video-panel
@@ -171,7 +202,7 @@
    [:.upper :.lower
     {:margin-bottom (px 20)}]
    [:.content
-    {:width (px content-width)
+    {:max-width (px content-width)
      :display :block
      :margin :auto}
     [:.search-nav
@@ -238,7 +269,16 @@
    [:.search-results-title
     {:z-index 1
      :margin-bottom (px -1)}]
-   [:.video-packed-display]
+   (at-media
+    {:max-width (px video-large-width)}
+    [:.video-packed-display
+     {:width (px video-medium-width)
+      :margin [[0 :auto]]}])
+   (at-media
+    {:max-width (px video-medium-width)}
+    [:.video-packed-display
+     {:width (px video-small-width)
+      :margin [[0 :auto]]}])
    [:.video-packed
     [:&:hover
      [:.video-packed-panel-overlay-small
@@ -340,5 +380,7 @@
       :background-color "rgba(255, 255, 255, 0.6)"}]
     [:&:focus
      {:outline 0}]]]
+  [:.further-viewing-slider
+   {:margin ["0 auto"]}]
   [:.noscroll
    {:overflow-y :hidden}])

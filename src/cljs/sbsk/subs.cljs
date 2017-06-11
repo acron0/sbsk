@@ -3,6 +3,11 @@
   (:require [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub
+ :window-size
+ (fn [db]
+   (:window-size db)))
+
+(re-frame/reg-sub
  :search
  (fn [db]
    (:search db)))

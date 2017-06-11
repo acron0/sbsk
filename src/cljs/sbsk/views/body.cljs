@@ -16,7 +16,9 @@
                                video-medium-height
                                video-large-width
                                video-large-height
-                               search-typeahead-height]]
+                               search-typeahead-height
+                               video-slider-visible
+                               tiny-content-width]]
             [cljsjs.smooth-scroll]))
 
 (def search-input-id "search-nav-input")
@@ -89,13 +91,14 @@
     tag]])
 
 (defn search-nav
-  [search-terms]
+  [search-terms alignment]
   (let [search-input (r/atom nil)
         typeahead-results (re-frame/subscribe [:typeahead-results])]
     (fn [search-terms]
       [re-com/v-box
        :class "search-nav"
-       :width (px (- video-small-width 16))
+       :align alignment
+       :width (if (= alignment :center) "100%" (px (- video-small-width 16)))
        :children [[re-com/h-box
                    :align :stretch
                    :children [[re-com/box
@@ -162,14 +165,14 @@
                              term]))]]])))
 
 (defn latest-videos-slider
-  [videos]
+  [videos num-videos]
   [re-com/v-box
    :gap "0px"
    :children
    [[re-com/title
      :level :level2
      :label "Latest Videos"]
-    (video/video-slider (take 8 videos) 4 {:overlay-fn small-video-date-overlay})]])
+    (video/video-slider (take 8 videos) num-videos {:overlay-fn small-video-date-overlay})]])
 
 (defn playlist-overlay
   [playlist]
@@ -178,39 +181,56 @@
    [:p [:span (:short-description playlist)]]])
 
 (defn playlist-slider
-  []
+  [num-videos]
   (let [playlists (re-frame/subscribe [:playlists])]
-    (fn []
+    (fn [num-videos]
       [re-com/v-box
        :gap "0px"
        :children
        [[re-com/title
          :level :level2
          :label "Playlists"]
-        (playlist/playlist-slider @playlists 4 {:overlay-fn playlist-overlay})]])))
+        (playlist/playlist-slider @playlists num-videos {:overlay-fn playlist-overlay})]])))
 
 (defn video-highlights
-  [videos]
-  [re-com/v-box
-   :size "auto"
-   :gap "20px"
-   :children
-   [(latest-videos-slider videos)
-    [playlist-slider]]])
+  [videos alignment]
+  (let [window-size (re-frame/subscribe [:window-size])]
+    (fn [videos]
+      (let [[w] @window-size
+            num-videos (video-slider-visible w)]
+        [re-com/v-box
+         :size "auto"
+         :gap "20px"
+         :align alignment
+         :style {:flex "0 0 auto"}
+         :children
+         [(latest-videos-slider videos num-videos)
+          [playlist-slider num-videos]]]))))
 
 (defn upper-body
   [videos popular-search-terms]
-  [re-com/h-box
-   :class "upper"
-   :gap (px 10)
-   :children [[search-nav popular-search-terms]
-              (video-highlights videos)]])
+  (let [window-size (re-frame/subscribe [:window-size])]
+    (fn [videos popular-search-terms]
+      (let [[container children]
+            (if (<= (first @window-size) tiny-content-width)
+              [re-com/v-box [[video-highlights videos :center]
+                             [search-nav popular-search-terms :center]]]
+              [re-com/h-box [[search-nav popular-search-terms :start]
+                             [video-highlights videos :start]]])]
+        [container
+         :class "upper"
+         :justify :center
+         :gap (px 10)
+         :children children]))))
 
 (defn random-video-dimensions
-  []
-  (let [prop [[7  [video-small-width video-small-height :small]]
-              [5  [video-medium-width video-medium-height :medium]]
-              [1  [video-large-width video-large-height :large]]]
+  [window-width]
+  (let [prop [[7
+               [video-small-width video-small-height :small]]
+              [(if (< window-width video-medium-width) 0 5)
+               [video-medium-width video-medium-height :medium]]
+              [(if (< window-width video-large-width) 0 1)
+               [video-large-width video-large-height :large]]]
         pick (rand-nth (range (apply + (map first prop))))]
     (loop [props prop
            total 0]
@@ -263,13 +283,13 @@
    100))
 
 (defn append-videos!
-  [vpd-id isotope videos added-videos scroll?]
+  [vpd-id isotope videos added-videos scroll? window-width]
   (when isotope
     (->> videos
          (filter (comp not @added-videos :id))
          (run!
           (fn [video]
-            (let [[w h size] (random-video-dimensions)
+            (let [[w h size] (random-video-dimensions window-width)
                   video-el (.item (hiccup->element (video-packed size w h video)) 0)
                   vpd-el (.getElementById js/document vpd-id)]
               (add-onclick! video-el (partial open-video video))
@@ -291,7 +311,7 @@
   (reset! added-videos #{}))
 
 (defn video-packed-display
-  [search-term videos]
+  [search-term videos window-width]
   (let [isotope            (atom nil)
         added-videos       (atom #{})
         component-videos   (atom nil)
@@ -303,13 +323,13 @@
       (fn [& _]
         (when-not @isotope
           (init-isotope! vpd-id isotope isotope-config))
-        (append-videos! vpd-id @isotope @component-videos added-videos search-term))
+        (append-videos! vpd-id @isotope @component-videos added-videos search-term window-width))
       :component-did-update
       (fn [old-state new-state]
         (when (and (not @isotope) search-term)
           (init-isotope! vpd-id isotope isotope-config))
         (when (or (not search-term) @render-since-reset)
-          (append-videos! vpd-id @isotope @component-videos added-videos search-term)))
+          (append-videos! vpd-id @isotope @component-videos added-videos search-term window-width)))
       :reagent-render
       (fn [search-term videos]
         (if (and @isotope (not= @last-search-term search-term))
@@ -321,13 +341,14 @@
             (reset! render-since-reset true)))
         (reset! component-videos videos)
         ;;
-        (let [videos' (map #(assoc % :thumb-dimensions (random-video-dimensions)) videos)]
+        (let [videos' (map #(assoc % :thumb-dimensions (random-video-dimensions window-width)) videos)]
           [:div.video-packed-display
            {:id vpd-id}]))})))
 
 (defn lower-body
   [search-results? search-term videos]
-  (let [loading-more? (re-frame/subscribe [:loading-more?])]
+  (let [loading-more? (re-frame/subscribe [:loading-more?])
+        window-size (re-frame/subscribe [:window-size])]
     (fn [search-results? search-term videos]
       [:div#search-results.lower-body
        [re-com/v-box
@@ -354,16 +375,16 @@
                                                  (str "Search Results for '" search-term "'")
                                                  "All Videos")]]]]
                    (if search-results?
-                     [:div.pure-g
+                     [:div
                       {:key "search-results"}
                       [:div
                        {:style {:width "100%"}}
-                       [video-packed-display search-term videos]]]
-                     [:div.pure-g
+                       [video-packed-display search-term videos (first @window-size)]]]
+                     [:div
                       {:key "all-videos"}
                       [:div
                        {:style {:width "100%"}}
-                       [video-packed-display nil videos]]
+                       [video-packed-display nil videos (first @window-size)]]
                       [re-com/h-box
                        :class "load-more"
                        :justify :center
@@ -386,9 +407,9 @@
          [:div.content
           (if (or search-results all-videos)
             [re-com/v-box
-             :children [(upper-body (take noof-highlight-videos
+             :children [[upper-body (take noof-highlight-videos
                                           (:all-videos @videos))
-                                    @psts)
+                         @psts]
                         [lower-body search-results
                          @search-term
                          (or search-results

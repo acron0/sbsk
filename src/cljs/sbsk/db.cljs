@@ -25,7 +25,9 @@
    :search-pending? false
    :isotope nil
    :current-playlist nil
-   :current-playlist-videos []})
+   :current-playlist-videos []
+   :window-size [(.-innerWidth js/window)
+                 (.-innerHeight js/window)]})
 
 (defn init-db
   []
