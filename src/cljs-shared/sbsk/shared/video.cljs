@@ -21,6 +21,12 @@
   (or (get-in video [:meta :thumb])
       (get video :thumb)))
 
+(defn get-thumb*
+  [video]
+  (if (get-in video [:meta :thumb])
+    (str "http://sbsks3pictures.specialbooksbyspecialkids.org/" (get video :id))
+    (get video :thumb)))
+
 (defn get-description
   ([video]
    (get-description video 512))
@@ -78,7 +84,7 @@
               :on-click (if (:on-video-click opts)
                           (partial (:on-video-click opts) video)
                           (partial open-video video))}
-             [:img {:src (get-thumb video)
+             [:img {:src (get-thumb* video)
                     :width w
                     :height h}]
              (when (:overlay-fn opts)

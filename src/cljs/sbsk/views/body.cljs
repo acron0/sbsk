@@ -249,7 +249,7 @@
       :style (style {:width (px width)
                      :height (px height)
                      :background-color "white" })}
-     [:img {:src (video/get-thumb video)
+     [:img {:src (video/get-thumb* video)
             :width (px (- width (* 2 trim)))
             :height (px (- height (* 2 trim)))
             :style (style {:margin (px trim)})}]
